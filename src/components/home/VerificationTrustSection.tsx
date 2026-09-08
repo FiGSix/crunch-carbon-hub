@@ -35,7 +35,20 @@ export interface PartnerLogoSlot {
   src?: string;
 }
 
-const partnerLogos: PartnerLogoSlot[] = Array.from({ length: 12 }, () => ({}));
+const partnerLogos: PartnerLogoSlot[] = [
+  { name: "Nuvo Energy", src: nuvoEnergy.url },
+  { name: "GridVolt Solar & Electrical", src: gridvolt.url },
+  { name: "AfriPower Solar & Beyond", src: afripower.url },
+  { name: "Deo Solar", src: deoSolar.url },
+  { name: "Infoled", src: infoled.url },
+  { name: "PV Solutions", src: pvSolutions.url },
+  { name: "miSolar Trading", src: misolar.url },
+  { name: "Renen Energy", src: renenEnergy.url },
+  { name: "SG Solar", src: sgSolar.url },
+  { name: "AutoX", src: autox.url },
+  {},
+  {},
+];
 
 function PartnerSlot({ slot, index }: { slot: PartnerLogoSlot; index: number }) {
   return (
