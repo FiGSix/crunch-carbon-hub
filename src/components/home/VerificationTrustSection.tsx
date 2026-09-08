@@ -26,6 +26,7 @@ import unionPowerEnergy from "@/assets/partners/union-power-energy.png.asset.jso
 import deeLogo from "@/assets/accreditation/DEE_logo.png.asset.json";
 import eazyEpc from "@/assets/accreditation/eazyEPC.png.asset.json";
 import sanediLogo from "@/assets/accreditation/SANEDILogo.jpg.asset.json";
+import arepLogo from "@/assets/accreditation/AREP-Full-Logo.png.asset.json";
 
 /**
  * Trust block shown directly under the homepage hero:
@@ -164,7 +165,7 @@ export function VerificationTrustSection() {
       </div>
 
       {/* 3. Industry and accreditation */}
-      <div className="bg-white pb-16 md:pb-20">
+      <div className="bg-industry-tint py-16 md:py-20">
         <div className="container mx-auto max-w-5xl px-4 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-crunch-yellow">
             Backed by the industry
@@ -178,29 +179,53 @@ export function VerificationTrustSection() {
             behind it are worth.
           </p>
 
-          <div className="mt-10 grid gap-6 text-left md:grid-cols-2">
-            <article className="rounded-lg border border-border bg-card p-7">
-              <div className="flex h-20 items-center justify-center border-b border-border pb-5 text-3xl font-bold text-crunch-black">
-                AREP
+          <div className="mt-10 grid items-stretch gap-6 text-left md:grid-cols-2">
+            <article className="flex h-full flex-col rounded-lg border border-border bg-card p-7">
+              <div className="flex h-16 items-center justify-center">
+                <img
+                  src={arepLogo.url}
+                  alt="Association for Renewable Energy Practitioners"
+                  className="max-h-12 max-w-full object-contain"
+                />
               </div>
-              <h3 className="mt-6 text-xl font-bold text-crunch-black">AREP</h3>
-              <p className="mt-2 text-muted-foreground">
-                Association of Renewable Energy Practitioners. Industry partner.
+              <div className="mt-5 h-px w-full bg-crunch-yellow" aria-hidden="true" />
+              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.16em] text-crunch-yellow">
+                Standards &amp; Quality Assurance
               </p>
+              <p className="mt-3 flex-1 leading-relaxed text-muted-foreground">
+                A non-profit, public benefit quality assurance organisation (NPO 224-033)
+                representing South Africa&apos;s renewable energy practitioners — setting and assuring
+                installation standards across the solar PV value chain through its P4 programme.
+              </p>
+              <div className="mt-6 border-t border-border pt-5">
+                <span className="inline-flex rounded-full border border-crunch-yellow px-3 py-1 text-xs font-medium text-crunch-black">
+                  Industry partner
+                </span>
+              </div>
             </article>
 
-            <article className="rounded-lg border border-border bg-card p-7">
-              <div className="flex h-20 items-center justify-center border-b border-border pb-5">
-                <img src={eazyEpc.url} alt="eazyEPC" className="max-h-14 max-w-[240px] object-contain" />
+            <article className="flex h-full flex-col rounded-lg border border-border bg-card p-7">
+              <div className="flex h-16 items-center justify-center">
+                <img src={eazyEpc.url} alt="eazyEPC" className="max-h-12 max-w-full object-contain" />
               </div>
-              <h3 className="mt-6 text-xl font-bold text-crunch-black">eazyEPC</h3>
-              <p className="mt-2 text-muted-foreground">
-                Industry partner. eazyEPC is Proudly Approved by the Department of Electricity &amp;
-                Energy, in partnership with SANEDI.
+              <div className="mt-5 h-px w-full bg-crunch-yellow" aria-hidden="true" />
+              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.16em] text-crunch-yellow">
+                Compliance &amp; Certification
               </p>
-              <div className="mt-5 flex items-center gap-5 border-t border-border pt-5">
-                <img src={deeLogo.url} alt="Department of Electricity and Energy" className="h-9 w-auto max-w-[48%] object-contain" />
-                <img src={sanediLogo.url} alt="SANEDI" className="h-10 w-auto max-w-[48%] object-contain" />
+              <p className="mt-3 flex-1 leading-relaxed text-muted-foreground">
+                South Africa&apos;s Energy Performance Certificate automation platform, approved by
+                the Department of Electricity &amp; Energy and a proud partner of the Department and
+                SANEDI. eazyEPC digitises every step of the EPC process under the Energy Act and
+                SANS 1544.
+              </p>
+              <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-border pt-5">
+                <span className="inline-flex rounded-full border border-crunch-yellow px-3 py-1 text-xs font-medium text-crunch-black">
+                  Industry partner
+                </span>
+                <div className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-4">
+                  <img src={deeLogo.url} alt="Department of Electricity and Energy" className="h-14 w-auto min-w-0 max-w-[55%] object-contain" />
+                  <img src={sanediLogo.url} alt="SANEDI" className="h-16 w-auto min-w-0 max-w-[40%] object-contain" />
+                </div>
               </div>
             </article>
           </div>

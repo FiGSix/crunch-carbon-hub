@@ -74,6 +74,7 @@ export default {
 				// Legacy support for existing components
 				'crunch-black': 'hsl(var(--crunch-black))',
 				'crunch-yellow': 'hsl(var(--crunch-yellow))',
+				'industry-tint': 'hsl(var(--industry-tint))',
 				'carbon-gray': {
 					50: 'hsl(var(--muted))',
 					100: 'hsl(var(--muted))',

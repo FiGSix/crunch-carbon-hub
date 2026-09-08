@@ -21,6 +21,7 @@
   /* Brand Colors */
   --crunch-yellow: 45 100% 50%;
   --crunch-black: 0 0% 10%;
+  --industry-tint: 51 100% 96%;
 
   --muted: 0 0% 96%;
   --muted-foreground: 0 0% 45%;
@@ -66,6 +67,7 @@
   /* Brand Colors - consistent in dark mode */
   --crunch-yellow: 45 100% 50%;
   --crunch-black: 0 0% 98%;
+  --industry-tint: 51 100% 96%;
 
   --muted: 0 0% 20%;
   --muted-foreground: 0 0% 60%;
