@@ -94,7 +94,7 @@ export function Header() {
           
           <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
             {navItems.map((item) => (
-              item.children ? (
+              "children" in item ? (
                 <div key={item.label} className="group relative">
                   <button
                     type="button"
