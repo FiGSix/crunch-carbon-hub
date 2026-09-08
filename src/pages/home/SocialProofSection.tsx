@@ -1,3 +1,12 @@
+import abb from "@/assets/equipment/abb.png.asset.json";
+import afore from "@/assets/equipment/afore.png.asset.json";
+import alphaess from "@/assets/equipment/alphaess.avif.asset.json";
+import ario from "@/assets/equipment/ario.svg.asset.json";
+import atess from "@/assets/equipment/atess.png.asset.json";
+import bydSolar from "@/assets/equipment/byd-solar.jpg.asset.json";
+import canadianSolar from "@/assets/equipment/canadian-solar.png.asset.json";
+import deye from "@/assets/equipment/deye.svg.asset.json";
+import dogoEnergy from "@/assets/equipment/dogo-energy.png.asset.json";
 import dyness from "@/assets/equipment/dyness.svg.asset.json";
 import enphase from "@/assets/equipment/enphase.png.asset.json";
 import freedomWon from "@/assets/equipment/freedom-won.png.asset.json";
@@ -6,6 +15,7 @@ import givenergy from "@/assets/equipment/givenergy.webp.asset.json";
 import goodwe from "@/assets/equipment/goodwe.svg.asset.json";
 import greenrich from "@/assets/equipment/greenrich.png.asset.json";
 import growatt from "@/assets/equipment/growatt.png.asset.json";
+import hiMo from "@/assets/equipment/hi-mo.svg.asset.json";
 import huawei from "@/assets/equipment/huawei_logo.png.asset.json";
 import hubble from "@/assets/equipment/hubble_energy.png.asset.json";
 import ig3n from "@/assets/equipment/i-g3n.jpeg.asset.json";
@@ -25,6 +35,15 @@ import victron from "@/assets/equipment/victron_logo_rgb.svg.asset.json";
 import weg from "@/assets/equipment/weg.png.asset.json";
 
 const equipmentBrands = [
+  { name: "ABB", src: abb.url },
+  { name: "Afore", src: afore.url },
+  { name: "AlphaESS", src: alphaess.url },
+  { name: "Ario", src: ario.url },
+  { name: "ATESS", src: atess.url },
+  { name: "BYD Solar", src: bydSolar.url },
+  { name: "Canadian Solar", src: canadianSolar.url },
+  { name: "Deye", src: deye.url },
+  { name: "Dogo Energy", src: dogoEnergy.url },
   { name: "Dyness", src: dyness.url },
   { name: "Enphase", src: enphase.url },
   { name: "Freedom Won", src: freedomWon.url },
@@ -33,6 +52,7 @@ const equipmentBrands = [
   { name: "GoodWe", src: goodwe.url },
   { name: "Greenrich", src: greenrich.url },
   { name: "Growatt", src: growatt.url },
+  { name: "Hi-MO", src: hiMo.url },
   { name: "Huawei", src: huawei.url },
   { name: "Hubble Energy", src: hubble.url },
   { name: "i-G3N", src: ig3n.url },
@@ -64,9 +84,9 @@ export const SocialProofSection = () => {
             works with the solar equipment you already have.
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Crunch Carbon integrates with leading inverter and battery brands to
-            verify your generation data automatically — no extra hardware
-            required.
+            Crunch Carbon integrates with leading inverter, battery, and panel
+            brands to verify your generation data automatically — no extra
+            hardware required.
           </p>
         </div>
 
