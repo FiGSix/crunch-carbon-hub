@@ -1,4 +1,14 @@
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import afripower from "@/assets/partners/afripower.png.asset.json";
+import autox from "@/assets/partners/autox.png.asset.json";
+import deoSolar from "@/assets/partners/deo-solar.svg.asset.json";
+import gridvolt from "@/assets/partners/gridvolt.png.asset.json";
+import infoled from "@/assets/partners/infoled.png.asset.json";
+import misolar from "@/assets/partners/misolar.png.asset.json";
+import nuvoEnergy from "@/assets/partners/nuvo-energy.png.asset.json";
+import pvSolutions from "@/assets/partners/pv-solutions.png.asset.json";
+import renenEnergy from "@/assets/partners/renen-energy.png.asset.json";
+import sgSolar from "@/assets/partners/sg-solar.avif.asset.json";
 
 /**
  * Trust block shown directly under the homepage hero:
