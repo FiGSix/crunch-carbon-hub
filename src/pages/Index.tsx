@@ -32,6 +32,7 @@ const Index = () => {
       <Header />
       <main>
         <HeroSection />
+        <VerificationTrustSection />
         <AudienceSelector />
         <CalculatorPromo />
         <HowItWorksSection />
