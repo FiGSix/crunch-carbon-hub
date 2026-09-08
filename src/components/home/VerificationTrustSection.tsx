@@ -1,4 +1,14 @@
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import afripower from "@/assets/partners/afripower.png.asset.json";
+import autox from "@/assets/partners/autox.png.asset.json";
+import deoSolar from "@/assets/partners/deo-solar.svg.asset.json";
+import gridvolt from "@/assets/partners/gridvolt.png.asset.json";
+import infoled from "@/assets/partners/infoled.png.asset.json";
+import misolar from "@/assets/partners/misolar.png.asset.json";
+import nuvoEnergy from "@/assets/partners/nuvo-energy.png.asset.json";
+import pvSolutions from "@/assets/partners/pv-solutions.png.asset.json";
+import renenEnergy from "@/assets/partners/renen-energy.png.asset.json";
+import sgSolar from "@/assets/partners/sg-solar.avif.asset.json";
 
 /**
  * Trust block shown directly under the homepage hero:
@@ -25,7 +35,20 @@ export interface PartnerLogoSlot {
   src?: string;
 }
 
-const partnerLogos: PartnerLogoSlot[] = Array.from({ length: 12 }, () => ({}));
+const partnerLogos: PartnerLogoSlot[] = [
+  { name: "Nuvo Energy", src: nuvoEnergy.url },
+  { name: "GridVolt Solar & Electrical", src: gridvolt.url },
+  { name: "AfriPower Solar & Beyond", src: afripower.url },
+  { name: "Deo Solar", src: deoSolar.url },
+  { name: "Infoled", src: infoled.url },
+  { name: "PV Solutions", src: pvSolutions.url },
+  { name: "miSolar Trading", src: misolar.url },
+  { name: "Renen Energy", src: renenEnergy.url },
+  { name: "SG Solar", src: sgSolar.url },
+  { name: "AutoX", src: autox.url },
+  {},
+  {},
+];
 
 function PartnerSlot({ slot, index }: { slot: PartnerLogoSlot; index: number }) {
   return (
