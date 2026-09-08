@@ -65,7 +65,7 @@ export function FloatingShareButton() {
             rel="noopener noreferrer"
             onClick={handleClick}
             aria-label="Invite a friend on WhatsApp"
-            className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-transform hover:scale-105 hover:bg-[#20BD5A] focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2"
+            className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-crunch-yellow text-crunch-black shadow-lg transition-transform hover:scale-105 hover:bg-crunch-yellow/90 focus:outline-none focus:ring-2 focus:ring-crunch-yellow focus:ring-offset-2"
           >
             <MessageCircle className="h-7 w-7" fill="currentColor" strokeWidth={0} />
             <span className="sr-only">Invite a friend on WhatsApp</span>

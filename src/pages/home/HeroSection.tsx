@@ -12,7 +12,7 @@ export const HeroSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <div className="inline-block px-4 py-2 bg-card/60 backdrop-blur-md rounded-full shadow-md border border-border/40">
-              <span className="text-sm font-medium text-muted-foreground">Verified Verra-grade carbon credits</span>
+              <span className="text-sm font-medium text-muted-foreground">Verra-certified · VCS project 4799</span>
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight tracking-tight">

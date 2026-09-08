@@ -24,7 +24,7 @@ export const CTASection = () => {
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-crunch-black">
               Start Earning From Your Solar System Today
             </h2>
-            <p className="text-xl text-crunch-black/80 mb-8">Join 1,500+ South African homeowners already earning R600-R1,000+ per year. Free to join, no setup costs.</p>
+            <p className="text-xl text-crunch-black/80 mb-8">Join 600+ South African solar owners on the platform — with 230+ projects already through verification.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.div whileHover={{
               scale: 1.02

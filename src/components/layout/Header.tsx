@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { SafeMotionDiv } from "@/components/common/SafeMotionDiv";
@@ -92,17 +92,37 @@ export function Header() {
             </SafeMotionDiv>
           </div>
           
-          <nav className="hidden lg:flex items-center gap-6 xl:gap-8">
+          <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
             {navItems.map((item) => (
-              <Link 
-                key={item.href}
-                to={item.href} 
-                className="font-medium text-crunch-black relative group py-2 px-1 touch-manipulation hover:text-crunch-yellow transition-colors duration-200"
-                title={item.description}
-              >
-                {item.label}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-crunch-yellow rounded-full transition-all duration-300 group-hover:w-full"></span>
-              </Link>
+              item.children ? (
+                <div key={item.label} className="group relative">
+                  <button
+                    type="button"
+                    className="flex items-center gap-1 whitespace-nowrap px-1 py-2 font-medium text-crunch-black transition-colors hover:text-crunch-yellow focus:outline-none"
+                    aria-haspopup="true"
+                  >
+                    {item.label}<ChevronDown className="h-4 w-4" />
+                  </button>
+                  <div className="invisible absolute left-1/2 top-full z-50 w-52 -translate-x-1/2 pt-2 opacity-0 transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                    <div className="rounded-lg border border-border bg-card p-2 shadow-lg">
+                      {item.children.map((child) => (
+                        <Link key={child.href} to={child.href} className="block whitespace-nowrap rounded-md px-3 py-2.5 font-medium text-crunch-black hover:bg-crunch-yellow/10">
+                          {child.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <Link 
+                  key={item.href}
+                  to={item.href ?? "/"} 
+                  className="relative whitespace-nowrap px-1 py-2 font-medium text-crunch-black transition-colors duration-200 hover:text-crunch-yellow"
+                  title={item.description}
+                >
+                  {item.label}
+                </Link>
+              )
             ))}
           </nav>
           
@@ -111,7 +131,7 @@ export function Header() {
               <Button 
                 variant="ghost" 
                 onClick={() => navigate("/login")}
-                className="hidden sm:inline-flex text-crunch-black hover:text-crunch-black hover:bg-crunch-yellow/10 rounded-full px-4 md:px-5 py-2 min-h-[44px] touch-manipulation"
+                className="hidden min-h-[44px] whitespace-nowrap rounded-full px-3 py-2 text-base font-medium text-crunch-black hover:bg-crunch-yellow/10 hover:text-crunch-black sm:inline-flex"
               >
                 Log in
               </Button>
@@ -154,7 +174,7 @@ export function Header() {
         >
           <div className="p-6 pt-20">
             <nav className="flex flex-col gap-2">
-              {navItems.map((item) => (
+              {navItems.flatMap((item) => item.children ?? [item]).map((item) => (
                 <Link 
                   key={item.href}
                   to={item.href} 
@@ -200,19 +220,12 @@ export function Header() {
 
 const navItems = [
   { 
-    label: "Home", 
-    href: "/",
-    description: "Return to our homepage" 
-  },
-  { 
-    label: "For Homes", 
-    href: "/home-owners",
-    description: "Monetise your solar system" 
-  },
-  { 
-    label: "For Business", 
-    href: "/business",
-    description: "Commercial & industrial solar" 
+    label: "Solutions",
+    children: [
+      { label: "For Homes", href: "/home-owners", description: "Monetise your solar system" },
+      { label: "For Business", href: "/business", description: "Commercial & industrial solar" },
+      { label: "For Agents", href: "/agents", description: "Information for energy consultants" },
+    ],
   },
   { 
     label: "Calculator", 
@@ -223,11 +236,6 @@ const navItems = [
     label: "Marketplace", 
     href: "/marketplace",
     description: "Buy, sell & trade carbon credits" 
-  },
-  { 
-    label: "For Agents", 
-    href: "/agents",
-    description: "Information for energy consultants" 
   },
   { 
     label: "Why Choose Us", 

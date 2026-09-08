@@ -6,8 +6,8 @@ import { VerificationTrustSection } from "@/components/home/VerificationTrustSec
 import { CalculatorPromo } from "@/components/home/CalculatorPromo";
 import { HowItWorksSection } from "@/pages/home/HowItWorksSection";
 import { SocialProofSection } from "@/pages/home/SocialProofSection";
-import { TestimonialsSection } from "@/pages/home/TestimonialsSection";
 import { SecuritySection } from "@/components/home/SecuritySection";
+import { ClientProofSection } from "@/components/home/ClientProofSection";
 import { CTASection } from "@/pages/home/CTASection";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/Header";
@@ -37,7 +37,7 @@ const Index = () => {
         <CalculatorPromo />
         <HowItWorksSection />
         <SocialProofSection />
-        <TestimonialsSection />
+        <ClientProofSection />
         <SecuritySection />
         <CTASection />
       </main>
