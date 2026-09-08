@@ -61,6 +61,24 @@ const partnerLogos: PartnerLogoSlot[] = [
   { name: "Greenway Solar", src: greenwaySolar.url },
 ];
 
+/**
+ * Second partner rail: nine newly uploaded logos plus three empty placeholders.
+ */
+const partnerLogosRow2: PartnerLogoSlot[] = [
+  { name: "New Planet Energy", src: newPlanetEnergy.url },
+  { name: "JC Energy Solutions", src: jcEnergy.url },
+  { name: "Keiller Power Solutions", src: keillerPower.url },
+  { name: "Broad Sky", src: broadSky.url },
+  { name: "LoveSun", src: loveSun.url },
+  { name: "Samekh Group", src: samekhGroup.url },
+  { name: "Soco Energy", src: socoEnergy.url },
+  { name: "Offrian Solutions", src: technoserv.url },
+  { name: "Union Power Energy", src: unionPowerEnergy.url },
+  {},
+  {},
+  {},
+];
+
 function PartnerSlot({ slot, index }: { slot: PartnerLogoSlot; index: number }) {
   return (
     <div className="flex h-16 w-40 flex-shrink-0 items-center justify-center rounded-xl border border-border/60 bg-white px-4">
