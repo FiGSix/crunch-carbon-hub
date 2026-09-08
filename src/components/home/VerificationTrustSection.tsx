@@ -1,0 +1,132 @@
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+
+/**
+ * Trust block shown directly under the homepage hero:
+ * proof bar -> headline strip -> installation partner rail.
+ * Brand colours are fixed by the brand guide (#231F20 / #FFCC03).
+ */
+
+const BRAND_INK = "#231F20";
+const BRAND_YELLOW = "#FFCC03";
+
+const proofStats = [
+  { value: "267", label: "Projects verified" },
+  { value: "109.9 MWp", label: "Installed capacity" },
+  { value: "129,208 tCO₂e", label: "Emission reductions verified" },
+  { value: "2022–2024", label: "First verification period" },
+];
+
+/**
+ * 12 installation-partner slots. Drop a logo file into /public/partner-logos/
+ * and set `src` + `name`; empty slots render as a neutral placeholder.
+ */
+export interface PartnerLogoSlot {
+  name?: string;
+  src?: string;
+}
+
+const partnerLogos: PartnerLogoSlot[] = Array.from({ length: 12 }, () => ({}));
+
+function PartnerSlot({ slot, index }: { slot: PartnerLogoSlot; index: number }) {
+  return (
+    <div className="flex h-16 w-40 flex-shrink-0 items-center justify-center rounded-xl border border-border/60 bg-white px-4">
+      {slot.src ? (
+        <img
+          src={slot.src}
+          alt={slot.name ?? "Installation partner logo"}
+          loading="lazy"
+          className="max-h-10 w-auto object-contain opacity-40 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0"
+        />
+      ) : (
+        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground/50">
+          Logo {index + 1}
+        </span>
+      )}
+    </div>
+  );
+}
+
+export function VerificationTrustSection() {
+  const reduced = useReducedMotion();
+  const rail = [...partnerLogos, ...partnerLogos];
+
+  return (
+    <section aria-label="Verification and partners">
+      {/* 1. Proof bar */}
+      <div style={{ backgroundColor: BRAND_INK }} className="py-12 md:py-14">
+        <div className="container mx-auto max-w-6xl px-4">
+          <p
+            className="mb-8 text-xs font-semibold uppercase tracking-[0.2em]"
+            style={{ color: BRAND_YELLOW }}
+          >
+            Verified
+          </p>
+
+          <dl className="grid grid-cols-2 gap-8 md:grid-cols-4">
+            {proofStats.map((stat) => (
+              <div key={stat.label}>
+                <dt className="sr-only">{stat.label}</dt>
+                <dd className="text-2xl font-bold leading-tight text-white md:text-3xl">
+                  {stat.value}
+                </dd>
+                <p className="mt-2 text-sm text-white/60">{stat.label}</p>
+              </div>
+            ))}
+          </dl>
+
+          <p className="mt-10 text-sm text-white/50">
+            Independently verified under the Verified Carbon Standard. Verra project VCS 4799.{" "}
+            <a
+              href="https://registry.verra.org/app/projectDetail/VCS/4799"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium underline-offset-4 hover:underline"
+              style={{ color: BRAND_YELLOW }}
+            >
+              View on the Verra registry →
+            </a>
+          </p>
+        </div>
+      </div>
+
+      {/* 2. Headline strip */}
+      <div className="bg-white py-16 md:py-20">
+        <div className="container mx-auto max-w-3xl px-4 text-center">
+          <h2
+            className="text-3xl font-bold lowercase leading-tight tracking-tight md:text-5xl"
+            style={{ color: BRAND_INK }}
+          >
+            our first carbon credits have been issued.
+          </h2>
+          <p className="mx-auto mt-6 max-w-2xl text-base text-muted-foreground md:text-lg">
+            Crunch Carbon is the first platform to take South African solar owners all the way
+            through Verra to issued carbon credits.
+          </p>
+        </div>
+      </div>
+
+      {/* 3. Partner rail */}
+      <div className="bg-white pb-16 md:pb-20">
+        <div className="container mx-auto max-w-6xl px-4">
+          <p
+            className="mb-8 text-xs font-semibold uppercase tracking-[0.2em]"
+            style={{ color: BRAND_YELLOW }}
+          >
+            Our installation partners
+          </p>
+        </div>
+
+        <div className="group relative overflow-x-auto md:overflow-hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div
+            className="flex w-max gap-4 px-4 md:animate-partner-rail md:group-hover:[animation-play-state:paused]"
+            style={reduced ? { animation: "none" } : undefined}
+          >
+            {rail.map((slot, i) => (
+              <PartnerSlot key={i} slot={slot} index={i % partnerLogos.length} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
