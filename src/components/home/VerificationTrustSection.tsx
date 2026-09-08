@@ -24,7 +24,7 @@ const BRAND_YELLOW = "#FFCC03";
 const proofStats = [
   { value: "200+", label: "Projects verified" },
   { value: "100+ MWp", label: "Installed capacity" },
-  { value: "+120,000 tCO₂e", label: "Emission reductions verified" },
+  { value: "120,000+ tCO₂e", label: "Emission reductions verified" },
   { value: "2022–2024", label: "First verification period" },
 ];
 
