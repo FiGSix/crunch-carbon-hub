@@ -6,6 +6,7 @@ import broadSky from "@/assets/partners/broad-sky.png.asset.json";
 import deoSolar from "@/assets/partners/deo-solar.svg.asset.json";
 import greenwaySolar from "@/assets/partners/greenway-solar.svg.asset.json";
 import gridvolt from "@/assets/partners/gridvolt.png.asset.json";
+import icSolar from "@/assets/partners/ic-solar.png.asset.json";
 import infoled from "@/assets/partners/infoled.png.asset.json";
 import jcEnergy from "@/assets/partners/jc-energy.png.asset.json";
 import keillerPower from "@/assets/partners/keiller-power-solutions.jpg.asset.json";
@@ -18,6 +19,7 @@ import renenEnergy from "@/assets/partners/renen-energy.png.asset.json";
 import samekhGroup from "@/assets/partners/samekh-group.jpg.asset.json";
 import sgSolar from "@/assets/partners/sg-solar.avif.asset.json";
 import socoEnergy from "@/assets/partners/soco-energy.svg.asset.json";
+import solargy from "@/assets/partners/solargy-south-africa.jpg.asset.json";
 import technoserv from "@/assets/partners/technoserv.jpg.asset.json";
 import unionPowerEnergy from "@/assets/partners/union-power-energy.png.asset.json";
 
@@ -74,8 +76,8 @@ const partnerLogosRow2: PartnerLogoSlot[] = [
   { name: "Soco Energy", src: socoEnergy.url },
   { name: "Offrian Solutions", src: technoserv.url },
   { name: "Union Power Energy", src: unionPowerEnergy.url },
-  {},
-  {},
+  { name: "IC Solar", src: icSolar.url },
+  { name: "Solargy South Africa", src: solargy.url },
   {},
 ];
 
