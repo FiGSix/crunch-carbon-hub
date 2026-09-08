@@ -9,6 +9,7 @@
   --primary-foreground: 0 0% 10%;
   --crunch-yellow: 45 100% 50%;
   --crunch-black: 0 0% 10%;
+  --industry-tint: 51 100% 96%;
   --border: 0 0% 90%;
   --ring: 45 100% 50%;
 }
@@ -17,6 +18,7 @@
   --background: 0 0% 10%;
   --foreground: 0 0% 98%;
   --crunch-black: 0 0% 98%;
+  --industry-tint: 51 100% 96%;
 }
 
 /* Critical base styles */
