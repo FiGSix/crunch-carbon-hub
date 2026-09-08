@@ -13,11 +13,11 @@ const About = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>About Crunch Carbon | Our Mission & Team</title>
-        <meta name="description" content="Learn about Crunch Carbon's mission to help individuals and organisations monetise renewable energy through verified carbon credits." />
+        <title>About Crunch Carbon | Verra VCS Certified Solar Income</title>
+        <meta name="description" content="Crunch Carbon is Verra VCS certified. We help South African homeowners and businesses earn money from solar panels through verified carbon credits. Meet our team and learn how we turn clean energy into cash." />
         <link rel="canonical" href="https://crunchcarbon.com/about" />
-        <meta property="og:title" content="About Crunch Carbon | Our Mission & Team" />
-        <meta property="og:description" content="Learn about Crunch Carbon's mission to help individuals and organisations monetise renewable energy through verified carbon credits." />
+        <meta property="og:title" content="About Crunch Carbon | Verra VCS Certified Solar Income" />
+        <meta property="og:description" content="Crunch Carbon is Verra VCS certified. We help South African homeowners and businesses earn money from solar panels through verified carbon credits." />
         <meta property="og:url" content="https://crunchcarbon.com/about" />
         <meta property="og:type" content="website" />
       </Helmet>
