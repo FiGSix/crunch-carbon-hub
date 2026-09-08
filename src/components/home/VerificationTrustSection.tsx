@@ -2,15 +2,24 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import afripower from "@/assets/partners/afripower.png.asset.json";
 import autox from "@/assets/partners/autox.png.asset.json";
 import azoteq from "@/assets/partners/azoteq.png.asset.json";
+import broadSky from "@/assets/partners/broad-sky.png.asset.json";
 import deoSolar from "@/assets/partners/deo-solar.svg.asset.json";
 import greenwaySolar from "@/assets/partners/greenway-solar.svg.asset.json";
 import gridvolt from "@/assets/partners/gridvolt.png.asset.json";
 import infoled from "@/assets/partners/infoled.png.asset.json";
+import jcEnergy from "@/assets/partners/jc-energy.png.asset.json";
+import keillerPower from "@/assets/partners/keiller-power-solutions.jpg.asset.json";
+import loveSun from "@/assets/partners/LoveSun.png.asset.json";
 import misolar from "@/assets/partners/misolar.png.asset.json";
+import newPlanetEnergy from "@/assets/partners/new-planet-energy.png.asset.json";
 import nuvoEnergy from "@/assets/partners/nuvo-energy.png.asset.json";
 import pvSolutions from "@/assets/partners/pv-solutions.png.asset.json";
 import renenEnergy from "@/assets/partners/renen-energy.png.asset.json";
+import samekhGroup from "@/assets/partners/samekh-group.jpg.asset.json";
 import sgSolar from "@/assets/partners/sg-solar.avif.asset.json";
+import socoEnergy from "@/assets/partners/soco-energy.svg.asset.json";
+import technoserv from "@/assets/partners/technoserv.jpg.asset.json";
+import unionPowerEnergy from "@/assets/partners/union-power-energy.png.asset.json";
 
 /**
  * Trust block shown directly under the homepage hero:
