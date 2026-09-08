@@ -137,7 +137,7 @@ export function VerificationTrustSection() {
             className="mb-8 text-xs font-semibold uppercase tracking-[0.2em]"
             style={{ color: BRAND_YELLOW }}
           >
-            Our installation partners
+            PARTNERS
           </p>
         </div>
 
