@@ -174,7 +174,7 @@ export function Header() {
         >
           <div className="p-6 pt-20">
             <nav className="flex flex-col gap-2">
-              {navItems.flatMap((item) => item.children ?? [item]).map((item) => (
+              {mobileNavItems.map((item) => (
                 <Link 
                   key={item.href}
                   to={item.href} 
@@ -218,7 +218,20 @@ export function Header() {
   );
 }
 
-const navItems = [
+interface NavLinkItem {
+  label: string;
+  href: string;
+  description: string;
+}
+
+interface NavGroupItem {
+  label: string;
+  children: NavLinkItem[];
+  href?: never;
+  description?: never;
+}
+
+const navItems: Array<NavLinkItem | NavGroupItem> = [
   { 
     label: "Solutions",
     children: [
@@ -253,3 +266,7 @@ const navItems = [
     description: "Get in touch with us" 
   },
 ];
+
+const mobileNavItems: NavLinkItem[] = navItems.flatMap((item) =>
+  "children" in item ? item.children : [item],
+);
