@@ -2,6 +2,7 @@
 
 import { HeroSection } from "@/pages/home/HeroSection";
 import { AudienceSelector } from "@/components/home/AudienceSelector";
+import { VerificationTrustSection } from "@/components/home/VerificationTrustSection";
 import { CalculatorPromo } from "@/components/home/CalculatorPromo";
 import { HowItWorksSection } from "@/pages/home/HowItWorksSection";
 import { SocialProofSection } from "@/pages/home/SocialProofSection";
@@ -31,6 +32,7 @@ const Index = () => {
       <Header />
       <main>
         <HeroSection />
+        <VerificationTrustSection />
         <AudienceSelector />
         <CalculatorPromo />
         <HowItWorksSection />
