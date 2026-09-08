@@ -84,19 +84,19 @@ export function BusinessHeroSection({ onCalculateClick, onConsultationClick }: B
               <div className="space-y-4">
                 <div className="bg-card border border-border/40 rounded-2xl p-6 shadow-sm">
                   <Building2 className="h-10 w-10 text-primary mb-3" />
-                  <h3 className="font-semibold text-foreground">Commercial</h3>
+                  <h2 className="font-semibold text-foreground">Commercial</h2>
                   <p className="text-sm text-muted-foreground">Retail, offices, warehouses</p>
                 </div>
                 <div className="bg-card border border-border/40 rounded-2xl p-6 shadow-sm">
                   <Factory className="h-10 w-10 text-primary mb-3" />
-                  <h3 className="font-semibold text-foreground">Industrial</h3>
+                  <h2 className="font-semibold text-foreground">Industrial</h2>
                   <p className="text-sm text-muted-foreground">Manufacturing, data centers</p>
                 </div>
               </div>
               <div className="space-y-4 mt-8">
                 <div className="bg-card border border-border/40 rounded-2xl p-6 shadow-sm">
                   <Wheat className="h-10 w-10 text-primary mb-3" />
-                  <h3 className="font-semibold text-foreground">Agricultural</h3>
+                  <h2 className="font-semibold text-foreground">Agricultural</h2>
                   <p className="text-sm text-muted-foreground">Farms, packhouses, wineries</p>
                 </div>
                 <div className="bg-primary/10 border border-primary/20 rounded-2xl p-6">
