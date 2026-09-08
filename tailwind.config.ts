@@ -118,13 +118,19 @@ export default {
 				'highlight-sweep': {
 					from: { transform: 'translateX(-100%)' },
 					to: { transform: 'translateX(100%)' }
+				},
+				/* Partner rail: one duplicated set scrolls by, then loops seamlessly. */
+				'partner-rail': {
+					from: { transform: 'translateX(0)' },
+					to: { transform: 'translateX(-50%)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'milestone-line': 'milestone-line 0.7s ease-out both',
-				'highlight-sweep': 'highlight-sweep 1.1s ease-out both'
+				'highlight-sweep': 'highlight-sweep 1.1s ease-out both',
+				'partner-rail': 'partner-rail 45s linear infinite'
 			},
 
             fontFamily: {
