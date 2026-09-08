@@ -14,6 +14,7 @@ import loveSun from "@/assets/partners/LoveSun.png.asset.json";
 import misolar from "@/assets/partners/misolar.png.asset.json";
 import newPlanetEnergy from "@/assets/partners/new-planet-energy.png.asset.json";
 import nuvoEnergy from "@/assets/partners/nuvo-energy.png.asset.json";
+import oryxRenewables from "@/assets/partners/oryx-renewables.png.asset.json";
 import pvSolutions from "@/assets/partners/pv-solutions.png.asset.json";
 import renenEnergy from "@/assets/partners/renen-energy.png.asset.json";
 import samekhGroup from "@/assets/partners/samekh-group.jpg.asset.json";
@@ -78,7 +79,7 @@ const partnerLogosRow2: PartnerLogoSlot[] = [
   { name: "Union Power Energy", src: unionPowerEnergy.url },
   { name: "IC Solar", src: icSolar.url },
   { name: "Solargy South Africa", src: solargy.url },
-  {},
+  { name: "Oryx Renewables", src: oryxRenewables.url },
 ];
 
 function PartnerSlot({ slot, index }: { slot: PartnerLogoSlot; index: number }) {
