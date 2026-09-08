@@ -14,8 +14,15 @@ import megarevo from "@/assets/equipment/megarevo.jpeg.asset.json";
 import schneider from "@/assets/equipment/schneider.svg.asset.json";
 import sigenergy from "@/assets/equipment/SigEnergy.webp.asset.json";
 import sineng from "@/assets/equipment/sineng.png.asset.json";
+import sivula from "@/assets/equipment/sivula-logo.svg.asset.json";
 import sinexel from "@/assets/equipment/sinexel.png.asset.json";
+import sma from "@/assets/equipment/SMA.png.asset.json";
+import solarEdge from "@/assets/equipment/solar_edge.png.asset.json";
+import solis from "@/assets/equipment/solis.webp.asset.json";
 import sunSynk from "@/assets/equipment/sun-synk.jpg.asset.json";
+import sungrow from "@/assets/equipment/sungrow.svg.asset.json";
+import victron from "@/assets/equipment/victron_logo_rgb.svg.asset.json";
+import weg from "@/assets/equipment/weg.png.asset.json";
 
 const equipmentBrands = [
   { name: "Dyness", src: dyness.url },
@@ -35,7 +42,14 @@ const equipmentBrands = [
   { name: "SigEnergy", src: sigenergy.url },
   { name: "Sineng", src: sineng.url },
   { name: "Sinexcel", src: sinexel.url },
+  { name: "Sivula", src: sivula.url },
+  { name: "SMA", src: sma.url },
+  { name: "SolarEdge", src: solarEdge.url },
+  { name: "Solis", src: solis.url },
   { name: "Sun Synk", src: sunSynk.url },
+  { name: "Sungrow", src: sungrow.url },
+  { name: "Victron Energy", src: victron.url },
+  { name: "WEG", src: weg.url },
 ];
 
 export const SocialProofSection = () => {
@@ -56,7 +70,7 @@ export const SocialProofSection = () => {
           </p>
         </div>
 
-        <div className="mx-auto mt-12 grid max-w-4xl grid-cols-2 items-center gap-x-10 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
+        <div className="mx-auto mt-12 grid max-w-6xl grid-cols-2 items-center gap-x-10 gap-y-8 sm:grid-cols-3 md:grid-cols-5">
           {equipmentBrands.map((brand) => (
             <div key={brand.name} className="flex items-center justify-center">
               <img
