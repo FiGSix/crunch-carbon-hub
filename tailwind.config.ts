@@ -123,6 +123,10 @@ export default {
 				'partner-rail': {
 					from: { transform: 'translateX(0)' },
 					to: { transform: 'translateX(-50%)' }
+				},
+				'partner-rail-reverse': {
+					from: { transform: 'translateX(-50%)' },
+					to: { transform: 'translateX(0)' }
 				}
 			},
 			animation: {
@@ -130,7 +134,8 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'milestone-line': 'milestone-line 0.7s ease-out both',
 				'highlight-sweep': 'highlight-sweep 1.1s ease-out both',
-				'partner-rail': 'partner-rail 45s linear infinite'
+				'partner-rail': 'partner-rail 45s linear infinite',
+				'partner-rail-reverse': 'partner-rail-reverse 45s linear infinite'
 			},
 
             fontFamily: {
