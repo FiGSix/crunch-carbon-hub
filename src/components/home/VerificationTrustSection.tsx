@@ -1,7 +1,9 @@
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import afripower from "@/assets/partners/afripower.png.asset.json";
 import autox from "@/assets/partners/autox.png.asset.json";
+import azoteq from "@/assets/partners/azoteq.png.asset.json";
 import deoSolar from "@/assets/partners/deo-solar.svg.asset.json";
+import greenwaySolar from "@/assets/partners/greenway-solar.svg.asset.json";
 import gridvolt from "@/assets/partners/gridvolt.png.asset.json";
 import infoled from "@/assets/partners/infoled.png.asset.json";
 import misolar from "@/assets/partners/misolar.png.asset.json";
