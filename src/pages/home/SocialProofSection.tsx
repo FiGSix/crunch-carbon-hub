@@ -6,6 +6,16 @@ import givenergy from "@/assets/equipment/givenergy.webp.asset.json";
 import goodwe from "@/assets/equipment/goodwe.svg.asset.json";
 import greenrich from "@/assets/equipment/greenrich.png.asset.json";
 import growatt from "@/assets/equipment/growatt.png.asset.json";
+import huawei from "@/assets/equipment/huawei_logo.png.asset.json";
+import hubble from "@/assets/equipment/hubble_energy.png.asset.json";
+import ig3n from "@/assets/equipment/i-g3n.jpeg.asset.json";
+import luxpower from "@/assets/equipment/luxpower.png.asset.json";
+import megarevo from "@/assets/equipment/megarevo.jpeg.asset.json";
+import schneider from "@/assets/equipment/schneider.svg.asset.json";
+import sigenergy from "@/assets/equipment/SigEnergy.webp.asset.json";
+import sineng from "@/assets/equipment/sineng.png.asset.json";
+import sinexel from "@/assets/equipment/sinexel.png.asset.json";
+import sunSynk from "@/assets/equipment/sun-synk.jpg.asset.json";
 
 const equipmentBrands = [
   { name: "Dyness", src: dyness.url },
@@ -16,6 +26,16 @@ const equipmentBrands = [
   { name: "GoodWe", src: goodwe.url },
   { name: "Greenrich", src: greenrich.url },
   { name: "Growatt", src: growatt.url },
+  { name: "Huawei", src: huawei.url },
+  { name: "Hubble Energy", src: hubble.url },
+  { name: "i-G3N", src: ig3n.url },
+  { name: "Luxpower", src: luxpower.url },
+  { name: "Megarevo", src: megarevo.url },
+  { name: "Schneider Electric", src: schneider.url },
+  { name: "SigEnergy", src: sigenergy.url },
+  { name: "Sineng", src: sineng.url },
+  { name: "Sinexcel", src: sinexel.url },
+  { name: "Sun Synk", src: sunSynk.url },
 ];
 
 export const SocialProofSection = () => {
