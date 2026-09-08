@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { Proposal } from "@/components/proposals/types";
 import { ProposalData } from "@/types/proposals";
-import { useReactivateProposal } from "@/hooks/dashboard/useCloseoutQueue";
+import { useReactivateProposal } from "@/hooks/proposals/useReactivateProposal";
 
 interface ProposalHeaderProps {
   title: string;
