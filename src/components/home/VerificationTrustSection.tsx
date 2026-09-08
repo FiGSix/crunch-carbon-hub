@@ -164,7 +164,7 @@ export function VerificationTrustSection() {
       <div className="bg-white pb-16 md:pb-20">
         <div className="container mx-auto max-w-6xl px-4">
           <p
-            className="mb-8 text-xs font-semibold uppercase tracking-[0.2em]"
+            className="mb-10 text-sm font-semibold uppercase tracking-[0.2em]"
             style={{ color: BRAND_YELLOW }}
           >
             PARTNERS
