@@ -168,14 +168,29 @@ export function VerificationTrustSection() {
           </p>
         </div>
 
-        <div className="group relative overflow-x-auto md:overflow-hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div
-            className="flex w-max gap-4 px-4 md:animate-partner-rail md:group-hover:[animation-play-state:paused]"
-            style={reduced ? { animation: "none" } : undefined}
-          >
-            {rail.map((slot, i) => (
-              <PartnerSlot key={i} slot={slot} index={i % partnerLogos.length} />
-            ))}
+        <div className="space-y-4">
+          {/* Row 1: scrolls left */}
+          <div className="group relative overflow-x-auto md:overflow-hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div
+              className="flex w-max gap-4 px-4 md:animate-partner-rail md:group-hover:[animation-play-state:paused]"
+              style={reduced ? { animation: "none" } : undefined}
+            >
+              {rail.map((slot, i) => (
+                <PartnerSlot key={i} slot={slot} index={i % partnerLogos.length} />
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2: scrolls right (opposite direction) */}
+          <div className="group relative overflow-x-auto md:overflow-hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div
+              className="flex w-max gap-4 px-4 md:animate-partner-rail-reverse md:group-hover:[animation-play-state:paused]"
+              style={reduced ? { animation: "none" } : undefined}
+            >
+              {[...partnerLogosRow2, ...partnerLogosRow2].map((slot, i) => (
+                <PartnerSlot key={i} slot={slot} index={i % partnerLogosRow2.length} />
+              ))}
+            </div>
           </div>
         </div>
       </div>
