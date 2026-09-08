@@ -39,7 +39,7 @@ export function Footer({ className }: { className?: string }) {
           <div className="md:col-span-4">
             <h3 className="font-bold text-lg mb-4 text-crunch-black">Get Started Today</h3>
             <p className="text-crunch-black/70 mb-4">
-              Join thousands of system owners already monetizing their carbon offsets.
+              Join 600+ South African solar owners turning generation into verified carbon revenue.
             </p>
             <motion.div
               whileHover={{ scale: 1.02 }}

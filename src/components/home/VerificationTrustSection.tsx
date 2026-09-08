@@ -23,6 +23,9 @@ import socoEnergy from "@/assets/partners/soco-energy.svg.asset.json";
 import solargy from "@/assets/partners/solargy-south-africa.jpg.asset.json";
 import technoserv from "@/assets/partners/technoserv.jpg.asset.json";
 import unionPowerEnergy from "@/assets/partners/union-power-energy.png.asset.json";
+import deeLogo from "@/assets/accreditation/DEE_logo.png.asset.json";
+import eazyEpc from "@/assets/accreditation/eazyEPC.png.asset.json";
+import sanediLogo from "@/assets/accreditation/SANEDILogo.jpg.asset.json";
 
 /**
  * Trust block shown directly under the homepage hero:
@@ -90,7 +93,7 @@ function PartnerSlot({ slot, index }: { slot: PartnerLogoSlot; index: number }) 
           src={slot.src}
           alt={slot.name ?? "Installation partner logo"}
           loading="lazy"
-          className="max-h-10 w-auto object-contain opacity-40 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0"
+          className="max-h-10 max-w-full object-contain opacity-60 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0"
         />
       ) : (
         <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground/50">
@@ -160,7 +163,51 @@ export function VerificationTrustSection() {
         </div>
       </div>
 
-      {/* 3. Partner rail */}
+      {/* 3. Industry and accreditation */}
+      <div className="bg-white pb-16 md:pb-20">
+        <div className="container mx-auto max-w-5xl px-4 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-crunch-yellow">
+            Backed by the industry
+          </p>
+          <h2 className="mt-3 text-3xl font-bold lowercase text-crunch-black md:text-4xl">
+            we don&apos;t operate in isolation.
+          </h2>
+          <p className="mx-auto mt-5 max-w-3xl text-muted-foreground md:text-lg">
+            Carbon markets run on credibility. We work alongside the bodies and partners shaping
+            South Africa&apos;s renewable energy sector — because a credit is only worth what the people
+            behind it are worth.
+          </p>
+
+          <div className="mt-10 grid gap-6 text-left md:grid-cols-2">
+            <article className="rounded-lg border border-border bg-card p-7">
+              <div className="flex h-20 items-center justify-center border-b border-border pb-5 text-3xl font-bold text-crunch-black">
+                AREP
+              </div>
+              <h3 className="mt-6 text-xl font-bold text-crunch-black">AREP</h3>
+              <p className="mt-2 text-muted-foreground">
+                Association of Renewable Energy Practitioners. Industry partner.
+              </p>
+            </article>
+
+            <article className="rounded-lg border border-border bg-card p-7">
+              <div className="flex h-20 items-center justify-center border-b border-border pb-5">
+                <img src={eazyEpc.url} alt="eazyEPC" className="max-h-14 max-w-[240px] object-contain" />
+              </div>
+              <h3 className="mt-6 text-xl font-bold text-crunch-black">eazyEPC</h3>
+              <p className="mt-2 text-muted-foreground">
+                Industry partner. eazyEPC is Proudly Approved by the Department of Electricity &amp;
+                Energy, in partnership with SANEDI.
+              </p>
+              <div className="mt-5 flex items-center gap-5 border-t border-border pt-5">
+                <img src={deeLogo.url} alt="Department of Electricity and Energy" className="h-9 w-auto max-w-[48%] object-contain" />
+                <img src={sanediLogo.url} alt="SANEDI" className="h-10 w-auto max-w-[48%] object-contain" />
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Partner rail */}
       <div className="bg-white pb-16 md:pb-20">
         <div className="container mx-auto max-w-6xl px-4">
           <p
@@ -169,6 +216,9 @@ export function VerificationTrustSection() {
           >
             PARTNERS
           </p>
+          <h2 className="-mt-7 mb-10 text-3xl font-bold lowercase text-crunch-black md:text-4xl">
+            backed by South Africa&apos;s solar installers.
+          </h2>
         </div>
 
         <div className="space-y-4">
