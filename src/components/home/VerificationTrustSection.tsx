@@ -2,15 +2,24 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import afripower from "@/assets/partners/afripower.png.asset.json";
 import autox from "@/assets/partners/autox.png.asset.json";
 import azoteq from "@/assets/partners/azoteq.png.asset.json";
+import broadSky from "@/assets/partners/broad-sky.png.asset.json";
 import deoSolar from "@/assets/partners/deo-solar.svg.asset.json";
 import greenwaySolar from "@/assets/partners/greenway-solar.svg.asset.json";
 import gridvolt from "@/assets/partners/gridvolt.png.asset.json";
 import infoled from "@/assets/partners/infoled.png.asset.json";
+import jcEnergy from "@/assets/partners/jc-energy.png.asset.json";
+import keillerPower from "@/assets/partners/keiller-power-solutions.jpg.asset.json";
+import loveSun from "@/assets/partners/LoveSun.png.asset.json";
 import misolar from "@/assets/partners/misolar.png.asset.json";
+import newPlanetEnergy from "@/assets/partners/new-planet-energy.png.asset.json";
 import nuvoEnergy from "@/assets/partners/nuvo-energy.png.asset.json";
 import pvSolutions from "@/assets/partners/pv-solutions.png.asset.json";
 import renenEnergy from "@/assets/partners/renen-energy.png.asset.json";
+import samekhGroup from "@/assets/partners/samekh-group.jpg.asset.json";
 import sgSolar from "@/assets/partners/sg-solar.avif.asset.json";
+import socoEnergy from "@/assets/partners/soco-energy.svg.asset.json";
+import technoserv from "@/assets/partners/technoserv.jpg.asset.json";
+import unionPowerEnergy from "@/assets/partners/union-power-energy.png.asset.json";
 
 /**
  * Trust block shown directly under the homepage hero:
@@ -50,6 +59,24 @@ const partnerLogos: PartnerLogoSlot[] = [
   { name: "AutoX", src: autox.url },
   { name: "Azoteq", src: azoteq.url },
   { name: "Greenway Solar", src: greenwaySolar.url },
+];
+
+/**
+ * Second partner rail: nine newly uploaded logos plus three empty placeholders.
+ */
+const partnerLogosRow2: PartnerLogoSlot[] = [
+  { name: "New Planet Energy", src: newPlanetEnergy.url },
+  { name: "JC Energy Solutions", src: jcEnergy.url },
+  { name: "Keiller Power Solutions", src: keillerPower.url },
+  { name: "Broad Sky", src: broadSky.url },
+  { name: "LoveSun", src: loveSun.url },
+  { name: "Samekh Group", src: samekhGroup.url },
+  { name: "Soco Energy", src: socoEnergy.url },
+  { name: "Offrian Solutions", src: technoserv.url },
+  { name: "Union Power Energy", src: unionPowerEnergy.url },
+  {},
+  {},
+  {},
 ];
 
 function PartnerSlot({ slot, index }: { slot: PartnerLogoSlot; index: number }) {
@@ -141,14 +168,29 @@ export function VerificationTrustSection() {
           </p>
         </div>
 
-        <div className="group relative overflow-x-auto md:overflow-hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div
-            className="flex w-max gap-4 px-4 md:animate-partner-rail md:group-hover:[animation-play-state:paused]"
-            style={reduced ? { animation: "none" } : undefined}
-          >
-            {rail.map((slot, i) => (
-              <PartnerSlot key={i} slot={slot} index={i % partnerLogos.length} />
-            ))}
+        <div className="space-y-4">
+          {/* Row 1: scrolls left */}
+          <div className="group relative overflow-x-auto md:overflow-hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div
+              className="flex w-max gap-4 px-4 md:animate-partner-rail md:group-hover:[animation-play-state:paused]"
+              style={reduced ? { animation: "none" } : undefined}
+            >
+              {rail.map((slot, i) => (
+                <PartnerSlot key={i} slot={slot} index={i % partnerLogos.length} />
+              ))}
+            </div>
+          </div>
+
+          {/* Row 2: scrolls right (opposite direction) */}
+          <div className="group relative overflow-x-auto md:overflow-hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div
+              className="flex w-max gap-4 px-4 md:animate-partner-rail-reverse md:group-hover:[animation-play-state:paused]"
+              style={reduced ? { animation: "none" } : undefined}
+            >
+              {[...partnerLogosRow2, ...partnerLogosRow2].map((slot, i) => (
+                <PartnerSlot key={i} slot={slot} index={i % partnerLogosRow2.length} />
+              ))}
+            </div>
           </div>
         </div>
       </div>
