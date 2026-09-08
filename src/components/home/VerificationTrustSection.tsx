@@ -1,7 +1,9 @@
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import afripower from "@/assets/partners/afripower.png.asset.json";
 import autox from "@/assets/partners/autox.png.asset.json";
+import azoteq from "@/assets/partners/azoteq.png.asset.json";
 import deoSolar from "@/assets/partners/deo-solar.svg.asset.json";
+import greenwaySolar from "@/assets/partners/greenway-solar.svg.asset.json";
 import gridvolt from "@/assets/partners/gridvolt.png.asset.json";
 import infoled from "@/assets/partners/infoled.png.asset.json";
 import misolar from "@/assets/partners/misolar.png.asset.json";
@@ -20,9 +22,9 @@ const BRAND_INK = "#231F20";
 const BRAND_YELLOW = "#FFCC03";
 
 const proofStats = [
-  { value: "267", label: "Projects verified" },
-  { value: "109.9 MWp", label: "Installed capacity" },
-  { value: "129,208 tCO₂e", label: "Emission reductions verified" },
+  { value: "200+", label: "Projects verified" },
+  { value: "100+ MWp", label: "Installed capacity" },
+  { value: "+120,000 tCO₂e", label: "Emission reductions verified" },
   { value: "2022–2024", label: "First verification period" },
 ];
 
@@ -46,8 +48,8 @@ const partnerLogos: PartnerLogoSlot[] = [
   { name: "Renen Energy", src: renenEnergy.url },
   { name: "SG Solar", src: sgSolar.url },
   { name: "AutoX", src: autox.url },
-  {},
-  {},
+  { name: "Azoteq", src: azoteq.url },
+  { name: "Greenway Solar", src: greenwaySolar.url },
 ];
 
 function PartnerSlot({ slot, index }: { slot: PartnerLogoSlot; index: number }) {
