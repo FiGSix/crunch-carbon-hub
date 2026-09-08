@@ -22,14 +22,15 @@ import ig3n from "@/assets/equipment/i-g3n.jpeg.asset.json";
 import luxpower from "@/assets/equipment/luxpower.png.asset.json";
 import megarevo from "@/assets/equipment/megarevo.jpeg.asset.json";
 import schneider from "@/assets/equipment/schneider.svg.asset.json";
-import sigenergy from "@/assets/equipment/SigEnergy.webp.asset.json";
+import sigenergy from "@/assets/equipment/sigenergy.png.asset.json";
 import sineng from "@/assets/equipment/sineng.png.asset.json";
 import sivula from "@/assets/equipment/sivula-logo.svg.asset.json";
 import sinexel from "@/assets/equipment/sinexel.png.asset.json";
 import sma from "@/assets/equipment/SMA.png.asset.json";
 import solarEdge from "@/assets/equipment/solar_edge.png.asset.json";
 import solis from "@/assets/equipment/solis.webp.asset.json";
-import sunSynk from "@/assets/equipment/sun-synk.jpg.asset.json";
+import sunSynk from "@/assets/equipment/sunsynk.png.asset.json";
+import tesla from "@/assets/equipment/tesla-energy.webp.asset.json";
 import sungrow from "@/assets/equipment/sungrow.svg.asset.json";
 import victron from "@/assets/equipment/victron_logo_rgb.svg.asset.json";
 import weg from "@/assets/equipment/weg.png.asset.json";
@@ -67,6 +68,7 @@ const equipmentBrands = [
   { name: "SolarEdge", src: solarEdge.url },
   { name: "Solis", src: solis.url },
   { name: "Sun Synk", src: sunSynk.url },
+  { name: "Tesla Energy", src: tesla.url },
   { name: "Sungrow", src: sungrow.url },
   { name: "Victron Energy", src: victron.url },
   { name: "WEG", src: weg.url },
