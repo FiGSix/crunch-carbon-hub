@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "asset_id": "7becba7a-a065-4987-91a5-a139d7e47e6b",
+  "asset_id": "94a8c7b8-4893-43b0-8553-8a9aa033571e",
   "project_id": "336ef803-14b3-4034-a031-e6f769d96338",
-  "url": "/__l5e/assets-v1/7becba7a-a065-4987-91a5-a139d7e47e6b/solar_edge.png",
-  "r2_key": "a/v1/336ef803-14b3-4034-a031-e6f769d96338/7becba7a-a065-4987-91a5-a139d7e47e6b/solar_edge.png",
-  "original_filename": "solar_edge.png",
-  "size": 3931,
-  "content_type": "image/png",
-  "created_at": "2026-09-08T19:44:13Z"
+  "url": "/__l5e/assets-v1/94a8c7b8-4893-43b0-8553-8a9aa033571e/solar-edge.png",
+  "r2_key": "a/v1/336ef803-14b3-4034-a031-e6f769d96338/94a8c7b8-4893-43b0-8553-8a9aa033571e/solar-edge.png",
+  "original_filename": "solar-edge.png",
+  "size": 6328,
+  "content_type": "image/webp",
+  "created_at": "2026-09-08T20:43:44Z"
 }
