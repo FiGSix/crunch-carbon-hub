@@ -34,6 +34,7 @@ import tesla from "@/assets/equipment/tesla-energy.webp.asset.json";
 import sungrow from "@/assets/equipment/sungrow.svg.asset.json";
 import victron from "@/assets/equipment/victron_logo_rgb.svg.asset.json";
 import weg from "@/assets/equipment/weg.png.asset.json";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 const equipmentBrands = [
   { name: "ABB", src: abb.url },
@@ -75,6 +76,22 @@ const equipmentBrands = [
 ];
 
 export const SocialProofSection = () => {
+  const reduced = useReducedMotion();
+  const midpoint = Math.ceil(equipmentBrands.length / 2);
+  const firstRow = equipmentBrands.slice(0, midpoint);
+  const secondRow = equipmentBrands.slice(midpoint);
+
+  const renderBrand = (brand: (typeof equipmentBrands)[number], key: string) => (
+    <div key={key} className="flex h-20 w-44 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-card px-5">
+      <img
+        src={brand.src}
+        alt={`${brand.name} logo`}
+        loading="lazy"
+        className="max-h-11 max-w-full object-contain opacity-60 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0"
+      />
+    </div>
+  );
+
   return (
     <section className="border-y border-border/50 bg-background py-16">
       <div className="container mx-auto px-4">
@@ -92,17 +109,17 @@ export const SocialProofSection = () => {
           </p>
         </div>
 
-        <div className="mx-auto mt-12 grid max-w-6xl grid-cols-2 items-center gap-x-10 gap-y-8 sm:grid-cols-3 md:grid-cols-5">
-          {equipmentBrands.map((brand) => (
-            <div key={brand.name} className="flex items-center justify-center">
-              <img
-                src={brand.src}
-                alt={`${brand.name} logo`}
-                loading="lazy"
-                className="h-10 w-auto max-w-[140px] object-contain opacity-40 grayscale transition duration-300 hover:opacity-100 hover:grayscale-0"
-              />
+        <div className="mt-12 space-y-4 overflow-hidden">
+          <div className="group overflow-x-auto md:overflow-hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex w-max gap-4 px-4 md:animate-partner-rail md:group-hover:[animation-play-state:paused]" style={reduced ? { animation: "none" } : undefined}>
+              {[...firstRow, ...firstRow].map((brand, index) => renderBrand(brand, `first-${index}`))}
             </div>
-          ))}
+          </div>
+          <div className="group overflow-x-auto md:overflow-hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex w-max gap-4 px-4 md:animate-partner-rail-reverse md:group-hover:[animation-play-state:paused]" style={reduced ? { animation: "none" } : undefined}>
+              {[...secondRow, ...secondRow].map((brand, index) => renderBrand(brand, `second-${index}`))}
+            </div>
+          </div>
         </div>
 
         <p className="mx-auto mt-10 max-w-xl text-center text-sm text-muted-foreground">

@@ -24,8 +24,8 @@ export function ClientProofSection() {
         <dl className="mt-10 grid gap-5 md:grid-cols-3">
           {clientProof.map((item) => (
             <div key={item.value} className="rounded-lg border border-border bg-card p-7 text-center">
-              <dt className="text-sm text-muted-foreground">{item.label}</dt>
-              <dd className="mb-2 text-2xl font-bold text-crunch-black md:text-3xl">{item.value}</dd>
+              <dt className="text-2xl font-bold text-crunch-black md:text-3xl">{item.value}</dt>
+              <dd className="mt-2 text-sm text-muted-foreground">{item.label}</dd>
             </div>
           ))}
         </dl>
