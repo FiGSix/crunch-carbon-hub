@@ -196,6 +196,7 @@ export function VerificationTrustSection() {
                 A non-profit, public benefit quality assurance organisation (NPO 224-033)
                 representing South Africa&apos;s renewable energy practitioners — setting and assuring
                 installation standards across the solar PV value chain through its P4 programme.
+                Registered Non Profit Company (2025/398945/08).
               </p>
               <div className="mt-6 border-t border-border pt-5">
                 <span className="inline-flex rounded-full border border-crunch-yellow px-3 py-1 text-xs font-medium text-crunch-black">
