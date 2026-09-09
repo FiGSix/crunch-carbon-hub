@@ -193,10 +193,10 @@ export function VerificationTrustSection() {
                 Standards &amp; Quality Assurance
               </p>
               <p className="mt-3 flex-1 leading-relaxed text-muted-foreground">
-                A non-profit, public benefit quality assurance organisation (NPO 224-033)
-                representing South Africa&apos;s renewable energy practitioners — setting and assuring
-                installation standards across the solar PV value chain through its P4 programme.
-                Registered Non Profit Company (2025/398945/08).
+                A non-profit, public benefit quality assurance organisation (Registered NPC
+                2025/398945/08) representing South Africa&apos;s renewable energy practitioners, solar
+                installers and other key market players. Setting and assuring installation standards
+                across the solar PV value chain through its P4 programme.
               </p>
               <div className="mt-6 border-t border-border pt-5">
                 <span className="inline-flex rounded-full border border-crunch-yellow px-3 py-1 text-xs font-medium text-crunch-black">
