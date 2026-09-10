@@ -71,9 +71,9 @@ describe("onboardingSchema - validateField", () => {
   });
 
   describe("system_gps_lat validation", () => {
-    it("should return null for empty value (optional)", () => {
-      expect(validateField("system_gps_lat", "")).toBeNull();
-      expect(validateField("system_gps_lat", null)).toBeNull();
+    it("should return error for empty value (required)", () => {
+      expect(validateField("system_gps_lat", "")).toBe("GPS latitude is required");
+      expect(validateField("system_gps_lat", null)).toBe("GPS latitude is required");
     });
 
     it("should return error for invalid latitude", () => {
