@@ -1247,7 +1247,7 @@ export function OnboardingTab({ projectId, fields, project, proposal, onRefresh 
                 id="inverter_quantity"
                 type="number"
                 min="1"
-                max="20"
+                max="100"
                 value={
                   typeof formData.inverter_quantity === 'number' && formData.inverter_quantity >= 1
                     ? formData.inverter_quantity
@@ -1261,7 +1261,7 @@ export function OnboardingTab({ projectId, fields, project, proposal, onRefresh 
                     return;
                   }
                   const val = parseInt(raw);
-                  if (!isNaN(val) && val >= 1 && val <= 20) {
+                  if (!isNaN(val) && val >= 1 && val <= 100) {
                     handleInputChange('inverter_quantity', val);
                   }
                 }}
