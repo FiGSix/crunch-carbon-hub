@@ -46,7 +46,7 @@ export const systemDetailsSchema = z.object({
 
 // Inverter section schema
 export const inverterSectionSchema = z.object({
-  inverter_quantity: z.number().min(1, "At least 1 inverter required").max(20, "Maximum 20 inverters"),
+  inverter_quantity: z.number().min(1, "At least 1 inverter required").max(100, "Maximum 100 inverters"),
   inverter_cost: z.number().positive("Cost must be positive").optional().nullable(),
   data_collector_present: z.string().optional().nullable(),
   data_collector_serial: z.string().optional().nullable(),
@@ -173,7 +173,7 @@ export const validateField = (fieldName: string, value: any, formData?: any): st
         if (value === null || value === undefined || value === "") return "Number of inverters is required";
         const qty = Number(value);
         if (isNaN(qty) || qty < 1) return "At least 1 inverter required";
-        if (qty > 20) return "Maximum 20 inverters";
+        if (qty > 100) return "Maximum 100 inverters";
         break;
       
       case "inverter_cost":
