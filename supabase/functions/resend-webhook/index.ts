@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isPrimaryRecipient, isRetryableBounce } from './bounce-classification.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,6 +25,8 @@ interface ResendWebhookEvent {
     bounce?: {
       bouncedAt: string;
       reason: string;
+      type?: string;
+      subType?: string;
     };
   };
 }
@@ -58,7 +61,7 @@ serve(async (req) => {
     );
 
     // Extract proposal_id from email metadata
-    const proposalId = await extractProposalIdFromEmail(
+    const proposalTracking = await extractProposalTrackingFromEmail(
       supabaseAdmin,
       event.data.email_id,
       event.data.to[0]
@@ -75,12 +78,17 @@ serve(async (req) => {
       }
     }
 
-    if (!proposalId) {
+    if (!proposalTracking) {
       console.warn('⚠️  Could not find proposal for email:', event.data.email_id);
       return new Response(JSON.stringify({ received: true, warning: 'proposal_not_found' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
+    const proposalId = proposalTracking.proposalId;
+    const webhookRecipient = event.data.to?.[0];
+    const primaryRecipientEvent = isPrimaryRecipient(webhookRecipient, proposalTracking.primaryRecipient);
+    const retryableBounce = event.type === 'email.bounced' && isRetryableBounce(event.data.bounce);
 
     console.log('✅ Found proposal:', proposalId);
 
@@ -109,11 +117,16 @@ serve(async (req) => {
 
     console.log('✅ Email event stored:', emailEvent.id);
 
-    // Update proposal engagement tracking
-    await updateProposalEngagement(supabaseAdmin, proposalId, event.type, event.created_at);
+    // Resend reports failures per recipient. A failure for the copied agent must
+    // never change the client's proposal, and transient failures remain retryable.
+    const shouldAffectProposal = primaryRecipientEvent && !retryableBounce;
+    if (shouldAffectProposal) {
+      await updateProposalEngagement(supabaseAdmin, proposalId, event.type, event.created_at);
+    }
 
-    // Trigger status update if needed
-    const statusUpdated = await processStatusUpdate(supabaseAdmin, proposalId, event.type);
+    const statusUpdated = shouldAffectProposal
+      ? await processStatusUpdate(supabaseAdmin, proposalId, event.type)
+      : false;
 
     // Mark event as processed
     await supabaseAdmin
@@ -246,23 +259,28 @@ async function updateWeeklyRoundupCtaEvent(supabase: any, event: ResendWebhookEv
   console.log(`[email_cta_events] updated ${event.type} for message ${messageId}`);
 }
 
-async function extractProposalIdFromEmail(
+async function extractProposalTrackingFromEmail(
   supabase: any,
   emailId: string,
   recipientEmail: string
-): Promise<string | null> {
+): Promise<{ proposalId: string; primaryRecipient: string } | null> {
   // ONLY match emails that were explicitly logged as proposal emails
   // This prevents agent invitations or other emails from being
   // incorrectly associated with proposals
   const { data: logEntry } = await supabase
     .from('proposal_automation_log')
-    .select('proposal_id')
+    .select('proposal_id, details')
     .eq('email_message_id', emailId)
     .single();
 
   if (logEntry) {
     console.log('📋 Found proposal from automation log');
-    return logEntry.proposal_id;
+    const primaryRecipient = logEntry.details?.recipient;
+    if (!primaryRecipient) {
+      console.warn('⚠️ Proposal email log has no primary recipient:', emailId);
+      return null;
+    }
+    return { proposalId: logEntry.proposal_id, primaryRecipient };
   }
 
   // DO NOT fallback to email matching - this causes agent invitations
