@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Mail, Loader2 } from "lucide-react";
+import { Mail, Loader2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Proposal } from "../types";
 import { useProposalInvitations } from "../hooks/useProposalInvitations";
@@ -191,6 +191,30 @@ export function ProposalInviteButton({ proposal, onProposalUpdate }: ProposalInv
         ) : (
           <>
             Revive & Send <Mail className="h-4 w-4 ml-1" />
+          </>
+        )}
+      </Button>
+    );
+  }
+
+  // Keep recovery visible after a delivery failure. The send flow resolves the
+  // latest linked client email and explains permanent blocks instead of hiding.
+  if (proposal.status === "bounced") {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleResend}
+        className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+        disabled={isProcessing || sending}
+      >
+        {isProcessing || sending ? (
+          <>
+            <Loader2 className="h-4 w-4 mr-1 animate-spin" /> Retrying...
+          </>
+        ) : (
+          <>
+            Retry email <RotateCcw className="h-4 w-4 ml-1" />
           </>
         )}
       </Button>

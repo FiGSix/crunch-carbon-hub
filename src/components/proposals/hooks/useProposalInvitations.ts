@@ -116,11 +116,11 @@ export function useProposalInvitations(onProposalUpdate?: () => void) {
       // The send-proposal-invitation edge function will change status to 'sent'
       // No longer auto-promoting to 'pending' - that status is removed
       
-      // Allow draft, sent, stale proposals to send/resend
+      // Bounced proposals remain actionable so a corrected or temporary address can be retried.
       // Removed 'pending' - proposals go draft → sent when email is dispatched
-      const allowedStatuses = ['draft', 'sent', 'stale', 'delivered', 'opened', 'viewed'];
+      const allowedStatuses = ['draft', 'sent', 'stale', 'delivered', 'opened', 'viewed', 'bounced'];
       if (!allowedStatuses.includes(proposalData.status)) {
-        const errorMsg = `Proposal must be in draft, sent, or stale status to send invitations. Current status: ${proposalData.status}`;
+        const errorMsg = `This proposal cannot be emailed in its current status: ${proposalData.status}`;
         logger.error(errorMsg);
         return { success: false, error: errorMsg };
       }
@@ -209,7 +209,7 @@ export function useProposalInvitations(onProposalUpdate?: () => void) {
 
       // Block list check
       if (await isEmailSuppressed(resolvedEmail)) {
-        const msg = `${resolvedEmail} is on the blocked list. Remove it in Admin → Blocked Emails to send.`;
+        const msg = `${resolvedEmail} has a permanent delivery block. Update the client email, or ask an admin to review Blocked Emails.`;
         toast({ title: "Email blocked", description: msg, variant: "destructive" });
         return { success: false, error: msg };
       }
