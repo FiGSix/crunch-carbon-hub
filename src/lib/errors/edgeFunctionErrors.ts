@@ -11,6 +11,25 @@ export interface EdgeFunctionErrorResponse {
   code?: string;
   details?: string;
   alreadySigned?: boolean;
+  requiresAuthentication?: boolean;
+}
+
+export async function parseEdgeFunctionErrorResponse(
+  error: unknown,
+): Promise<EdgeFunctionErrorResponse | null> {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'context' in error &&
+    error.context instanceof Response
+  ) {
+    try {
+      return await error.context.clone().json() as EdgeFunctionErrorResponse;
+    } catch (parseError) {
+      console.error("Failed to parse edge function error:", parseError);
+    }
+  }
+  return null;
 }
 
 /**
@@ -28,17 +47,8 @@ export async function parseEdgeFunctionError(
     'context' in error &&
     error.context instanceof Response
   ) {
-    try {
-      // Clone the response before reading (Response body can only be read once)
-      const response = error.context.clone();
-      const data: EdgeFunctionErrorResponse = await response.json();
-      
-      if (data.error) {
-        return data.error;
-      }
-    } catch (parseError) {
-      console.error("Failed to parse edge function error:", parseError);
-    }
+    const data = await parseEdgeFunctionErrorResponse(error);
+    if (data?.error) return data.error;
   }
   
   // Fallback to standard Error message
