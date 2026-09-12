@@ -6,12 +6,14 @@ const CACHE_DURATION = 10000;
 
 // In-memory cache store
 let proposalsCache: ProposalCache | null = null;
+let proposalsCacheUserId: string | null = null;
 
 /**
  * Check if cache is valid based on filters and timestamp
  */
-export function isCacheValid(filters: ProposalFilters): boolean {
+export function isCacheValid(filters: ProposalFilters, userId: string | null): boolean {
   if (!proposalsCache) return false;
+  if (!userId || proposalsCacheUserId !== userId) return false;
   
   const now = Date.now();
   const isExpired = now - proposalsCache.timestamp > CACHE_DURATION;
@@ -39,13 +41,15 @@ export function getCachedProposals(): ProposalListItem[] | null {
  */
 export function updateProposalsCache(
   proposals: ProposalListItem[], 
-  filters: ProposalFilters
+  filters: ProposalFilters,
+  userId: string
 ): void {
   proposalsCache = {
     data: proposals,
     filters: { ...filters },
     timestamp: Date.now()
   };
+  proposalsCacheUserId = userId;
 }
 
 /**
@@ -53,6 +57,7 @@ export function updateProposalsCache(
  */
 export function clearProposalsCache(): void {
   proposalsCache = null;
+  proposalsCacheUserId = null;
 }
 
 export function setCachedProposals(proposals: any[]) {

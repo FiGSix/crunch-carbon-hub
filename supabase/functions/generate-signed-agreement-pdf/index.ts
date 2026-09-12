@@ -418,15 +418,11 @@ function resolveCommissioningDate(proposal: any): string | null {
  * metadata; individual cedents fall back to their own name.
  */
 function resolveSignatoryName(proposal: any, agreement: any, masterSignature: any): string {
-  const client = proposal.client ?? {};
-  const personName = [client.first_name, client.last_name].filter(Boolean).join(" ").trim();
   return (
     agreement?.metadata?.signatory_name ||
     masterSignature?.metadata?.signatory_name ||
     masterSignature?.typed_name ||
     agreement?.typed_name ||
-    personName ||
-    proposal.content?.clientInfo?.name ||
     "N/A"
   );
 }

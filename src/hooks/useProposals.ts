@@ -42,7 +42,7 @@ export function useProposals(): UseProposalsResult {
 
   const fetchProposals = useCallback(async (forceRefresh: boolean = false) => {
     // Check cache first unless force refresh is requested
-    if (!forceRefresh && isCacheValid(filters)) {
+    if (!forceRefresh && isCacheValid(filters, user?.id ?? null)) {
       const cachedProposals = getCachedProposals();
       if (cachedProposals) {
         proposalsLogger.info("Using cached proposals", { count: cachedProposals.length });
@@ -54,7 +54,7 @@ export function useProposals(): UseProposalsResult {
 
     // Fetch fresh data
     await fetchProposalsCore(forceRefresh);
-  }, [filters, fetchProposalsCore, proposalsLogger]);
+  }, [filters, fetchProposalsCore, proposalsLogger, user?.id]);
 
   // Client-side search filtering for instant search performance
   const proposals = useMemo(() => {
@@ -95,10 +95,10 @@ export function useProposals(): UseProposalsResult {
 
   // Update cache when proposals change
   useEffect(() => {
-    if (allProposals.length > 0) {
-      updateProposalsCache(allProposals, filters);
+    if (allProposals.length > 0 && user?.id) {
+      updateProposalsCache(allProposals, filters, user.id);
     }
-  }, [allProposals, filters]);
+  }, [allProposals, filters, user?.id]);
 
   // Listen for proposal status change events to refresh data - DEBOUNCED
   useEffect(() => {

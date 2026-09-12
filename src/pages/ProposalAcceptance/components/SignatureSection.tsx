@@ -17,6 +17,7 @@ interface SignatureSectionProps {
   companyName?: string | null;
   signatoryName: string;
   onSignatoryNameChange: (name: string) => void;
+  signatoryNameLocked?: boolean;
   canSubmit: boolean;
   isSubmitting: boolean;
   onSubmit: () => void;
@@ -32,6 +33,7 @@ export function SignatureSection({
   companyName,
   signatoryName,
   onSignatoryNameChange,
+  signatoryNameLocked = false,
   canSubmit,
   isSubmitting,
   onSubmit,
@@ -125,11 +127,12 @@ export function SignatureSection({
                   placeholder="e.g. Jane Ndlovu"
                   value={signatoryName}
                   onChange={(e) => onSignatoryNameChange(e.target.value)}
-                  disabled={!hasAgreed}
+                  disabled={!hasAgreed || signatoryNameLocked}
                 />
                 <p className="text-xs text-muted-foreground">
-                  A company signs through a natural person. This name is printed on the
-                  agreement as the signatory.
+                  {signatoryNameLocked
+                    ? 'This verified account name will be printed on the agreement as the signatory.'
+                    : 'A company signs through a natural person. This name is printed on the agreement as the signatory.'}
                 </p>
               </div>
             )}
