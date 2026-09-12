@@ -16,7 +16,7 @@ import {
 import { AcceptingConfirmationStrip } from "./components/AcceptingConfirmationStrip";
 import { SignedSuccessScreen } from "./components/SignedSuccessScreen";
 import { useToast } from "@/hooks/use-toast";
-import { parseEdgeFunctionError } from "@/lib/errors/edgeFunctionErrors";
+import { parseEdgeFunctionError, parseEdgeFunctionErrorResponse } from "@/lib/errors/edgeFunctionErrors";
 import { AlertTriangle, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -379,7 +379,7 @@ export default function ProposalAcceptance() {
 
     } catch (err) {
       console.error("Error submitting agreement:", err);
-      
+      const errorResponse = await parseEdgeFunctionErrorResponse(err);
       const errorMessage = await parseEdgeFunctionError(
         err,
         "Failed to submit agreement. Please try again."
@@ -389,6 +389,10 @@ export default function ProposalAcceptance() {
         description: errorMessage,
         variant: "destructive",
       });
+      if (errorResponse?.requiresAuthentication) {
+        const returnTo = `${window.location.pathname}${window.location.search}`;
+        navigate(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+      }
     } finally {
       setIsSubmitting(false);
     }
