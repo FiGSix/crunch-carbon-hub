@@ -205,10 +205,23 @@ serve(async (req) => {
     // is supplied it must be valid and its subject is the only trusted signer ID.
     const authHeader = req.headers.get('Authorization');
     const bearerToken = authHeader?.match(/^Bearer\s+(.+)$/i)?.[1] ?? null;
+    const bearerRole = (() => {
+      if (!bearerToken) return null;
+      try {
+        const payload = bearerToken.split('.')[1];
+        if (!payload) return null;
+        const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+        return JSON.parse(atob(normalized)).role as string | undefined;
+      } catch {
+        return null;
+      }
+    })();
     let authenticatedUserId: string | null = null;
     let authenticatedProfileName: string | null = null;
 
-    if (bearerToken) {
+    // Supabase's browser client sends the public anon key as Authorization for
+    // signed-out function calls. It identifies no person, so treat it as guest.
+    if (bearerToken && bearerRole !== 'anon') {
       const { data: authData, error: authError } = await supabase.auth.getUser(bearerToken);
       if (authError || !authData.user) {
         return new Response(
