@@ -34,6 +34,7 @@ export default function ProposalAcceptance() {
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
   const [hasAgreed, setHasAgreed] = useState(false);
   const [signatoryName, setSignatoryName] = useState("");
+  const [authenticatedSignerName, setAuthenticatedSignerName] = useState<string | null>(null);
   const [signatureImage, setSignatureImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSignedSuccess, setShowSignedSuccess] = useState(false);
@@ -50,8 +51,20 @@ export default function ProposalAcceptance() {
   });
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       setIsAuthenticated(!!data.session);
+      const userId = data.session?.user?.id;
+      if (!userId) return;
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', userId)
+        .maybeSingle();
+      const verifiedName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
+      if (verifiedName) {
+        setAuthenticatedSignerName(verifiedName);
+        setSignatoryName(verifiedName);
+      }
     });
   }, []);
 
@@ -268,12 +281,12 @@ export default function ProposalAcceptance() {
 
   // Prefill with the contact person on record; the client can correct it.
   useEffect(() => {
-    if (!signatoryName) {
+    if (!signatoryName && !isAuthenticated) {
       const name = getClientName();
       if (name) setSignatoryName(name);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [proposal, clientRecord]);
+  }, [proposal, clientRecord, isAuthenticated]);
 
 
   // Referral-sourced proposals require pre-signature project details capture.
@@ -577,6 +590,7 @@ export default function ProposalAcceptance() {
               companyName={isCompanyCedent ? getCompanyName() : null}
               signatoryName={signatoryName}
               onSignatoryNameChange={setSignatoryName}
+              signatoryNameLocked={Boolean(authenticatedSignerName)}
               canSubmit={canSubmit}
               isSubmitting={isSubmitting}
               onSubmit={handleSubmit}
