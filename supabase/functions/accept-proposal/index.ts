@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { authorizeCompanySigner, resolveStoredSignatoryName } from './signer-authorization.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -199,9 +200,81 @@ serve(async (req) => {
       );
     }
     
-    // 4a. A company cannot sign — a natural person must be named for it.
-    const resolvedSignatory = (signatoryName || typedName || '').trim();
-    if (isCompanyCedent && resolvedSignatory.length < 2) {
+    // Resolve and validate the caller before recording any signer identity.
+    // A bearer token is optional for unmanaged invitation recipients, but if it
+    // is supplied it must be valid and its subject is the only trusted signer ID.
+    const authHeader = req.headers.get('Authorization');
+    const bearerToken = authHeader?.match(/^Bearer\s+(.+)$/i)?.[1] ?? null;
+    let authenticatedUserId: string | null = null;
+    let authenticatedProfileName: string | null = null;
+
+    if (bearerToken) {
+      const { data: authData, error: authError } = await supabase.auth.getUser(bearerToken);
+      if (authError || !authData.user) {
+        return new Response(
+          JSON.stringify({ error: 'Your session is invalid or has expired. Please sign in again.' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        );
+      }
+      authenticatedUserId = authData.user.id;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', authenticatedUserId)
+        .maybeSingle();
+      authenticatedProfileName = [profile?.first_name, profile?.last_name]
+        .filter(Boolean)
+        .join(' ')
+        .trim() || null;
+    }
+
+    const ownerClientId = proposal.client_reference_id || null;
+    let clientCompanyId: string | null = null;
+    if (ownerClientId) {
+      const { data: ownerClient } = await supabase
+        .from('clients')
+        .select('client_company_id')
+        .eq('id', ownerClientId)
+        .maybeSingle();
+      clientCompanyId = ownerClient?.client_company_id ?? null;
+    }
+
+    let companyMemberships: Array<{ user_id: string; status: string; can_sign_agreements: boolean }> = [];
+    if (clientCompanyId) {
+      const { data: memberships } = await supabase
+        .from('client_company_members')
+        .select('user_id, status, can_sign_agreements')
+        .eq('client_company_id', clientCompanyId);
+      companyMemberships = memberships ?? [];
+    }
+
+    const signerAuthorization = authorizeCompanySigner({
+      companyId: clientCompanyId,
+      authenticatedUserId,
+      memberships: companyMemberships,
+    });
+    if (!signerAuthorization.allowed) {
+      return new Response(
+        JSON.stringify({
+          error: signerAuthorization.reason,
+          requiresAuthentication: signerAuthorization.requiresAuthentication,
+        }),
+        {
+          status: signerAuthorization.requiresAuthentication ? 401 : 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
+      );
+    }
+
+    // For signed-in users the verified profile name wins. A caller cannot name
+    // another person in the request body and have that identity recorded.
+    const resolvedSignatory = resolveStoredSignatoryName(
+      authenticatedProfileName,
+      signatoryName || typedName || '',
+    );
+    const companyCedent = Boolean(clientCompanyId || isCompanyCedent);
+    if (companyCedent && resolvedSignatory.length < 2) {
       return new Response(
         JSON.stringify({
           error: 'Please provide the full name of the person signing on behalf of the company',
@@ -246,30 +319,16 @@ serve(async (req) => {
     }
 
 
-    // Get signed_by from proposal or from authenticated user
+    // Store the actual authenticated signer separately from the proposal contact.
     console.log('🔍 Finding signedBy:', { 
       client_reference_id: proposal.client_reference_id,
       client_id: proposal.client_id 
     });
     
-    let signedBy = proposal.client_reference_id || proposal.client_id;
+    const signedBy = authenticatedUserId || ownerClientId || proposal.client_id;
+    const masterClientId = ownerClientId;
     
-    // If no client reference and we have auth, use the authenticated user
-    if (!signedBy && !token) {
-      const authHeader = req.headers.get('Authorization');
-      if (authHeader) {
-        const userSupabase = createClient(
-          Deno.env.get("SUPABASE_URL")!,
-          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-          { global: { headers: { Authorization: authHeader } } }
-        );
-        const { data: { user } } = await userSupabase.auth.getUser();
-        signedBy = user?.id;
-        console.log('🔍 Got signedBy from authenticated user:', signedBy);
-      }
-    }
-    
-    if (!signedBy) {
+    if (!signedBy || !masterClientId) {
       console.error("❌ No client reference found for proposal:", proposal.id);
       return new Response(
         JSON.stringify({ 
@@ -351,7 +410,7 @@ serve(async (req) => {
       const { data: existingMaster } = await supabase
         .from('client_cession_signatures')
         .select('id, legal_document_id, legal_document_version')
-        .eq('client_id', signedBy)
+        .eq('client_id', masterClientId)
         .is('revoked_at', null)
         .order('signed_at', { ascending: false })
         .limit(1)
@@ -367,7 +426,7 @@ serve(async (req) => {
         const { data: createdMaster, error: masterError } = await supabase
           .from('client_cession_signatures')
           .insert({
-            client_id: signedBy,
+            client_id: masterClientId,
             legal_document_id: liveDoc.id,
             legal_document_version: liveDoc.current_version,
             legal_document_title: liveDoc.title,
@@ -384,7 +443,8 @@ serve(async (req) => {
               signed_via: token ? 'acceptance_link' : 'authenticated_user',
               signing_location: 'South Africa',
               signatory_name: resolvedSignatory || null,
-              cedent_is_company: Boolean(isCompanyCedent),
+              cedent_is_company: companyCedent,
+              signer_user_id: authenticatedUserId,
             },
           })
           .select('id')
@@ -443,7 +503,8 @@ serve(async (req) => {
             timestamp: new Date().toISOString(),
             signing_location: 'South Africa',
             signatory_name: resolvedSignatory || null,
-            cedent_is_company: Boolean(isCompanyCedent),
+            cedent_is_company: companyCedent,
+            signer_user_id: authenticatedUserId,
             witness_info: {
               method: 'automatic_system',
               witness_1: 'DIGITAL WITNESS 1',
@@ -564,7 +625,7 @@ serve(async (req) => {
         const { data } = await supabase
           .from('clients')
           .select('email')
-          .eq('id', signedBy)
+            .eq('id', ownerClientId)
           .single();
         clientEmail = data?.email || null;
       }
@@ -609,7 +670,7 @@ serve(async (req) => {
         // its own generated PDF + email — no manual intervention.
         const { data: sweepResult, error: sweepError } = await supabase.functions.invoke(
           'sweep-agreement-documents',
-          { body: { clientId: signedBy } }
+          { body: { clientId: masterClientId } }
         );
         if (sweepError) {
           console.error('❌ [post-sign] Sibling document sweep failed:', sweepError);
