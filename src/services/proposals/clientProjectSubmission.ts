@@ -127,18 +127,17 @@ export async function submitClientProject(
       systemSizeKwp: systemSizeKWp,
     });
 
-    // 7. Resolve company anchor (auto-creates solo company if needed)
-    const { data: companyIdResolved } = await supabase
-      .rpc('ensure_agent_has_company', { p_agent_id: userId });
-
-    // 8. Insert proposal
+    // 7. Insert proposal.
+    //    A client submitting their own project is NOT the agent. Leaving agent_id
+    //    (and the company anchor) unset keeps the project unassigned until an
+    //    internal owner is allocated; the submitter is recorded via client_id.
     const proposalRow = {
       title,
       status: "draft" as const,
       client_id: userId,
       client_reference_id: clientRecord.id,
-      agent_id: userId,
-      company_id: (companyIdResolved as string) || null,
+      agent_id: null,
+      company_id: null,
       content: content as unknown as Json,
       eligibility_criteria: eligibility as unknown as Json,
       project_info: projectInfo as unknown as Json,
