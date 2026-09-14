@@ -218,6 +218,7 @@ serve(async (req) => {
     })();
     let authenticatedUserId: string | null = null;
     let authenticatedProfileName: string | null = null;
+    let authenticatedProfileEmail: string | null = null;
 
     // Supabase's browser client sends the public anon key as Authorization for
     // signed-out function calls. It identifies no person, so treat it as guest.
