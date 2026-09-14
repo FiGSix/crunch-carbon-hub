@@ -260,6 +260,7 @@ async function assemble(args: {
   // STEP 4 — party & site details (a consolidated record of the particulars).
   addPartyDetailsPage(
     pdfDoc, font, bold, proposal, agreement, masterSignature, legalTitle, legalVersion,
+    signerEmail,
   );
 
   // STEP 5 — Annexure A separator + proposal pages.
