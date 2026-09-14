@@ -211,7 +211,7 @@ serve(async (req) => {
                 <tr>
                   <td style="background-color: #ffffff; padding: 40px 30px;">
                     <p style="font-size: 16px; color: #1A1A1A; margin: 0 0 20px 0;">
-                      Dear <strong>${clientName}</strong>,
+                      Dear <strong>${greetingName}</strong>,
                     </p>
 
                     <p style="font-size: 16px; color: #1A1A1A; line-height: 1.6; margin: 0 0 20px 0;">
