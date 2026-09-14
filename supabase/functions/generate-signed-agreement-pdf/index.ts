@@ -224,6 +224,9 @@ async function assemble(args: {
   // STEP 2 — fill in the template's blank underlines on the canonical pages.
   // Nothing is re-typeset: values are drawn onto the blanks only.
   const client = proposal.client ?? {};
+  // The email printed on the agreement must belong to the person who signed,
+  // not to whoever happens to be the contact on the client record.
+  const signerEmail = await resolveSignerEmail(admin, agreement, masterSignature, client, proposal);
   const { map: blankMap, fingerprint } = await resolveBlankMap(legalPdfBytes);
   if (blankMap) {
     applyBlankOverlay({
