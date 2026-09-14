@@ -241,7 +241,7 @@ async function assemble(args: {
         // Signed off by the business: the site address is used for the
         // "Registered Offices" blank (the template has no separate site field).
         registeredOffices: resolveSiteAddress(proposal),
-        email: client.email || proposal.content?.clientInfo?.email || "",
+        email: signerEmail,
         placeOfSignature: "South Africa",
         dateOfSignature: isoDateInZA(agreement.signed_at),
         signedFor: resolveOwnerName(proposal, agreement),
