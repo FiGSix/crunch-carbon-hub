@@ -16,4 +16,14 @@
 - [x] Set Naazia as signatory on the older Rhino agreement and regenerate its document
 - [x] Stop recording a self-submitting client as the project agent; clear Juan from the 10 Rhino projects
 - [ ] Assign an internal owner (agent) to the 10 unassigned Rhino projects — waiting on the user's choice
-- [ ] Two June test projects ("rhino test test test", "test test tets") have no agreement records — confirm whether to archive or generate documents
+
+# Signer details on documents and company-wide cover
+
+- [x] Documents show the signer's own name and email instead of the contact's
+- [x] Record the signer's email on the signature and agreement records
+- [x] One signature now covers every project of the same company, including drafts
+- [x] New projects for a company that already signed are covered automatically at creation
+- [x] Applied Naazia's signature to the 8 outstanding Rhino projects and generated each document
+- [x] Regenerated The Houghton document and emailed it to Naazia
+- [x] Deleted the two June test projects
+- [ ] "Foreman Orical" under Naazia's own contact record is in the deleted bin — confirm whether to restore and cover it
