@@ -519,6 +519,7 @@ serve(async (req) => {
             timestamp: new Date().toISOString(),
             signing_location: 'South Africa',
             signatory_name: resolvedSignatory || null,
+            signatory_email: authenticatedProfileEmail,
             cedent_is_company: companyCedent,
             signer_user_id: authenticatedUserId,
             witness_info: {
