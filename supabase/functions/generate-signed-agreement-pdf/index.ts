@@ -67,7 +67,10 @@ Deno.serve(async (req) => {
       `)
       .eq("id", proposalId)
       .single();
-    if (proposalError || !proposal) return json({ error: "Proposal not found" }, 404);
+    if (proposalError || !proposal) {
+      console.error("[Signed PDF] Proposal load failed:", proposalError?.message, proposalError?.details, proposalError?.hint);
+      return json({ error: "Proposal not found", details: proposalError?.message ?? null }, 404);
+    }
 
     const { data: agreement, error: agreementError } = await admin
       .from("proposal_agreements")
