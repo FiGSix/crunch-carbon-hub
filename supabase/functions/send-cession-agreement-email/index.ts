@@ -236,6 +236,11 @@ serve(async (req) => {
                               <td style="padding: 8px 0; color: #666666; font-size: 14px;">Est. Carbon Credits:</td>
                               <td style="padding: 8px 0; color: #1A1A1A; font-size: 14px; font-weight: 600; text-align: right;">${carbonCredits}</td>
                             </tr>
+                            ${signatoryName ? `
+                            <tr>
+                              <td style="padding: 8px 0; color: #666666; font-size: 14px;">Signed By:</td>
+                              <td style="padding: 8px 0; color: #1A1A1A; font-size: 14px; font-weight: 600; text-align: right;">${signatoryName}</td>
+                            </tr>` : ''}
                           </table>
                         </td>
                       </tr>
