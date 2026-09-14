@@ -233,13 +233,14 @@ serve(async (req) => {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('first_name, last_name')
+        .select('first_name, last_name, email')
         .eq('id', authenticatedUserId)
         .maybeSingle();
       authenticatedProfileName = [profile?.first_name, profile?.last_name]
         .filter(Boolean)
         .join(' ')
         .trim() || null;
+      authenticatedProfileEmail = profile?.email?.trim() || authData.user.email || null;
     }
 
     const ownerClientId = proposal.client_reference_id || null;
