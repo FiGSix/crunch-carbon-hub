@@ -37,3 +37,14 @@
 - Suspects for step 1: the proposal status update in `accept-proposal` (step 6), the `propagate_master_agreement()` trigger, and any later write that reset `status`/`signed_at`. Edge logs for `accept-proposal` are currently empty, so reproduce with a controlled call plus row-level inspection.
 - Step 3 touches `supabase/functions/send-cession-agreement-email/index.ts:49-52`, replacing the contact-derived `clientName` for the signatory line with `proposal_agreements.metadata.signatory_name` / `typed_name` (falling back to the master signature), while keeping recipient resolution unchanged.
 - Step 4 backfills `typed_name` and `metadata.signatory_name` on the June `proposal_agreements` rows and re-runs `generate-signed-agreement-pdf`; no legal wording is re-typeset.
+
+## Why Juan shows as both agent and client
+
+Confirmed from the records: all ten Rhino projects were created through the client's own project submission, which stores whoever submits as the project's agent. Juan submitted them, so his account is saved as both the agent and the client contact. His account only holds the client role, so this is bad data on the projects, not a role problem.
+
+6. **Separate the submitter from the agent**
+   - Stop saving the submitting client as the project's agent when a client submits their own project; record the submitter separately and leave the agent to be the responsible Crunch Carbon partner or admin.
+   - Correct the ten Rhino projects so Juan is no longer listed as the agent.
+   - I need one decision from you: who should be shown as the agent on those ten Rhino projects — an internal Crunch Carbon owner, a specific partner, or no agent until one is assigned?
+
+Technical note: `src/services/proposals/clientProjectSubmission.ts:140` sets `agent_id: userId` from the signed-in client, which is the source of the duplication.
