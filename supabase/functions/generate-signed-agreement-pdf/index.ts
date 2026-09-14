@@ -509,7 +509,7 @@ function addPartyDetailsPage(
   row("Owner / Entity Name:", ownerName);
   row("Registration Number:", client.registration_number || "Not applicable");
   row("Signatory:", resolveSignatoryName(proposal, agreement, masterSignature));
-  row("Email Address:", client.email || "N/A");
+  row("Email Address:", signerEmail || client.email || "N/A");
   row("Physical Address:", resolveSiteAddress(proposal));
 
   y -= 10;
