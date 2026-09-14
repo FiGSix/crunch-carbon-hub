@@ -431,10 +431,39 @@ function resolveSignatoryName(proposal: any, agreement: any, masterSignature: an
   );
 }
 
+/**
+ * The signer's own email address. Captured at signing time; older records fall
+ * back to the signer's profile, and only then to the client contact record.
+ */
+async function resolveSignerEmail(
+  admin: any, agreement: any, masterSignature: any, client: any, proposal: any,
+): Promise<string> {
+  const direct =
+    agreement?.metadata?.signatory_email ||
+    masterSignature?.metadata?.signatory_email;
+  if (typeof direct === "string" && direct.trim()) return direct.trim();
+
+  const signerUserId =
+    agreement?.metadata?.signer_user_id ||
+    masterSignature?.metadata?.signer_user_id ||
+    masterSignature?.signed_by;
+  if (signerUserId) {
+    const { data } = await admin
+      .from("profiles")
+      .select("email")
+      .eq("id", signerUserId)
+      .maybeSingle();
+    if (data?.email) return data.email as string;
+  }
+
+  return client?.email || proposal?.content?.clientInfo?.email || "";
+}
+
 
 function addPartyDetailsPage(
   pdfDoc: any, font: any, bold: any, proposal: any, agreement: any,
   masterSignature: any, legalTitle: string | null, legalVersion: number | null,
+  signerEmail: string,
 ) {
   const page = pdfDoc.addPage(A4);
   const { width, height } = page.getSize();
