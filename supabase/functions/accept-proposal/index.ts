@@ -458,6 +458,7 @@ serve(async (req) => {
               signed_via: token ? 'acceptance_link' : 'authenticated_user',
               signing_location: 'South Africa',
               signatory_name: resolvedSignatory || null,
+              signatory_email: authenticatedProfileEmail,
               cedent_is_company: companyCedent,
               signer_user_id: authenticatedUserId,
             },
