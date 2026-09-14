@@ -224,6 +224,9 @@ async function assemble(args: {
   // STEP 2 — fill in the template's blank underlines on the canonical pages.
   // Nothing is re-typeset: values are drawn onto the blanks only.
   const client = proposal.client ?? {};
+  // The email printed on the agreement must belong to the person who signed,
+  // not to whoever happens to be the contact on the client record.
+  const signerEmail = await resolveSignerEmail(admin, agreement, masterSignature, client, proposal);
   const { map: blankMap, fingerprint } = await resolveBlankMap(legalPdfBytes);
   if (blankMap) {
     applyBlankOverlay({
@@ -238,7 +241,7 @@ async function assemble(args: {
         // Signed off by the business: the site address is used for the
         // "Registered Offices" blank (the template has no separate site field).
         registeredOffices: resolveSiteAddress(proposal),
-        email: client.email || proposal.content?.clientInfo?.email || "",
+        email: signerEmail,
         placeOfSignature: "South Africa",
         dateOfSignature: isoDateInZA(agreement.signed_at),
         signedFor: resolveOwnerName(proposal, agreement),
@@ -257,6 +260,7 @@ async function assemble(args: {
   // STEP 4 — party & site details (a consolidated record of the particulars).
   addPartyDetailsPage(
     pdfDoc, font, bold, proposal, agreement, masterSignature, legalTitle, legalVersion,
+    signerEmail,
   );
 
   // STEP 5 — Annexure A separator + proposal pages.
@@ -427,10 +431,39 @@ function resolveSignatoryName(proposal: any, agreement: any, masterSignature: an
   );
 }
 
+/**
+ * The signer's own email address. Captured at signing time; older records fall
+ * back to the signer's profile, and only then to the client contact record.
+ */
+async function resolveSignerEmail(
+  admin: any, agreement: any, masterSignature: any, client: any, proposal: any,
+): Promise<string> {
+  const direct =
+    agreement?.metadata?.signatory_email ||
+    masterSignature?.metadata?.signatory_email;
+  if (typeof direct === "string" && direct.trim()) return direct.trim();
+
+  const signerUserId =
+    agreement?.metadata?.signer_user_id ||
+    masterSignature?.metadata?.signer_user_id ||
+    masterSignature?.signed_by;
+  if (signerUserId) {
+    const { data } = await admin
+      .from("profiles")
+      .select("email")
+      .eq("id", signerUserId)
+      .maybeSingle();
+    if (data?.email) return data.email as string;
+  }
+
+  return client?.email || proposal?.content?.clientInfo?.email || "";
+}
+
 
 function addPartyDetailsPage(
   pdfDoc: any, font: any, bold: any, proposal: any, agreement: any,
   masterSignature: any, legalTitle: string | null, legalVersion: number | null,
+  signerEmail: string,
 ) {
   const page = pdfDoc.addPage(A4);
   const { width, height } = page.getSize();
@@ -476,7 +509,7 @@ function addPartyDetailsPage(
   row("Owner / Entity Name:", ownerName);
   row("Registration Number:", client.registration_number || "Not applicable");
   row("Signatory:", resolveSignatoryName(proposal, agreement, masterSignature));
-  row("Email Address:", client.email || "N/A");
+  row("Email Address:", signerEmail || client.email || "N/A");
   row("Physical Address:", resolveSiteAddress(proposal));
 
   y -= 10;

@@ -218,6 +218,7 @@ serve(async (req) => {
     })();
     let authenticatedUserId: string | null = null;
     let authenticatedProfileName: string | null = null;
+    let authenticatedProfileEmail: string | null = null;
 
     // Supabase's browser client sends the public anon key as Authorization for
     // signed-out function calls. It identifies no person, so treat it as guest.
@@ -233,13 +234,14 @@ serve(async (req) => {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('first_name, last_name')
+        .select('first_name, last_name, email')
         .eq('id', authenticatedUserId)
         .maybeSingle();
       authenticatedProfileName = [profile?.first_name, profile?.last_name]
         .filter(Boolean)
         .join(' ')
         .trim() || null;
+      authenticatedProfileEmail = profile?.email?.trim() || authData.user.email || null;
     }
 
     const ownerClientId = proposal.client_reference_id || null;
@@ -456,6 +458,7 @@ serve(async (req) => {
               signed_via: token ? 'acceptance_link' : 'authenticated_user',
               signing_location: 'South Africa',
               signatory_name: resolvedSignatory || null,
+              signatory_email: authenticatedProfileEmail,
               cedent_is_company: companyCedent,
               signer_user_id: authenticatedUserId,
             },
@@ -516,6 +519,7 @@ serve(async (req) => {
             timestamp: new Date().toISOString(),
             signing_location: 'South Africa',
             signatory_name: resolvedSignatory || null,
+            signatory_email: authenticatedProfileEmail,
             cedent_is_company: companyCedent,
             signer_user_id: authenticatedUserId,
             witness_info: {
