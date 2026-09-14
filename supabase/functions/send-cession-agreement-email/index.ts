@@ -65,11 +65,19 @@ serve(async (req) => {
     // Fetch the signed document reference from proposal_agreements, retrying briefly
     // in case the upstream generate-signed-agreement-pdf write hasn't propagated yet.
     // `signed-agreements` is a PRIVATE bucket, so what we store is a bare object path.
-    let agreement: { pdf_path: string | null; signed_pdf_url: string | null } | null = null;
+    let agreement:
+      | {
+          pdf_path: string | null;
+          signed_pdf_url: string | null;
+          typed_name: string | null;
+          client_cession_signature_id: string | null;
+          metadata: Record<string, unknown> | null;
+        }
+      | null = null;
     for (let attempt = 1; attempt <= 3; attempt++) {
       const { data, error } = await supabase
         .from('proposal_agreements')
-        .select('pdf_path, signed_pdf_url')
+        .select('pdf_path, signed_pdf_url, typed_name, client_cession_signature_id, metadata')
         .eq('proposal_id', proposalId)
         .order('created_at', { ascending: false })
         .limit(1)
@@ -84,6 +92,28 @@ serve(async (req) => {
         await new Promise((r) => setTimeout(r, 1500));
       }
     }
+
+    // The person who actually signed — never the contact on the client record.
+    // Inherited sibling agreements carry only typed_name, so fall back to the
+    // master cession signature before falling back to the contact.
+    let signatoryName =
+      (agreement?.metadata?.['signatory_name'] as string | undefined)?.trim() ||
+      agreement?.typed_name?.trim() ||
+      '';
+
+    if (!signatoryName && agreement?.client_cession_signature_id) {
+      const { data: masterSignature } = await supabase
+        .from('client_cession_signatures')
+        .select('typed_name, metadata')
+        .eq('id', agreement.client_cession_signature_id)
+        .maybeSingle();
+      signatoryName =
+        (masterSignature?.metadata?.['signatory_name'] as string | undefined)?.trim() ||
+        masterSignature?.typed_name?.trim() ||
+        '';
+    }
+
+    const greetingName = signatoryName || clientName;
 
     const signedRef = agreement?.pdf_path || agreement?.signed_pdf_url || null;
     const pdfUrl = signedRef || proposal.pdf_url;
