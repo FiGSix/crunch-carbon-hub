@@ -46,7 +46,8 @@ serve(async (req) => {
       throw new Error('Proposal not found');
     }
 
-    // Extract client name from proposal data
+    // Contact on the client record — used only as a last-resort fallback. The person
+    // who actually signed is resolved from the agreement/signature records below.
     const clientName = proposal.client?.first_name 
       ? `${proposal.client.first_name} ${proposal.client.last_name || ''}`
       : proposal.content?.clientInfo?.name || 'Valued Client';
