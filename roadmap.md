@@ -42,4 +42,4 @@
 - [x] Resolve the displayed share from the proposal or saved calculator value
 - [x] Remove the confirmation and proposal-summary cards from the signing journey
 - [x] Simplify the opening card and update the agreement/signing instructions
-- [ ] Verify the exact emailed link on desktop and mobile
+- [x] Verify the exact emailed link on desktop and mobile
