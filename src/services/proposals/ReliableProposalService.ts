@@ -9,6 +9,7 @@ import { createProposal, searchClients } from './unifiedProposalService';
 import { EligibilityCriteria, ClientInformation, ProjectInformation, AdditionalClient } from '@/types/proposals';
 import { logger } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
+import { isSelfAsClient, SELF_AS_CLIENT_MESSAGE } from '@/lib/validation/selfAsClient';
 
 export interface ReliableProposalResult {
   success: boolean;
@@ -76,6 +77,9 @@ export class ReliableProposalService {
       if (!agentId || !proposalTitle.trim()) {
         throw new Error('Invalid proposal data');
       }
+
+      // Hard business rule: a partner may not be the client on their own proposal
+      await this.assertNotSelfAsClient(clientInfo, additionalClients);
 
       // Try immediate creation with extended timeout and retries
       const immediateResult = await this.tryImmediateCreation(
