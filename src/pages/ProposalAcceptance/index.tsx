@@ -13,7 +13,6 @@ import {
   ProjectDetailsValue,
   projectDetailsValid,
 } from "./components/ProjectDetailsStep";
-import { AcceptingConfirmationStrip } from "./components/AcceptingConfirmationStrip";
 import { SignedSuccessScreen } from "./components/SignedSuccessScreen";
 import { useToast } from "@/hooks/use-toast";
 import { parseEdgeFunctionError, parseEdgeFunctionErrorResponse } from "@/lib/errors/edgeFunctionErrors";
@@ -516,29 +515,19 @@ export default function ProposalAcceptance() {
       {tokenExpired && <ExpiredTokenBanner />}
       <div className="container max-w-4xl mx-auto px-4 py-8 md:py-12 pb-24 md:pb-12">
         <div className="space-y-8">
-          <AcceptingConfirmationStrip
-            proposal={proposal}
-            clientName={getClientName()}
-            companyName={isCompanyCedent ? getCompanyName() : null}
-          />
-
           <ThirtySecondSummary
             proposal={proposal}
             clientName={getClientName()}
-            onJumpToSign={scrollToSign}
           />
 
           <div>
             <h1 className="text-2xl md:text-3xl font-bold mb-2">
-              Full proposal &amp; Cession Agreement
+              Cession Agreement
             </h1>
             <p className="text-muted-foreground">
-              Please review the proposal details and terms carefully before
-              signing.
+              Please scroll through the agreement until you get to the bottom to unlock signing. Please review the proposal details and terms.
             </p>
           </div>
-
-          <ProposalSummarySection proposal={proposal} />
 
           <TermsAndConditionsSection
             onScrolledToBottom={() => setHasScrolledToBottom(true)}
