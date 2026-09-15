@@ -30,6 +30,7 @@ export function SignedSuccessScreen({
 }: SignedSuccessScreenProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { profile } = useAuth();
   const [sending, setSending] = useState(false);
   const [linkSent, setLinkSent] = useState(false);
   const [deferred, setDeferred] = useState(false);
