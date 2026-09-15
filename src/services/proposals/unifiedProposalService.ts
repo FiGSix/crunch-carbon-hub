@@ -8,6 +8,8 @@ import { devLogger } from '@/lib/performance/ConsoleReplacementUtility';
 import { UnifiedCarbonService } from '@/services/calculations/carbon';
 import type { SystemSpecs } from '@/services/calculations/carbon/types';
 import { checkProposalDuplicate } from './duplicateReviewService';
+import { normalizeProjectInfoForStorage } from '@/utils/proposals/normalizeProjectInfo';
+
 
 type ProposalInsert = Database['public']['Tables']['proposals']['Insert'];
 
@@ -333,6 +335,9 @@ export async function createProposal(
     });
 
     // Step 6: Insert proposal (company_id anchors the proposal permanently)
+    // Persist the size as a plain number; the typed wording lives in size_display.
+    const storedProjectInfo = normalizeProjectInfoForStorage(projectInfo, systemSizeKWp);
+
     const proposalData = {
       title: proposalTitle,
       agent_id: agentId,
@@ -343,7 +348,7 @@ export async function createProposal(
       content: {
         title: proposalTitle,
         eligibilityCriteria,
-        projectInfo,
+        projectInfo: storedProjectInfo,
         clientInfo,
         additionalClients: additionalClients && additionalClients.length > 0 ? additionalClients : undefined,
         financials: {
@@ -351,7 +356,8 @@ export async function createProposal(
         }
       } as any,
       eligibility_criteria: eligibilityCriteria as any,
-      project_info: projectInfo as any,
+      project_info: storedProjectInfo as any,
+
       system_size_kwp: systemSizeKWp,
       annual_energy: annualEnergy,
       carbon_credits: carbonCredits,
