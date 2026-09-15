@@ -173,7 +173,16 @@ export function useRegisterForm(initialRole: "client" | "agent", invitationToken
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    if (cooldownSeconds > 0) {
+      toast({
+        title: EMAIL_RATE_LIMIT_TITLE,
+        description: EMAIL_RATE_LIMIT_MESSAGE,
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Passwords don't match",
