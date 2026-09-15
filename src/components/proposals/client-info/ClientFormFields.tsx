@@ -5,6 +5,8 @@ import { Label } from "@/components/ui/label";
 import { ClientInformation } from "../types";
 import { searchClients } from "@/services/proposals/unifiedProposalService";
 import { devLogger } from '@/lib/performance/ConsoleReplacementUtility';
+import { useAuth } from "@/contexts/auth";
+import { isSelfAsClient, SELF_AS_CLIENT_MESSAGE } from "@/lib/validation/selfAsClient";
 
 interface ClientFormFieldsProps {
   clientInfo: ClientInformation;
@@ -19,6 +21,8 @@ export function ClientFormFields({
 }: ClientFormFieldsProps) {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const { profile, user } = useAuth();
+  const isSelf = isSelfAsClient(clientInfo.email, profile?.email || user?.email, profile?.role);
 
   const handleNameChange = async (e: ChangeEvent<HTMLInputElement>) => {
     updateClientInfo(e);
@@ -100,7 +104,12 @@ export function ClientFormFields({
           onChange={updateClientInfo}
           placeholder="client@example.com"
           required
+          aria-invalid={isSelf}
+          className={isSelf ? "border-destructive focus-visible:ring-destructive" : undefined}
         />
+        {isSelf && (
+          <p className="text-xs text-destructive mt-1">{SELF_AS_CLIENT_MESSAGE}</p>
+        )}
       </div>
 
       <div>
