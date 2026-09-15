@@ -252,6 +252,7 @@ serve(async (req: Request) => {
         .from('proposals')
         .select('id, invitation_token, system_size_kwp')
         .eq('client_reference_id', clientReferenceId)
+        .eq('project_info->>source', 'public_calculator')
         .is('deleted_at', null)
         .is('archived_at', null)
         .gte('system_size_kwp', normalizedSize - sizeTolerance)
