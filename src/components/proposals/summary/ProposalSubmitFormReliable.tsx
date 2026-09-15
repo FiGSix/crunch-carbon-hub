@@ -94,9 +94,14 @@ export function ProposalSubmitFormReliable({
       setProgress(null);
       setHasError(true);
       
+      const message = error instanceof Error ? error.message : "";
+      const isRuleBreach = message === SELF_AS_CLIENT_MESSAGE;
+
       toast({
-        title: "Proposal Creation Failed",
-        description: "We encountered an issue creating your proposal. Please try again.",
+        title: isRuleBreach ? "You cannot be your own client" : "Proposal Creation Failed",
+        description: isRuleBreach
+          ? SELF_AS_CLIENT_MESSAGE
+          : "We encountered an issue creating your proposal. Please try again.",
         variant: "destructive",
       });
     }

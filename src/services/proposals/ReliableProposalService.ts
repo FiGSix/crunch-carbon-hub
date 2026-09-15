@@ -130,6 +130,33 @@ export class ReliableProposalService {
   }
 
   /**
+   * Hard business rule: the signed-in partner may not be listed as a client.
+   * Admins are exempt.
+   */
+  private async assertNotSelfAsClient(
+    clientInfo: ClientInformation,
+    additionalClients?: AdditionalClient[]
+  ): Promise<void> {
+    const { data: authData } = await supabase.auth.getUser();
+    const authUser = authData?.user;
+    if (!authUser) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('email, role')
+      .eq('id', authUser.id)
+      .maybeSingle();
+
+    const ownEmail = profile?.email || authUser.email;
+    const role = profile?.role;
+
+    const emails = [clientInfo?.email, ...(additionalClients || []).map(c => c.email)];
+    if (emails.some(email => isSelfAsClient(email, ownEmail, role))) {
+      throw new Error(SELF_AS_CLIENT_MESSAGE);
+    }
+  }
+
+  /**
    * Try immediate creation (fast path)
    */
   private async tryImmediateCreation(
