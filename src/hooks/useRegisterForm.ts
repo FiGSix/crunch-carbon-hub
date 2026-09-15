@@ -566,5 +566,6 @@ export function useRegisterForm(initialRole: "client" | "agent", invitationToken
     handleTermsAccept,
     isInvitationRegistration: !!invitationToken,
     invitedEmail, // Expose invited email for read-only field
+    cooldownSeconds, // Seconds left after an email rate-limit refusal
   };
 }
