@@ -1,3 +1,11 @@
+# Calculator reliability
+
+- [x] Diagnose Shaun's repeated calculator failure from live logs and data
+- [x] Make duplicate matching safe for legacy size and GPS formats
+- [x] Harden client reuse, request validation, proposal responses, and email outcomes
+- [x] Run automated checks and browser coverage
+- [ ] Run one live Shaun submission after the staged database correction applies
+
 # Rhino Energy signing and visibility
 
 - [x] Keep portfolio visibility company-aware and isolate cached results by signed-in user
