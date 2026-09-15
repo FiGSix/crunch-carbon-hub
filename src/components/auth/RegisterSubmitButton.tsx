@@ -5,14 +5,18 @@ import { useFormAccessibility } from "@/hooks/useAccessibility";
 
 interface RegisterSubmitButtonProps {
   isLoading: boolean;
+  /** Seconds left before the form can be submitted again (email rate limit). */
+  cooldownSeconds?: number;
 }
 
-export function RegisterSubmitButton({ isLoading }: RegisterSubmitButtonProps) {
+export function RegisterSubmitButton({ isLoading, cooldownSeconds = 0 }: RegisterSubmitButtonProps) {
+  const isCoolingDown = cooldownSeconds > 0 && !isLoading;
+
   return (
     <Button 
       type="submit" 
       className="w-full focus:ring-2 focus:ring-ring focus:ring-offset-2"
-      disabled={isLoading}
+      disabled={isLoading || isCoolingDown}
       variant="default"
       aria-describedby="submit-help"
       aria-live="polite"
