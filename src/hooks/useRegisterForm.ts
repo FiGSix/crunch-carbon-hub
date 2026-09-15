@@ -54,6 +54,30 @@ export function useRegisterForm(initialRole: "client" | "agent", invitationToken
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+
+  // Count the cool-down down so the button re-enables on its own.
+  useEffect(() => {
+    if (!rateLimitedUntil) {
+      setCooldownSeconds(0);
+      return;
+    }
+
+    const tick = () => {
+      const remaining = Math.ceil((rateLimitedUntil - Date.now()) / 1000);
+      if (remaining <= 0) {
+        setCooldownSeconds(0);
+        setRateLimitedUntil(null);
+      } else {
+        setCooldownSeconds(remaining);
+      }
+    };
+
+    tick();
+    const interval = window.setInterval(tick, 1000);
+    return () => window.clearInterval(interval);
+  }, [rateLimitedUntil]);
 
   // Fetch and validate invitation token
   useEffect(() => {
