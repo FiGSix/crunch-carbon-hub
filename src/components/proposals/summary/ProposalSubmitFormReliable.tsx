@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { ReliableProposalService, ProposalProgress } from "@/services/proposals/ReliableProposalService";
 import { devLogger } from '@/lib/performance/ConsoleReplacementUtility';
+import { SELF_AS_CLIENT_MESSAGE } from '@/lib/validation/selfAsClient';
 
 interface ProposalSubmitFormReliableProps {
   eligibility: EligibilityCriteria;
