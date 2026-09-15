@@ -112,13 +112,18 @@ function hasAnyKwh(grid: AnnualKwhByYear | undefined): boolean {
   return Object.values(grid).some((v) => (v || 0) > 0);
 }
 
-function validate(data: ProposalEditFormData): ValidationErrors {
+function validate(
+  data: ProposalEditFormData,
+  currentUser?: { email?: string | null; role?: string | null }
+): ValidationErrors {
   const errors: ValidationErrors = {};
   if (!data.clientName.trim()) errors.clientName = 'Client name is required';
   if (!data.clientEmail.trim()) {
     errors.clientEmail = 'Email is required';
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.clientEmail)) {
     errors.clientEmail = 'Invalid email format';
+  } else if (isSelfAsClient(data.clientEmail, currentUser?.email, currentUser?.role)) {
+    errors.clientEmail = SELF_AS_CLIENT_MESSAGE;
   }
   if (!data.projectName.trim()) errors.projectName = 'Project name is required';
 
@@ -128,6 +133,8 @@ function validate(data: ProposalEditFormData): ValidationErrors {
       errors[`addClient_${i}_email`] = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(client.email)) {
       errors[`addClient_${i}_email`] = 'Invalid email format';
+    } else if (isSelfAsClient(client.email, currentUser?.email, currentUser?.role)) {
+      errors[`addClient_${i}_email`] = SELF_AS_CLIENT_MESSAGE;
     }
   });
 
