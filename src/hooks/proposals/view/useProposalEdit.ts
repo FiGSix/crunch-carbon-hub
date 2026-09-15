@@ -11,6 +11,8 @@ import {
   GENERATION_YEARS,
 } from '@/types/proposals';
 import { calculateAnnualEnergy, calculateCarbonCredits } from '@/services/calculations/carbon/calculations';
+import { normalizeToKWp } from '@/services/calculations/carbon/validation';
+
 import { EMISSION_FACTOR } from '@/lib/calculations/carbon/constants';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth';
@@ -456,7 +458,7 @@ export function useProposalEdit(proposal: ProposalData, onSuccess?: () => void) 
           updatedProjectInfoContent.size = '';
           updatedProjectInfoContent.totalSystemSize = newSystemSize;
         } else {
-          updatedProjectInfoContent.size = String(formData.systemSize || '').trim();
+          updatedProjectInfoContent.size = String(normalizeToKWp(String(formData.systemSize || '').trim()) || '');
           updatedProjectInfoContent.commissionDate = formData.commissionDate;
         }
       }
@@ -487,7 +489,7 @@ export function useProposalEdit(proposal: ProposalData, onSuccess?: () => void) 
         ...(typeof existingProjectInfo === 'object' && existingProjectInfo !== null ? existingProjectInfo : {}),
         name: formData.projectName.trim(),
         address: formData.projectAddress.trim(),
-        size: isKwh ? '' : (formData.isMultiPhase ? String(newSystemSize) : String(formData.systemSize || '').trim()),
+        size: isKwh ? '' : (formData.isMultiPhase ? String(newSystemSize) : String(normalizeToKWp(String(formData.systemSize || '').trim()) || '')),
         commission_date: isKwh && !formData.isMultiPhase ? (formData.commissionDate || null) : (formData.isMultiPhase ? null : formData.commissionDate),
         commissionDate: formData.isMultiPhase || (isKwh && !formData.commissionDate) ? '' : formData.commissionDate,
         generationInputMode: formData.generationInputMode,
