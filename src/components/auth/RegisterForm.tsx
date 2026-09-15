@@ -30,7 +30,8 @@ export const RegisterForm = ({ initialRole, lockedRole, invitationToken, prefill
     handleRoleChange,
     handleSubmit,
     handleTermsAccept,
-    invitedEmail
+    invitedEmail,
+    cooldownSeconds
   } = useRegisterForm(effectiveInitialRole, invitationToken, prefilledEmail);
 
   return (
