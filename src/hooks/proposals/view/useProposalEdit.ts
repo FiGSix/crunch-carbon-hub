@@ -13,6 +13,8 @@ import {
 import { calculateAnnualEnergy, calculateCarbonCredits } from '@/services/calculations/carbon/calculations';
 import { EMISSION_FACTOR } from '@/lib/calculations/carbon/constants';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/auth';
+import { isSelfAsClient, SELF_AS_CLIENT_MESSAGE } from '@/lib/validation/selfAsClient';
 
 export interface PhaseFormData {
   phaseName: string;
@@ -249,6 +251,8 @@ export function useProposalEdit(proposal: ProposalData, onSuccess?: () => void) 
   const [formData, setFormData] = useState<ProposalEditFormData>(() => extractFormData(proposal));
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [saving, setSaving] = useState(false);
+  const { profile, user } = useAuth();
+  const currentUser = { email: profile?.email || user?.email, role: profile?.role };
 
   const resetForm = () => {
     setFormData(extractFormData(proposal));
