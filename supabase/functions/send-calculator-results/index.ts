@@ -242,19 +242,31 @@ serve(async (req: Request) => {
     }
 
     const proposalTitle = `Solar Project - ${normalizedSize} kWp`;
-    const retryWindow = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-    const { data: recentProposal } = await supabase
-      .from('proposals')
-      .select('id, invitation_token')
-      .eq('client_reference_id', clientReferenceId)
-      .eq('title', proposalTitle)
-      .eq('system_size_kwp', normalizedSize)
-      .gte('created_at', retryWindow)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
 
-    let proposal = recentProposal;
+    // Reuse a recent estimate for the same person at essentially the same size,
+    // using the same tolerance as the duplicate guard so a re-run never errors.
+    const sizeTolerance = Math.max(0.5, normalizedSize * 0.005);
+    const retryWindow = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const findExistingEstimate = async (windowStart: string | null) => {
+      let query = supabase
+        .from('proposals')
+        .select('id, invitation_token, system_size_kwp')
+        .eq('client_reference_id', clientReferenceId)
+        .eq('project_info->>source', 'public_calculator')
+        .is('deleted_at', null)
+        .is('archived_at', null)
+        .gte('system_size_kwp', normalizedSize - sizeTolerance)
+        .lte('system_size_kwp', normalizedSize + sizeTolerance)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      if (windowStart) query = query.gte('created_at', windowStart);
+      const { data } = await query.maybeSingle();
+      return data;
+    };
+
+    const recentProposal = await findExistingEstimate(retryWindow);
+
+    let proposal: { id: string; invitation_token?: string | null } | null = recentProposal;
     let responseToken = recentProposal?.invitation_token ?? token;
 
     if (!proposal) {
@@ -262,12 +274,13 @@ serve(async (req: Request) => {
       .from("proposals")
       .insert({
         title: proposalTitle,
-        content: proposalContent,
+        content: { ...proposalContent, source: 'public_calculator' },
         project_info: {
           system_size_kwp: normalizedSize,
           commissioning_date: commissioningDate,
           province: province || undefined,
           segment: segment || undefined,
+          source: 'public_calculator',
         },
         eligibility_criteria: {},
         status: 'sent',
@@ -287,15 +300,30 @@ serve(async (req: Request) => {
       if (insertError) {
         console.error("Insert error:", insertError);
         const isDuplicate = insertError.message?.includes('DUPLICATE_REVIEW_REQUIRED');
-        return jsonResponse({
-          error: isDuplicate
-            ? "We already have a matching proposal for this project. Please contact Crunch Carbon to review it."
-            : "We could not create your proposal. Please try again.",
-          code: isDuplicate ? "DUPLICATE_REVIEW_REQUIRED" : "PROPOSAL_SAVE_FAILED",
-        }, isDuplicate ? 409 : 500);
+
+        if (isDuplicate) {
+          // Fall back to the estimate already on file for this person rather than a dead end.
+          const existing = await findExistingEstimate(null);
+          if (existing?.id && existing.invitation_token) {
+            proposal = existing;
+            responseToken = existing.invitation_token;
+          } else {
+            return jsonResponse({
+              error: "We already have a report on file for this project. Please contact Crunch Carbon and we will send it to you.",
+              code: "DUPLICATE_REVIEW_REQUIRED",
+            }, 409);
+          }
+        } else {
+          return jsonResponse({
+            error: "We could not create your proposal. Please try again.",
+            code: "PROPOSAL_SAVE_FAILED",
+          }, 500);
+        }
+      } else {
+        proposal = insertedProposal;
       }
-      proposal = insertedProposal;
     }
+
 
     if (!proposal?.id || !responseToken) {
       return jsonResponse({ error: "Your proposal was saved, but its secure link could not be prepared.", code: "PROPOSAL_LINK_FAILED" }, 500);
