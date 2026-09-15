@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { X, Crown } from "lucide-react";
 import { AdditionalClient } from "@/types/proposals";
 import { searchClients } from "@/services/proposals/unifiedProposalService";
+import { useAuth } from "@/contexts/auth";
+import { isSelfAsClient, SELF_AS_CLIENT_MESSAGE } from "@/lib/validation/selfAsClient";
 
 interface AdditionalClientFormProps {
   index: number;
@@ -18,6 +20,8 @@ interface AdditionalClientFormProps {
 export function AdditionalClientForm({ index, client, errors, onChange, onRemove, onMakePrimary }: AdditionalClientFormProps) {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const { profile, user } = useAuth();
+  const isSelf = isSelfAsClient(client.email, profile?.email || user?.email, profile?.role);
 
   const handleFieldChange = (field: keyof AdditionalClient, value: string) => {
     onChange(index, { ...client, [field]: value, clientId: field === 'name' ? undefined : client.clientId });
