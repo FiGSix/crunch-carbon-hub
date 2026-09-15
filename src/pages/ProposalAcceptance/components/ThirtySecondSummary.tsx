@@ -28,15 +28,10 @@ export function ThirtySecondSummary({
     financialInfo?: { client_share_percentage?: number };
   }).financialInfo;
   const sharePct = proposal.client_share_percentage ?? financialInfo?.client_share_percentage;
-  const totalRevenue = proposal.content?.financials?.totalClientRevenue;
   const revenueLabel =
-    typeof totalRevenue === "number" && totalRevenue > 0
-      ? `R ${Math.round(totalRevenue).toLocaleString()}${
-          typeof sharePct === "number" ? ` (${sharePct}% of carbon-credit revenue)` : ""
-        }`
-      : typeof sharePct === "number"
-        ? `${sharePct}% of carbon-credit revenue`
-        : "your agreed share of carbon-credit revenue";
+    typeof sharePct === "number"
+      ? `${sharePct}% of carbon-credit revenue`
+      : "your agreed share of carbon-credit revenue";
 
   const greeting = clientName ? `Hi ${clientName},` : "Hi there,";
 
