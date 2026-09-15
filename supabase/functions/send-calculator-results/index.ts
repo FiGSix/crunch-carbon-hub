@@ -16,9 +16,43 @@ interface CalculatorRequest {
   ipAddress?: string;
   userAgent?: string;
   address?: string;
+  province?: string;
+  segment?: string;
+}
+
+interface CalculatorSuccessResponse {
+  success: true;
+  proposalId: string;
+  token: string;
+  message: string;
+  emailDelivered: boolean;
 }
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+
+// National fallback yield (kWh/kWp/year)
+const DEFAULT_ANNUAL_GENERATION_FACTOR = 1642.50;
+const DEFAULT_CARBON_FACTOR = 1.0334; // tCO₂/MWh
+
+function getClientSharePercentage(portfolioKWp: number): number {
+  if (portfolioKWp < 5000) return 60.20;
+  if (portfolioKWp < 10000) return 63;
+  if (portfolioKWp < 20000) return 66.5;
+  if (portfolioKWp < 30000) return 68.25;
+  return 70;
+}
+
+const SA_PROVINCES = new Set([
+  "Eastern Cape", "Free State", "Gauteng", "KwaZulu-Natal", "Limpopo",
+  "Mpumalanga", "Northern Cape", "North West", "Western Cape",
+]);
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
 serve(async (req: Request) => {
   // Handle CORS preflight
@@ -32,36 +66,57 @@ serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { email, name, systemSizeKwp, commissioningDate, referralCode, ipAddress, userAgent, address }: CalculatorRequest =
-      await req.json();
+    const requestBody = await req.json() as CalculatorRequest;
+    const {
+      email,
+      name,
+      systemSizeKwp,
+      commissioningDate,
+      referralCode,
+      ipAddress,
+      userAgent,
+      address,
+      province,
+      segment,
+    } = requestBody;
+
+    const normalizedEmail = typeof email === "string" ? email.toLowerCase().trim() : "";
+    const normalizedName = typeof name === "string" ? name.trim() : "";
+    const normalizedSize = Number(systemSizeKwp);
+    const parsedCommissioningDate = new Date(`${commissioningDate}T00:00:00Z`);
+    const minimumCommissioningDate = new Date("2022-09-15T00:00:00Z");
+    const maximumCommissioningDate = new Date("2030-12-31T00:00:00Z");
 
     // Validate inputs
-    if (!email || !name || !systemSizeKwp || !commissioningDate) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (!normalizedEmail || !normalizedName || !commissioningDate) {
+      return jsonResponse({ error: "Please complete your name, email, and commissioning date.", code: "INVALID_INPUT" }, 400);
+    }
+    if (!Number.isFinite(normalizedSize) || normalizedSize <= 0 || normalizedSize > 15000) {
+      return jsonResponse({ error: "System size must be between 0 and 15,000 kWp.", code: "INVALID_SYSTEM_SIZE" }, 400);
+    }
+    if (
+      Number.isNaN(parsedCommissioningDate.getTime()) ||
+      parsedCommissioningDate < minimumCommissioningDate ||
+      parsedCommissioningDate > maximumCommissioningDate
+    ) {
+      return jsonResponse({ error: "Commissioning date must be between 15 September 2022 and 31 December 2030.", code: "INVALID_COMMISSIONING_DATE" }, 400);
+    }
+    if (province && !SA_PROVINCES.has(province)) {
+      return jsonResponse({ error: "Please select a valid South African province.", code: "INVALID_PROVINCE" }, 400);
+    }
+    if (segment && segment !== "homeowner" && segment !== "business") {
+      return jsonResponse({ error: "Please select homeowner or business.", code: "INVALID_SEGMENT" }, 400);
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid email address" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    
-    // Name validation
-    if (!name.trim()) {
-      return new Response(
-        JSON.stringify({ error: "Name is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (!emailRegex.test(normalizedEmail)) {
+      return jsonResponse({ error: "Please enter a valid email address.", code: "INVALID_EMAIL" }, 400);
     }
 
+    // Name validation
     // Parse name into first and last name
-    const nameParts = name?.trim().split(' ') || [];
+    const nameParts = normalizedName.split(/\s+/);
     const firstName = nameParts[0] || '';
     const lastName = nameParts.slice(1).join(' ') || '';
 
@@ -70,7 +125,6 @@ serve(async (req: Request) => {
     const DEFAULT_CRUNCH_CARBON_AGENT = '6538aa1a-c0dc-4ce4-ab6f-bb4368d9fce1'; // Shaun from Crunch Carbon
 
     if (referralCode) {
-      // Validate referral code is a valid active agent
       const { data: agent, error: agentError } = await supabase
         .from('profiles')
         .select('id, role, agent_status, first_name, last_name')
@@ -87,18 +141,41 @@ serve(async (req: Request) => {
         agentId = DEFAULT_CRUNCH_CARBON_AGENT;
       }
     } else {
-      // No referral code - assign to Crunch Carbon default
       agentId = DEFAULT_CRUNCH_CARBON_AGENT;
       console.log('No referral code - calculator lead assigned to Crunch Carbon default agent');
     }
 
-    // Calculate carbon credits and annual energy
-    const annualEnergy = Math.round(systemSizeKwp * 1642.50);
-    const carbonCredits = parseFloat(((annualEnergy / 1000) * 1.0334).toFixed(2));
+    const { data: owningAgent, error: owningAgentError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', agentId)
+      .maybeSingle();
+    if (owningAgentError || !owningAgent) {
+      console.error('Calculator owner is unavailable:', owningAgentError);
+      return jsonResponse({ error: "We could not assign your proposal. Please contact Crunch Carbon.", code: "OWNER_UNAVAILABLE" }, 503);
+    }
+
+    // Fetch province-specific yield if a province is provided
+    let yieldFactor = DEFAULT_ANNUAL_GENERATION_FACTOR;
+    if (province) {
+      const { data: yieldRow } = await supabase
+        .from('regional_solar_yields')
+        .select('yield_kwh_per_kwp')
+        .eq('province', province)
+        .single();
+      if (yieldRow && yieldRow.yield_kwh_per_kwp) {
+        yieldFactor = Number(yieldRow.yield_kwh_per_kwp);
+      }
+    }
+
+    // Calculate carbon credits using province yield and tiered client share
+    const annualEnergy = Math.round(normalizedSize * yieldFactor);
+    const carbonCredits = parseFloat(((annualEnergy / 1000) * DEFAULT_CARBON_FACTOR).toFixed(2));
+    const clientSharePercentage = getClientSharePercentage(normalizedSize);
 
     // Generate secure token (48 char random string)
     const token = crypto.randomUUID() + crypto.randomUUID().replace(/-/g, "");
-    
+
     // Set expiration to 10 days from now
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 240);
@@ -106,215 +183,235 @@ serve(async (req: Request) => {
     // Create proposal content
     const proposalContent = {
       clientInfo: {
-        email: email.toLowerCase().trim(),
+        email: normalizedEmail,
         name: `${firstName} ${lastName}`.trim(),
         first_name: firstName,
         last_name: lastName,
       },
       projectInfo: {
-        size: `${systemSizeKwp} kWp`,
+        size: normalizedSize,
+        size_display: `${normalizedSize} kWp`,
         commissionDate: commissioningDate,
-        system_size_kwp: systemSizeKwp,
+        system_size_kwp: normalizedSize,
         annual_energy_kwh: annualEnergy,
         address: address || undefined,
+        province: province || undefined,
+        segment: segment || undefined,
       },
       financialInfo: {
         carbon_credits: carbonCredits,
+        client_share_percentage: clientSharePercentage,
+        yield_factor: yieldFactor,
       }
     };
 
-    // Find or create client record
-    const { data: existingClient } = await supabase
-      .from('clients')
-      .select('id, user_id')
-      .eq('email', email.toLowerCase().trim())
-      .single();
-
-    let clientReferenceId = existingClient?.id;
-    let clientProfileId = existingClient?.user_id;
-
-    // Create client if doesn't exist
-    if (!existingClient) {
-      const { data: newClient } = await supabase
-        .from('clients')
-        .insert({
-          email: email.toLowerCase().trim(),
-          first_name: firstName,
-          last_name: lastName,
-          created_by: agentId,
-          notes: `Created from calculator submission - ${systemSizeKwp} kWp system`
-        })
-        .select('id')
-        .single();
-      
-      clientReferenceId = newClient?.id;
+    // Reuse or create the client atomically. The RPC handles simultaneous requests.
+    const { data: clientReferenceId, error: clientError } = await supabase.rpc(
+      'find_or_create_client_by_email',
+      {
+        p_email: normalizedEmail,
+        p_first_name: firstName,
+        p_last_name: lastName,
+        p_phone: null,
+        p_company_name: null,
+        p_created_by: agentId,
+      },
+    );
+    if (clientError || !clientReferenceId) {
+      console.error('Client creation error:', clientError);
+      return jsonResponse({ error: "We could not save your contact details. Please try again.", code: "CLIENT_SAVE_FAILED" }, 500);
     }
 
-    // If client has no profile yet, check if one exists with matching email
+    const { data: clientRecord, error: clientLookupError } = await supabase
+      .from('clients')
+      .select('user_id')
+      .eq('id', clientReferenceId)
+      .single();
+    if (clientLookupError) console.error('Client profile lookup error:', clientLookupError);
+    let clientProfileId = clientRecord?.user_id;
+
     if (!clientProfileId) {
       const { data: profile } = await supabase
         .from('profiles')
         .select('id')
-        .eq('email', email.toLowerCase().trim())
+        .eq('email', normalizedEmail)
         .eq('role', 'client')
         .single();
-      
+
       clientProfileId = profile?.id;
     }
 
-    // Insert proposal with all client links
-    const { data: proposal, error: insertError } = await supabase
+    const proposalTitle = `Solar Project - ${normalizedSize} kWp`;
+    const retryWindow = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+    const { data: recentProposal } = await supabase
+      .from('proposals')
+      .select('id, invitation_token')
+      .eq('client_reference_id', clientReferenceId)
+      .eq('title', proposalTitle)
+      .eq('system_size_kwp', normalizedSize)
+      .gte('created_at', retryWindow)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    let proposal = recentProposal;
+    let responseToken = recentProposal?.invitation_token ?? token;
+
+    if (!proposal) {
+      const { data: insertedProposal, error: insertError } = await supabase
       .from("proposals")
       .insert({
-        title: `Solar Project - ${systemSizeKwp} kWp`,
+        title: proposalTitle,
         content: proposalContent,
         project_info: {
-          system_size_kwp: systemSizeKwp,
-          commissioning_date: commissioningDate
+          system_size_kwp: normalizedSize,
+          commissioning_date: commissioningDate,
+          province: province || undefined,
+          segment: segment || undefined,
         },
         eligibility_criteria: {},
         status: 'sent',
         carbon_credits: carbonCredits,
         annual_energy: annualEnergy,
-        system_size_kwp: systemSizeKwp,
+        system_size_kwp: normalizedSize,
         invitation_token: token,
         invitation_expires_at: expiresAt.toISOString(),
         invitation_sent_at: new Date().toISOString(),
         agent_id: agentId,
-        client_reference_id: clientReferenceId,  // Link to clients table
-        client_id: clientProfileId,               // Link to profiles if exists
+        client_reference_id: clientReferenceId,
+        client_id: clientProfileId,
       })
       .select()
       .single();
 
-    if (insertError) {
-      console.error("Insert error:", insertError);
-      return new Response(
-        JSON.stringify({ error: "Failed to create proposal" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      if (insertError) {
+        console.error("Insert error:", insertError);
+        const isDuplicate = insertError.message?.includes('DUPLICATE_REVIEW_REQUIRED');
+        return jsonResponse({
+          error: isDuplicate
+            ? "We already have a matching proposal for this project. Please contact Crunch Carbon to review it."
+            : "We could not create your proposal. Please try again.",
+          code: isDuplicate ? "DUPLICATE_REVIEW_REQUIRED" : "PROPOSAL_SAVE_FAILED",
+        }, isDuplicate ? 409 : 500);
+      }
+      proposal = insertedProposal;
+    }
+
+    if (!proposal?.id || !responseToken) {
+      return jsonResponse({ error: "Your proposal was saved, but its secure link could not be prepared.", code: "PROPOSAL_LINK_FAILED" }, 500);
     }
 
     // Build proposal URL
     const siteUrl = Deno.env.get("SITE_URL") || "https://crunchcarbon.com";
-    const resultsUrl = `${siteUrl}/proposals/${proposal.id}?token=${token}`;
+    const resultsUrl = `${siteUrl}/proposals/${proposal.id}?token=${responseToken}`;
 
-    // Send email
-    const emailResponse = await resend.emails.send({
-      from: "Crunch Carbon <results@crunchcarbon.com>",
-      to: [email],
-      subject: `Your Solar Impact Report is Ready! ☀️`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8f9fa;">
-          <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; padding: 20px 0;">
-            <tr>
-              <td align="center">
-                <table cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); box-sizing: border-box;">
-                  <!-- Header -->
-                  <tr>
-                    <td style="background: linear-gradient(135deg, #FCEE21 0%, #FFD700 100%); padding: 40px 30px; text-align: center;">
-                      <h1 style="margin: 0; color: #1a1a1a; font-size: 28px; font-weight: bold;">
-                        Your Solar Impact Report is Ready! ☀️
-                      </h1>
-                    </td>
-                  </tr>
-                  
-                  <!-- Body -->
-                  <tr>
-                    <td style="padding: 40px 30px;">
-                      <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
-                        ${name ? `Hi ${name},` : 'Hi there,'}
-                      </p>
-                      
-                      <p style="margin: 0 0 30px; color: #333333; font-size: 16px; line-height: 1.6;">
-                        Great news! We've crunched the numbers for your <strong>${systemSizeKwp} kWp solar system</strong> commissioning on <strong>${new Date(commissioningDate).toLocaleDateString('en-ZA', { year: 'numeric', month: 'long', day: 'numeric' })}</strong>.
-                      </p>
-                      
-                      <!-- Stats Preview -->
-                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
-                        <tr>
-                          <td>
-                            <p style="margin: 0 0 15px; color: #1a1a1a; font-size: 18px; font-weight: bold;">
-                              Your Quick Impact Preview:
-                            </p>
-                            <p style="margin: 0 0 10px; color: #333333; font-size: 15px;">
-                              ✅ <strong>Annual Energy:</strong> ~${annualEnergy.toLocaleString()} kWh
-                            </p>
-                             <p style="margin: 0 0 10px; color: #333333; font-size: 15px;">
-                              ✅ <strong>Carbon Offset:</strong> ~${carbonCredits} tonnes CO₂
-                            </p>
-                            <p style="margin: 0; color: #333333; font-size: 15px;">
-                              ✅ <strong>Potential Value:</strong> Click below to reveal!
-                            </p>
-                          </td>
-                        </tr>
-                      </table>
-                      
-                      <!-- CTA Button -->
-                      <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
-                        <tr>
-                          <td align="center">
-                            <a href="${resultsUrl}" style="display: inline-block; background-color: #FCEE21; color: #1a1a1a; font-size: 18px; font-weight: bold; text-decoration: none; padding: 16px 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
-                              View Your Full Solar Impact Report
-                            </a>
-                          </td>
-                        </tr>
-                      </table>
-                      
-                      <p style="margin: 0 0 10px; color: #666666; font-size: 14px; text-align: center;">
-                        This link expires in 10 days
-                      </p>
-                      
-                      <p style="margin: 30px 0 0; color: #666666; font-size: 14px; line-height: 1.6; border-top: 1px solid #e0e0e0; padding-top: 20px;">
-                        Questions? Reply to this email or visit <a href="https://crunchcarbon.com" style="color: #1a1a1a; text-decoration: none; font-weight: 600;">crunchcarbon.com</a>
-                      </p>
-                    </td>
-                  </tr>
-                  
-                  <!-- Footer -->
-                  <tr>
-                    <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center;">
-                      <p style="margin: 0; color: #999999; font-size: 12px;">
-                        © ${new Date().getFullYear()} Crunch Carbon. All rights reserved.
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-        </body>
-        </html>
-      `,
-    });
-
-    console.log("Email sent successfully:", emailResponse);
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        proposalId: proposal.id,
-        message: "Proposal created successfully" 
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    let emailDelivered = false;
+    // Email delivery does not revoke an otherwise valid on-screen proposal link.
+    try {
+      const emailResponse = await resend.emails.send({
+        from: "Crunch Carbon <results@crunchcarbon.com>",
+        to: [normalizedEmail],
+        subject: `Your Solar Impact Report is Ready! ☀️`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8f9fa;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; padding: 20px 0;">
+              <tr>
+                <td align="center">
+                  <table cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); box-sizing: border-box;">
+                    <tr>
+                      <td style="background: linear-gradient(135deg, #FCEE21 0%, #FFD700 100%); padding: 40px 30px; text-align: center;">
+                        <h1 style="margin: 0; color: #1a1a1a; font-size: 28px; font-weight: bold;">
+                          Your Solar Impact Report is Ready! ☀️
+                        </h1>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 40px 30px;">
+                        <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+                           Hi ${normalizedName},
+                        </p>
+                        <p style="margin: 0 0 30px; color: #333333; font-size: 16px; line-height: 1.6;">
+                           Great news! We've crunched the numbers for your <strong>${normalizedSize} kWp solar system</strong> commissioning on <strong>${parsedCommissioningDate.toLocaleDateString('en-ZA', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })}</strong>${province ? ` in <strong>${province}</strong>` : ''}.
+                        </p>
+                        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+                          <tr>
+                            <td>
+                              <p style="margin: 0 0 15px; color: #1a1a1a; font-size: 18px; font-weight: bold;">
+                                Your Quick Impact Preview:
+                              </p>
+                              <p style="margin: 0 0 10px; color: #333333; font-size: 15px;">
+                                ✅ <strong>Annual Energy:</strong> ~${annualEnergy.toLocaleString()} kWh
+                              </p>
+                              <p style="margin: 0 0 10px; color: #333333; font-size: 15px;">
+                                ✅ <strong>Carbon Offset:</strong> ~${carbonCredits} tonnes CO₂
+                              </p>
+                              <p style="margin: 0 0 10px; color: #333333; font-size: 15px;">
+                                ✅ <strong>Client Share Tier:</strong> ${clientSharePercentage}%
+                              </p>
+                              <p style="margin: 0; color: #333333; font-size: 15px;">
+                                ✅ <strong>Next Step:</strong> Click below to review and sign your proposal
+                              </p>
+                            </td>
+                          </tr>
+                        </table>
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
+                          <tr>
+                            <td align="center">
+                              <a href="${resultsUrl}" style="display: inline-block; background-color: #FCEE21; color: #1a1a1a; font-size: 18px; font-weight: bold; text-decoration: none; padding: 16px 40px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                                View Your Full Solar Impact Report
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
+                        <p style="margin: 0 0 10px; color: #666666; font-size: 14px; text-align: center;">
+                          This link expires in 10 days
+                        </p>
+                        <p style="margin: 30px 0 0; color: #666666; font-size: 14px; line-height: 1.6; border-top: 1px solid #e0e0e0; padding-top: 20px;">
+                          Questions? Reply to this email or visit <a href="https://crunchcarbon.com" style="color: #1a1a1a; text-decoration: none; font-weight: 600;">crunchcarbon.com</a>
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="background-color: #f8f9fa; padding: 20px 30px; text-align: center;">
+                        <p style="margin: 0; color: #999999; font-size: 12px;">
+                          © ${new Date().getFullYear()} Crunch Carbon. All rights reserved.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+          </html>
+        `,
+      });
+      if (emailResponse.error) {
+        console.error("Email provider rejected calculator email:", emailResponse.error);
+      } else {
+        emailDelivered = true;
+        console.log("Email sent successfully:", emailResponse.data?.id);
       }
-    );
+    } catch (emailError) {
+      console.error("Failed to send email, but proposal was created:", emailError);
+    }
+
+    const response: CalculatorSuccessResponse = {
+        success: true,
+        proposalId: proposal.id,
+        token: responseToken,
+        emailDelivered,
+        message: emailDelivered ? "Proposal created and emailed successfully" : "Proposal created; email delivery failed",
+    };
+    return jsonResponse(response);
   } catch (error: any) {
     console.error("Error in send-calculator-results:", error);
-    return new Response(
-      JSON.stringify({ error: error.message || "Internal server error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return jsonResponse({ error: "We could not process your proposal. Please try again.", code: "INTERNAL_ERROR" }, 500);
   }
 });
