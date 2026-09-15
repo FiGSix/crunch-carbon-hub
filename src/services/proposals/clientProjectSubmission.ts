@@ -103,9 +103,13 @@ export async function submitClientProject(
     );
 
     // 6. Build proposal content
+    // Persist the size as a plain number; the typed wording lives in size_display.
+    const storedProjectInfo = normalizeProjectInfoForStorage(projectInfo, systemSizeKWp);
+
     const content: ProposalContent = {
       clientInfo,
-      projectInfo,
+      projectInfo: storedProjectInfo,
+
       portfolioSize: portfolioKWp,
       clientSpecificRevenue: clientRevenue,
       agentCommissionRevenue: {},
