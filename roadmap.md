@@ -35,3 +35,11 @@
 - [x] Regenerated The Houghton document and emailed it to Naazia
 - [x] Deleted the two June test projects
 - [ ] "Foreman Orical" under Naazia's own contact record is in the deleted bin — confirm whether to restore and cover it
+
+# Proposal acceptance page correction
+
+- [x] Trace the incorrect 80% fallback against the saved proposal data
+- [x] Resolve the displayed share from the proposal or saved calculator value
+- [x] Remove the confirmation and proposal-summary cards from the signing journey
+- [x] Simplify the opening card and update the agreement/signing instructions
+- [ ] Verify the exact emailed link on desktop and mobile

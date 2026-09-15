@@ -61,7 +61,7 @@ export function SignatureSection({
             <div className="h-5 w-5 rounded-full border-2 border-muted-foreground mt-0.5 flex-shrink-0" />
           )}
           <div className="flex-1">
-            <p className="font-medium">Step 1: Read Terms & Conditions</p>
+            <p className="font-medium">Step 1: Scroll through and Read Terms &amp; Conditions.</p>
             <p className="text-sm text-muted-foreground">
               {hasScrolledToBottom ? "Completed" : "Scroll to the bottom of the terms"}
             </p>
