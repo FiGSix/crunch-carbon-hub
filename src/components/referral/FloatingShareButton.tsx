@@ -38,6 +38,11 @@ export function FloatingShareButton() {
     return null;
   }
 
+  // Nothing may compete with signing: hide on the proposal accept/decline flow.
+  if (/^\/proposals\/[^/]+\/(accept|decline)$/.test(pathname)) {
+    return null;
+  }
+
   const url = buildReferralUrl(profile?.id);
   const message = defaultInviteMessage(url);
   const shareHref = buildWhatsAppShareUrl(message);

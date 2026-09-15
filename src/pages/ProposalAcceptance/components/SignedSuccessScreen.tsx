@@ -1,10 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, Loader2, MailCheck } from "lucide-react";
+import { CheckCircle2, Loader2, MailCheck, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth";
+import {
+  buildReferralUrl,
+  buildWhatsAppShareUrl,
+  signedClientShareMessage,
+} from "@/lib/referral";
 
 interface SignedSuccessScreenProps {
   proposalId: string;
@@ -24,6 +30,7 @@ export function SignedSuccessScreen({
 }: SignedSuccessScreenProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { profile } = useAuth();
   const [sending, setSending] = useState(false);
   const [linkSent, setLinkSent] = useState(false);
   const [deferred, setDeferred] = useState(false);
@@ -120,6 +127,32 @@ export function SignedSuccessScreen({
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardContent className="p-6 text-center">
+          <h2 className="text-lg font-semibold mb-2">
+            You're now earning carbon credits from your solar system. Tell someone.
+          </h2>
+          <p className="text-sm text-muted-foreground mb-5">
+            Share it as a message or a WhatsApp status — anyone with solar can check what
+            theirs could earn.
+          </p>
+          <Button
+            size="lg"
+            className="bg-[#25D366] text-white hover:bg-[#1FB855]"
+            onClick={() =>
+              window.open(
+                buildWhatsAppShareUrl(signedClientShareMessage(buildReferralUrl(profile?.id))),
+                "_blank",
+                "noopener,noreferrer"
+              )
+            }
+          >
+            <MessageCircle className="mr-2 h-4 w-4" />
+            Share on WhatsApp
+          </Button>
         </CardContent>
       </Card>
     </div>

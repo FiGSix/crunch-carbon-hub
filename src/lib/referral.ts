@@ -32,3 +32,11 @@ export function buildWhatsAppShareUrl(message: string): string {
 export function defaultInviteMessage(url: string): string {
   return `Howzit! I've been using a company called Crunch Carbon to turn my solar energy I use into carbon credits and then cash — it's free, easy, and actually pays you for going green. Thought you'd want in too! ${url}`;
 }
+
+/**
+ * Copy for a client who has just signed their Cession Agreement — shared as a
+ * message or a WhatsApp status.
+ */
+export function signedClientShareMessage(url: string): string {
+  return `My solar system is now earning me carbon credits through Crunch Carbon — free to join, and it pays you for power you're already generating. Check what yours could earn: ${url}`;
+}
