@@ -166,7 +166,14 @@ export function useRegistrationFormLogic(
       
       // Handle common errors
       let errorMessage: string;
-      if (error.message.includes("User already registered")) {
+      if (isEmailRateLimitError(error)) {
+        errorMessage = EMAIL_RATE_LIMIT_MESSAGE;
+        toast({
+          title: EMAIL_RATE_LIMIT_TITLE,
+          description: EMAIL_RATE_LIMIT_MESSAGE,
+          variant: "destructive"
+        });
+      } else if (error.message.includes("User already registered")) {
         errorMessage = "An account with this email already exists. Please sign in instead.";
         toast({
           title: "Account exists",
