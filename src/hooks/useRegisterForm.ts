@@ -14,6 +14,12 @@ import {
   findCompanyByName
 } from "@/lib/supabase/company/companyOperations";
 import { acceptLegalDocument } from "@/services/legalDocuments";
+import {
+  isEmailRateLimitError,
+  EMAIL_RATE_LIMIT_COOLDOWN_SECONDS,
+  EMAIL_RATE_LIMIT_TITLE,
+  EMAIL_RATE_LIMIT_MESSAGE,
+} from "@/lib/auth/emailRateLimit";
 
 interface RegisterFormData {
   firstName: string;
