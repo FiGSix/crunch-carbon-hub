@@ -1,0 +1,39 @@
+<svg viewBox="0 0 640 260" xmlns="http://www.w3.org/2000/svg" style="font-family: var(--font-sans)">
+  <style>
+    .lbl { font-size: 14px; font-weight: 480; fill: var(--fg-primary); }
+    .sm  { font-size: 12px; fill: var(--fg-secondary); }
+    .mono{ font-size: 12px; font-family: var(--font-mono); fill: var(--fg-primary); }
+    .bx  { fill: none; stroke: var(--fg-secondary); stroke-width: 1; rx: 8; }
+  </style>
+  <defs>
+    <marker id="ar" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6" fill="none" stroke="var(--fg-secondary)" stroke-width="1"/>
+    </marker>
+  </defs>
+
+  <rect class="bx" x="8" y="40" width="140" height="64"/>
+  <text class="lbl" x="78" y="66" text-anchor="middle">Calculator form</text>
+  <text class="sm"  x="78" y="86" text-anchor="middle">100 kWp entered</text>
+
+  <line x1="152" y1="72" x2="196" y2="72" stroke="var(--fg-secondary)" marker-end="url(#ar)"/>
+
+  <rect class="bx" x="200" y="40" width="180" height="64"/>
+  <text class="lbl" x="290" y="66" text-anchor="middle">Proposal saved</text>
+  <text class="mono" x="290" y="86" text-anchor="middle">size: "100 kWp"</text>
+
+  <line x1="384" y1="72" x2="428" y2="72" stroke="var(--fg-secondary)" marker-end="url(#ar)"/>
+
+  <rect x="432" y="40" width="200" height="64" rx="8" fill="var(--bg-accent-translucent)" stroke="var(--fg-accent)" stroke-width="1"/>
+  <text class="lbl" x="532" y="66" text-anchor="middle" style="fill: var(--fg-accent)">Duplicate-site check</text>
+  <text class="sm" x="532" y="86" text-anchor="middle" style="fill: var(--fg-accent)">expects a plain number</text>
+
+  <line x1="532" y1="108" x2="532" y2="140" stroke="var(--fg-secondary)" marker-end="url(#ar)"/>
+  <rect class="bx" x="412" y="144" width="220" height="56"/>
+  <text class="lbl" x="522" y="168" text-anchor="middle">Save rejected</text>
+  <text class="sm"  x="522" y="188" text-anchor="middle">"Could not send your proposal"</text>
+
+  <circle cx="24" cy="176" r="10" fill="var(--bg-accent)"/>
+  <text x="24" y="180" text-anchor="middle" style="font-size:11px; fill: var(--fg-emphasis)">1</text>
+  <text class="sm" x="44" y="172">Fix: store the size as a number (100), keep</text>
+  <text class="sm" x="44" y="190">"100 kWp" only as display text.</text>
+</svg>
