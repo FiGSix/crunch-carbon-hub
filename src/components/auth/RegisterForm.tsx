@@ -80,7 +80,7 @@ export const RegisterForm = ({ initialRole, lockedRole, invitationToken, prefill
           isLoading={isLoading}
         />
         
-        <RegisterSubmitButton isLoading={isLoading} />
+        <RegisterSubmitButton isLoading={isLoading} cooldownSeconds={cooldownSeconds} />
       </div>
       </form>
     </FormErrorBoundary>
