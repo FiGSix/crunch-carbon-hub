@@ -6,7 +6,7 @@ import { ErrorResponse, corsHeaders } from "../_shared/types.ts";
 export async function verifyUserAuth(
   authHeader: string | null,
   supabase: typeof supabaseAdmin
-): Promise<{ userId: string; role: string } | ErrorResponse> {
+): Promise<{ userId: string; role: string; email: string | null } | ErrorResponse> {
   if (!authHeader) {
     console.error("No authorization header provided");
     return {
@@ -63,7 +63,8 @@ export async function verifyUserAuth(
     
     return { 
       userId: authUser.id,
-      role: roleData 
+      role: roleData,
+      email: authUser.email ?? null
     };
   } catch (error) {
     console.error("Unexpected authentication error:", error);

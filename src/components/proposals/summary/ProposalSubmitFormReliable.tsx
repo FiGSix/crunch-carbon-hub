@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { ReliableProposalService, ProposalProgress } from "@/services/proposals/ReliableProposalService";
 import { devLogger } from '@/lib/performance/ConsoleReplacementUtility';
+import { SELF_AS_CLIENT_MESSAGE } from '@/lib/validation/selfAsClient';
 
 interface ProposalSubmitFormReliableProps {
   eligibility: EligibilityCriteria;
@@ -94,9 +95,14 @@ export function ProposalSubmitFormReliable({
       setProgress(null);
       setHasError(true);
       
+      const message = error instanceof Error ? error.message : "";
+      const isRuleBreach = message === SELF_AS_CLIENT_MESSAGE;
+
       toast({
-        title: "Proposal Creation Failed",
-        description: "We encountered an issue creating your proposal. Please try again.",
+        title: isRuleBreach ? "You cannot be your own client" : "Proposal Creation Failed",
+        description: isRuleBreach
+          ? SELF_AS_CLIENT_MESSAGE
+          : "We encountered an issue creating your proposal. Please try again.",
         variant: "destructive",
       });
     }

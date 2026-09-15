@@ -13,6 +13,8 @@ import {
 import { calculateAnnualEnergy, calculateCarbonCredits } from '@/services/calculations/carbon/calculations';
 import { EMISSION_FACTOR } from '@/lib/calculations/carbon/constants';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/auth';
+import { isSelfAsClient, SELF_AS_CLIENT_MESSAGE } from '@/lib/validation/selfAsClient';
 
 export interface PhaseFormData {
   phaseName: string;
@@ -112,13 +114,18 @@ function hasAnyKwh(grid: AnnualKwhByYear | undefined): boolean {
   return Object.values(grid).some((v) => (v || 0) > 0);
 }
 
-function validate(data: ProposalEditFormData): ValidationErrors {
+function validate(
+  data: ProposalEditFormData,
+  currentUser?: { email?: string | null; role?: string | null }
+): ValidationErrors {
   const errors: ValidationErrors = {};
   if (!data.clientName.trim()) errors.clientName = 'Client name is required';
   if (!data.clientEmail.trim()) {
     errors.clientEmail = 'Email is required';
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.clientEmail)) {
     errors.clientEmail = 'Invalid email format';
+  } else if (isSelfAsClient(data.clientEmail, currentUser?.email, currentUser?.role)) {
+    errors.clientEmail = SELF_AS_CLIENT_MESSAGE;
   }
   if (!data.projectName.trim()) errors.projectName = 'Project name is required';
 
@@ -128,6 +135,8 @@ function validate(data: ProposalEditFormData): ValidationErrors {
       errors[`addClient_${i}_email`] = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(client.email)) {
       errors[`addClient_${i}_email`] = 'Invalid email format';
+    } else if (isSelfAsClient(client.email, currentUser?.email, currentUser?.role)) {
+      errors[`addClient_${i}_email`] = SELF_AS_CLIENT_MESSAGE;
     }
   });
 
@@ -242,6 +251,8 @@ export function useProposalEdit(proposal: ProposalData, onSuccess?: () => void) 
   const [formData, setFormData] = useState<ProposalEditFormData>(() => extractFormData(proposal));
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [saving, setSaving] = useState(false);
+  const { profile, user } = useAuth();
+  const currentUser = { email: profile?.email || user?.email, role: profile?.role };
 
   const resetForm = () => {
     setFormData(extractFormData(proposal));
@@ -380,7 +391,7 @@ export function useProposalEdit(proposal: ProposalData, onSuccess?: () => void) 
   };
 
   const save = async (): Promise<boolean> => {
-    const validationErrors = validate(formData);
+    const validationErrors = validate(formData, currentUser);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       toast.error('Please fix the highlighted fields before saving.');

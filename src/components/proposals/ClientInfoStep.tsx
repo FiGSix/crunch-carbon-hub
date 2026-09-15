@@ -13,6 +13,8 @@ import { ClientFormFields } from "./client-info/ClientFormFields";
 import { ClientStepFooter } from "./client-info/ClientStepFooter";
 import { ClientCreationFeedback } from "./client-info/ClientCreationFeedback";
 import { AdditionalClientForm } from "./client-info/AdditionalClientForm";
+import { useAuth } from "@/contexts/auth";
+import { isSelfAsClient } from "@/lib/validation/selfAsClient";
 
 interface ClientInfoStepProps {
   clientInfo: ClientInformation;
@@ -37,9 +39,16 @@ export function ClientInfoStep({
   additionalClients = [],
   setAdditionalClients
 }: ClientInfoStepProps) {
+  const { profile, user } = useAuth();
+  const ownEmail = profile?.email || user?.email;
+  const hasSelfAsClient =
+    isSelfAsClient(clientInfo.email, ownEmail, profile?.role) ||
+    additionalClients.some(c => isSelfAsClient(c.email, ownEmail, profile?.role));
+
   const isFormValid = Boolean(
     clientInfo.name && clientInfo.email &&
-    additionalClients.every(c => c.name && c.email)
+    additionalClients.every(c => c.name && c.email) &&
+    !hasSelfAsClient
   );
   const isNewClient = !selectedClientId && clientInfo.name && clientInfo.email && !clientInfo.existingClient;
 

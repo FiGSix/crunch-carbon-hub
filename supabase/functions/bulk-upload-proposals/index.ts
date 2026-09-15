@@ -110,6 +110,17 @@ Deno.serve(async (req) => {
           console.log(`ℹ️ No agent specified, assigning to uploader: ${user.id}`);
         }
 
+        // Hard business rule: a partner may not list themselves as the client
+        if (
+          profile.role !== 'admin' &&
+          (proposal.client_email || '').trim().toLowerCase() ===
+            (user.email || '').trim().toLowerCase()
+        ) {
+          throw new Error(
+            "You cannot list yourself as the client. A partner may not act as both partner and client on the same proposal. Enter your client's email address — a colleague at your company can be added instead."
+          );
+        }
+
         // Find or create client
         let clientId: string;
         

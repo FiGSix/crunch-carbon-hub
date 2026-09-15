@@ -9,6 +9,7 @@ import { createProposal, searchClients } from './unifiedProposalService';
 import { EligibilityCriteria, ClientInformation, ProjectInformation, AdditionalClient } from '@/types/proposals';
 import { logger } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
+import { isSelfAsClient, SELF_AS_CLIENT_MESSAGE } from '@/lib/validation/selfAsClient';
 
 export interface ReliableProposalResult {
   success: boolean;
@@ -77,6 +78,9 @@ export class ReliableProposalService {
         throw new Error('Invalid proposal data');
       }
 
+      // Hard business rule: a partner may not be the client on their own proposal
+      await this.assertNotSelfAsClient(clientInfo, additionalClients);
+
       // Try immediate creation with extended timeout and retries
       const immediateResult = await this.tryImmediateCreation(
         proposalTitle,
@@ -122,6 +126,33 @@ export class ReliableProposalService {
       setTimeout(() => {
         this.progressCallbacks.delete(operationId);
       }, 5000);
+    }
+  }
+
+  /**
+   * Hard business rule: the signed-in partner may not be listed as a client.
+   * Admins are exempt.
+   */
+  private async assertNotSelfAsClient(
+    clientInfo: ClientInformation,
+    additionalClients?: AdditionalClient[]
+  ): Promise<void> {
+    const { data: authData } = await supabase.auth.getUser();
+    const authUser = authData?.user;
+    if (!authUser) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('email, role')
+      .eq('id', authUser.id)
+      .maybeSingle();
+
+    const ownEmail = profile?.email || authUser.email;
+    const role = profile?.role;
+
+    const emails = [clientInfo?.email, ...(additionalClients || []).map(c => c.email)];
+    if (emails.some(email => isSelfAsClient(email, ownEmail, role))) {
+      throw new Error(SELF_AS_CLIENT_MESSAGE);
     }
   }
 
