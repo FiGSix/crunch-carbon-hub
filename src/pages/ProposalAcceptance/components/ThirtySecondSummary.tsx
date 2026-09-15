@@ -19,9 +19,6 @@ interface ThirtySecondSummaryProps {
  *
  * Above-the-fold decision-support block that answers the 6 questions every
  * client has before they sign. Designed to reduce hesitation, not chase.
- *
- * Tone rule: "We're not chasing you. We're helping you unlock value from
- * something you already own."
  */
 export function ThirtySecondSummary({
   proposal,
@@ -34,7 +31,9 @@ export function ThirtySecondSummary({
   const totalRevenue = proposal.content?.financials?.totalClientRevenue;
   const revenueLabel =
     typeof totalRevenue === "number" && totalRevenue > 0
-      ? `R ${Math.round(totalRevenue).toLocaleString()}`
+      ? `R ${Math.round(totalRevenue).toLocaleString()}${
+          typeof sharePct === "number" ? ` (${sharePct}% of carbon-credit revenue)` : ""
+        }`
       : typeof sharePct === "number"
         ? `${sharePct}% of carbon-credit revenue`
         : "your agreed share of carbon-credit revenue";
