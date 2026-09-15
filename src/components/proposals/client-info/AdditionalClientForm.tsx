@@ -106,10 +106,14 @@ export function AdditionalClientForm({ index, client, errors, onChange, onRemove
           onChange={(e) => handleFieldChange('email', e.target.value)}
           placeholder="client@example.com"
           required
-          className={errors?.[`addClient_${index}_email`] ? 'border-destructive' : ''}
+          aria-invalid={isSelf}
+          className={errors?.[`addClient_${index}_email`] || isSelf ? 'border-destructive' : ''}
         />
         {errors?.[`addClient_${index}_email`] && (
           <p className="text-xs text-destructive mt-1">{errors[`addClient_${index}_email`]}</p>
+        )}
+        {isSelf && !errors?.[`addClient_${index}_email`] && (
+          <p className="text-xs text-destructive mt-1">{SELF_AS_CLIENT_MESSAGE}</p>
         )}
       </div>
 
