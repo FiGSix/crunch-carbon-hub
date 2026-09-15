@@ -14,6 +14,8 @@ import {
   calculateRevenueByYear,
 } from "@/services/calculations/carbon";
 import { checkProposalDuplicate } from "@/services/proposals/duplicateReviewService";
+import { normalizeProjectInfoForStorage } from "@/utils/proposals/normalizeProjectInfo";
+
 
 interface ClientSubmissionResult {
   success: boolean;
@@ -103,9 +105,13 @@ export async function submitClientProject(
     );
 
     // 6. Build proposal content
+    // Persist the size as a plain number; the typed wording lives in size_display.
+    const storedProjectInfo = normalizeProjectInfoForStorage(projectInfo, systemSizeKWp);
+
     const content: ProposalContent = {
       clientInfo,
-      projectInfo,
+      projectInfo: storedProjectInfo,
+
       portfolioSize: portfolioKWp,
       clientSpecificRevenue: clientRevenue,
       agentCommissionRevenue: {},
@@ -140,7 +146,7 @@ export async function submitClientProject(
       company_id: null,
       content: content as unknown as Json,
       eligibility_criteria: eligibility as unknown as Json,
-      project_info: projectInfo as unknown as Json,
+      project_info: storedProjectInfo as unknown as Json,
       annual_energy: annualEnergy,
       carbon_credits: carbonCredits,
       client_share_percentage: clientSharePercentage,

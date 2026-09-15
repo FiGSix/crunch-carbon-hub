@@ -4751,6 +4751,7 @@ export type Database = {
         }
         Returns: string
       }
+      safe_numeric: { Args: { _v: string }; Returns: number }
       search_clients: {
         Args: { search_term: string }
         Returns: {

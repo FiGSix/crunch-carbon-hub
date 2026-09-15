@@ -1,6 +1,3 @@
--- Make the proposal duplicate guard tolerant of non-numeric size values
--- (e.g. "100 kWp") instead of raising 22P02 and blocking the insert.
-
 CREATE OR REPLACE FUNCTION public.safe_numeric(_v text)
 RETURNS numeric
 LANGUAGE sql
@@ -13,9 +10,6 @@ AS $$
   END
 $$;
 
--- The duplicate finder must use the same tolerant parser as the insert trigger.
--- Otherwise one legacy row containing a display value such as "100 kWp" can
--- abort the entire candidate scan before the new proposal is inserted.
 CREATE OR REPLACE FUNCTION public.find_high_confidence_proposal_duplicate(
   p_client_id uuid,
   p_title text,
@@ -42,11 +36,11 @@ AS $function$
       CASE
         WHEN p_system_size_kwp IS NULL THEN false
         ELSE abs(coalesce(
+          p.system_size_kwp,
           public.safe_numeric(p.content->'projectInfo'->>'systemSize'),
           public.safe_numeric(p.content->'projectInfo'->>'size'),
           public.safe_numeric(p.project_info->>'systemSize'),
-          public.safe_numeric(p.project_info->>'size'),
-          p.system_size_kwp
+          public.safe_numeric(p.project_info->>'size')
         ) - p_system_size_kwp) <= greatest(0.5, p_system_size_kwp * 0.005)
       END AS same_size,
       CASE
@@ -110,11 +104,11 @@ DECLARE
   v_client uuid := coalesce(NEW.client_reference_id, NEW.client_id);
   v_address text := coalesce(NEW.content->'projectInfo'->>'address', NEW.project_info->>'address');
   v_size numeric := coalesce(
+    NEW.system_size_kwp,
     public.safe_numeric(NEW.content->'projectInfo'->>'systemSize'),
     public.safe_numeric(NEW.content->'projectInfo'->>'size'),
     public.safe_numeric(NEW.project_info->>'systemSize'),
-    public.safe_numeric(NEW.project_info->>'size'),
-    NEW.system_size_kwp
+    public.safe_numeric(NEW.project_info->>'size')
   );
   v_lat numeric := coalesce(
     public.safe_numeric(NEW.content->'projectInfo'->>'gpsLat'),
