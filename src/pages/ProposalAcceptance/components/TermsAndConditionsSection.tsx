@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle2, AlertTriangle } from "lucide-react";
+import { CheckCircle2, AlertTriangle, ArrowDown, ArrowUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ProposalData } from "@/types/proposals";
 
@@ -145,30 +145,65 @@ export function TermsAndConditionsSection({ onScrolledToBottom, proposal }: Term
         )}
 
         {!isLoading && ready && (
-          <div className="max-h-[400px] overflow-y-auto border rounded-lg p-6 space-y-3">
-            {paragraphs.map((line, i) => (
-              <p
-                key={i}
-                className="text-sm leading-relaxed whitespace-pre-wrap text-foreground"
-              >
-                {line}
-              </p>
-            ))}
+          <div className="relative">
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full bg-primary transition-all duration-150"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 mb-2">
+              You have read {progress}%
+            </p>
 
-            <div className="pt-6 border-t mt-6">
-              <p className="text-xs text-muted-foreground">
-                Signing as: {proposal?.content?.clientInfo?.name || "the Owner"}
-                {proposal?.content?.projectInfo?.address
-                  ? ` · Site: ${proposal.content.projectInfo.address}`
-                  : ""}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Your owner and site details are recorded on the signature page of the
-                signed document.
-              </p>
+            <div
+              ref={scrollRef}
+              onScroll={handleScroll}
+              className="max-h-[75vh] md:max-h-[400px] overflow-y-auto overscroll-contain border rounded-lg p-4 md:p-6 space-y-4"
+            >
+              {paragraphs.map((line, i) => (
+                <p
+                  key={i}
+                  className="text-[15px] md:text-sm leading-7 md:leading-relaxed whitespace-pre-wrap text-foreground"
+                >
+                  {line}
+                </p>
+              ))}
+
+              <div className="pt-6 border-t mt-6">
+                <p className="text-xs text-muted-foreground">
+                  Signing as: {proposal?.content?.clientInfo?.name || "the Owner"}
+                  {proposal?.content?.projectInfo?.address
+                    ? ` · Site: ${proposal.content.projectInfo.address}`
+                    : ""}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Your owner and site details are recorded on the signature page of the
+                  signed document.
+                </p>
+              </div>
+
+              <div ref={sentinelRef} className="h-1" />
             </div>
 
-            <div ref={sentinelRef} className="h-1" />
+            <button
+              type="button"
+              onClick={advance}
+              aria-label={hasReachedBottom ? "Back to top of agreement" : "Continue reading"}
+              className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-medium text-primary-foreground shadow-lg active:scale-95 transition"
+            >
+              {hasReachedBottom ? (
+                <>
+                  <ArrowUp className="h-4 w-4" />
+                  Back to top
+                </>
+              ) : (
+                <>
+                  <ArrowDown className="h-4 w-4" />
+                  Continue reading
+                </>
+              )}
+            </button>
           </div>
         )}
       </CardContent>
