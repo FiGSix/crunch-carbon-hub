@@ -23,7 +23,7 @@ serve(async (req) => {
     }
     
     // User is authenticated, proceed with client management
-    const { userId, role } = authResult;
+    const { userId, role, email: callerEmail } = authResult;
     
     // Parse request body
     const requestBody = await req.json();
@@ -34,6 +34,17 @@ serve(async (req) => {
         error: "Email is required"
       }, 400);
     }
+
+    // Hard business rule: a partner may not act as both partner and client
+    if (
+      role !== 'admin' &&
+      email.trim().toLowerCase() === (callerEmail || '').trim().toLowerCase()
+    ) {
+      return createResponse({
+        error: "You cannot list yourself as the client. A partner may not act as both partner and client on the same proposal. Enter your client's email address — a colleague at your company can be added instead."
+      }, 400);
+    }
+    
     
     // Process the client request using the processClientRequest function
     const result = await processClientRequest(
