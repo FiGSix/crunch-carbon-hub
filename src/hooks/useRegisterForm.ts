@@ -468,6 +468,24 @@ export function useRegisterForm(initialRole: "client" | "agent", invitationToken
       navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
       
     } catch (error: any) {
+      // Project-wide hourly cap on auth emails — not a fault with this user's
+      // address. Keep them on the form, hold submit briefly, and record it.
+      if (isEmailRateLimitError(error)) {
+        authLogger.warn("Registration blocked by auth email rate limit", {
+          email: formData.email,
+          role: formData.role,
+          code: error?.code ?? error?.error_code ?? null,
+          status: error?.status ?? null,
+        });
+        setRateLimitedUntil(Date.now() + EMAIL_RATE_LIMIT_COOLDOWN_SECONDS * 1000);
+        toast({
+          title: EMAIL_RATE_LIMIT_TITLE,
+          description: EMAIL_RATE_LIMIT_MESSAGE,
+          variant: "destructive",
+        });
+        return;
+      }
+
       authLogger.error("Registration failed", { 
         email: formData.email,
         role: formData.role,
