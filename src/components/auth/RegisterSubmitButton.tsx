@@ -37,6 +37,8 @@ export function RegisterSubmitButton({ isLoading, cooldownSeconds = 0 }: Registe
           <span>Creating Account...</span>
           <span className="sr-only">Processing, please wait</span>
         </>
+      ) : isCoolingDown ? (
+        <span>Try again in {cooldownSeconds}s</span>
       ) : (
         <>
           <span>Create Account</span>
