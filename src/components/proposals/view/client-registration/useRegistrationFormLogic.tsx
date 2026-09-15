@@ -5,6 +5,11 @@ import { useToast } from "@/hooks/use-toast";
 import { logger } from "@/lib/logger";
 import { useProposalUpdate } from './hooks/useProposalUpdate';
 import { useFormValidation } from './hooks/useFormValidation';
+import {
+  isEmailRateLimitError,
+  EMAIL_RATE_LIMIT_TITLE,
+  EMAIL_RATE_LIMIT_MESSAGE,
+} from '@/lib/auth/emailRateLimit';
 
 export function useRegistrationFormLogic(
   proposalId: string,
