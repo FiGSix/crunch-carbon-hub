@@ -30,7 +30,28 @@ interface LiveLegalDocument {
  */
 export function TermsAndConditionsSection({ onScrolledToBottom, proposal }: TermsAndConditionsSectionProps) {
   const [hasReachedBottom, setHasReachedBottom] = useState(false);
+  const [progress, setProgress] = useState(0);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const max = el.scrollHeight - el.clientHeight;
+    setProgress(max <= 0 ? 100 : Math.min(100, Math.round((el.scrollTop / max) * 100)));
+  };
+
+  // One screenful at a time — reading is still required, we only make the
+  // gesture easier on a phone.
+  const advance = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (hasReachedBottom) {
+      el.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    el.scrollBy({ top: el.clientHeight * 0.85, behavior: "smooth" });
+  };
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["live-legal-document", "cession_agreement"],
