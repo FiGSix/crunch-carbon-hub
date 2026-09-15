@@ -30,7 +30,8 @@ export const RegisterForm = ({ initialRole, lockedRole, invitationToken, prefill
     handleRoleChange,
     handleSubmit,
     handleTermsAccept,
-    invitedEmail
+    invitedEmail,
+    cooldownSeconds
   } = useRegisterForm(effectiveInitialRole, invitationToken, prefilledEmail);
 
   return (
@@ -79,7 +80,7 @@ export const RegisterForm = ({ initialRole, lockedRole, invitationToken, prefill
           isLoading={isLoading}
         />
         
-        <RegisterSubmitButton isLoading={isLoading} />
+        <RegisterSubmitButton isLoading={isLoading} cooldownSeconds={cooldownSeconds} />
       </div>
       </form>
     </FormErrorBoundary>

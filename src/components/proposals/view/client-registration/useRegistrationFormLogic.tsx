@@ -5,6 +5,11 @@ import { useToast } from "@/hooks/use-toast";
 import { logger } from "@/lib/logger";
 import { useProposalUpdate } from './hooks/useProposalUpdate';
 import { useFormValidation } from './hooks/useFormValidation';
+import {
+  isEmailRateLimitError,
+  EMAIL_RATE_LIMIT_TITLE,
+  EMAIL_RATE_LIMIT_MESSAGE,
+} from '@/lib/auth/emailRateLimit';
 
 export function useRegistrationFormLogic(
   proposalId: string,
@@ -166,7 +171,14 @@ export function useRegistrationFormLogic(
       
       // Handle common errors
       let errorMessage: string;
-      if (error.message.includes("User already registered")) {
+      if (isEmailRateLimitError(error)) {
+        errorMessage = EMAIL_RATE_LIMIT_MESSAGE;
+        toast({
+          title: EMAIL_RATE_LIMIT_TITLE,
+          description: EMAIL_RATE_LIMIT_MESSAGE,
+          variant: "destructive"
+        });
+      } else if (error.message.includes("User already registered")) {
         errorMessage = "An account with this email already exists. Please sign in instead.";
         toast({
           title: "Account exists",

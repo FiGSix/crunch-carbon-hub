@@ -14,6 +14,12 @@ import {
   findCompanyByName
 } from "@/lib/supabase/company/companyOperations";
 import { acceptLegalDocument } from "@/services/legalDocuments";
+import {
+  isEmailRateLimitError,
+  EMAIL_RATE_LIMIT_COOLDOWN_SECONDS,
+  EMAIL_RATE_LIMIT_TITLE,
+  EMAIL_RATE_LIMIT_MESSAGE,
+} from "@/lib/auth/emailRateLimit";
 
 interface RegisterFormData {
   firstName: string;
@@ -48,6 +54,30 @@ export function useRegisterForm(initialRole: "client" | "agent", invitationToken
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
   const [privacyDialogOpen, setPrivacyDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
+
+  // Count the cool-down down so the button re-enables on its own.
+  useEffect(() => {
+    if (!rateLimitedUntil) {
+      setCooldownSeconds(0);
+      return;
+    }
+
+    const tick = () => {
+      const remaining = Math.ceil((rateLimitedUntil - Date.now()) / 1000);
+      if (remaining <= 0) {
+        setCooldownSeconds(0);
+        setRateLimitedUntil(null);
+      } else {
+        setCooldownSeconds(remaining);
+      }
+    };
+
+    tick();
+    const interval = window.setInterval(tick, 1000);
+    return () => window.clearInterval(interval);
+  }, [rateLimitedUntil]);
 
   // Fetch and validate invitation token
   useEffect(() => {
@@ -143,7 +173,16 @@ export function useRegisterForm(initialRole: "client" | "agent", invitationToken
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    if (cooldownSeconds > 0) {
+      toast({
+        title: EMAIL_RATE_LIMIT_TITLE,
+        description: EMAIL_RATE_LIMIT_MESSAGE,
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Passwords don't match",
@@ -468,6 +507,24 @@ export function useRegisterForm(initialRole: "client" | "agent", invitationToken
       navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
       
     } catch (error: any) {
+      // Project-wide hourly cap on auth emails — not a fault with this user's
+      // address. Keep them on the form, hold submit briefly, and record it.
+      if (isEmailRateLimitError(error)) {
+        authLogger.warn("Registration blocked by auth email rate limit", {
+          email: formData.email,
+          role: formData.role,
+          code: error?.code ?? error?.error_code ?? null,
+          status: error?.status ?? null,
+        });
+        setRateLimitedUntil(Date.now() + EMAIL_RATE_LIMIT_COOLDOWN_SECONDS * 1000);
+        toast({
+          title: EMAIL_RATE_LIMIT_TITLE,
+          description: EMAIL_RATE_LIMIT_MESSAGE,
+          variant: "destructive",
+        });
+        return;
+      }
+
       authLogger.error("Registration failed", { 
         email: formData.email,
         role: formData.role,
@@ -509,5 +566,6 @@ export function useRegisterForm(initialRole: "client" | "agent", invitationToken
     handleTermsAccept,
     isInvitationRegistration: !!invitationToken,
     invitedEmail, // Expose invited email for read-only field
+    cooldownSeconds, // Seconds left after an email rate-limit refusal
   };
 }
