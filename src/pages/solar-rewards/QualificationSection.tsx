@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, ClipboardCheck } from "lucide-react";
 
 interface QualificationSectionProps {
   onCheckEligibility: () => void;

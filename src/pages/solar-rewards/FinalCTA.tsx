@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Calculator } from "lucide-react";
 
 interface FinalCTAProps {
   onCTAClick: () => void;

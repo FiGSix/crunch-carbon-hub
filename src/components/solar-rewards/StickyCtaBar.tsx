@@ -1,7 +1,7 @@
  import { useState, useEffect } from "react";
  import { motion, AnimatePresence } from "framer-motion";
- import { Button } from "@/components/ui/button";
- import { Calculator } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calculator, ClipboardCheck } from "lucide-react";
  
  interface StickyCtaBarProps {
    onCTAClick: () => void;
