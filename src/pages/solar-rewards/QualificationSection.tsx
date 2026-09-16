@@ -40,12 +40,13 @@ export function QualificationSection({ onCheckEligibility }: QualificationSectio
           </div>
           
           <div className="text-center">
-            <Button 
+            <Button
               size="lg"
               onClick={onCheckEligibility}
-              className="h-14 px-10 text-lg font-semibold"
+              className="h-14 px-10 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
             >
-              See If I Qualify
+              <ClipboardCheck className="mr-2 h-5 w-5" />
+              Check Eligibility
             </Button>
           </div>
         </div>
