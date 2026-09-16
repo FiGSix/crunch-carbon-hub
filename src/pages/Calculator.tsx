@@ -7,6 +7,7 @@ import { Helmet } from "react-helmet-async";
 import { UnifiedCarbonService } from "@/lib/calculations/carbon";
 import { getYieldForProvince, primeRegionalYieldsCache } from "@/services/calculations/carbon/regionalYields";
 import { toast } from "sonner";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import { HeroSection } from "./calculator/HeroSection";
 import { SystemInputPanel } from "./calculator/SystemInputPanel";
@@ -35,6 +36,7 @@ interface EstimateData {
 const Calculator = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const prefersReducedMotion = useReducedMotion();
 
   // Capture referral code from URL and store in localStorage
   useEffect(() => {
@@ -148,6 +150,13 @@ const Calculator = () => {
     setProposalToken(token);
   }, []);
 
+  const handleEditDetails = useCallback(() => {
+    setStep("input");
+    setEstimate(null);
+    setProposalId(null);
+    setProposalToken(null);
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
@@ -172,39 +181,64 @@ const Calculator = () => {
         <HeroSection />
 
         <section className="py-12 md:py-16 bg-white">
-          <div className="container mx-auto px-4 max-w-5xl space-y-8">
-            <SystemInputPanel
-              segment={segment}
-              onSegmentChange={setSegment}
-              systemSize={systemSize}
-              onSystemSizeChange={setSystemSize}
-              province={province}
-              onProvinceChange={setProvince}
-              commissionDate={commissionDate}
-              onCommissionDateChange={setCommissionDate}
-              errors={errors}
-              onCalculate={handleCalculate}
-              isCalculating={isCalculating}
-            />
+          <div className="container mx-auto px-4 max-w-5xl">
+            <AnimatePresence mode="wait" initial={false}>
+              {step === "input" ? (
+                <motion.div
+                  key="calculator-input"
+                  initial={{ opacity: 1 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, y: prefersReducedMotion ? 0 : -10 }}
+                  transition={{ duration: prefersReducedMotion ? 0 : 0.25 }}
+                >
+                  <SystemInputPanel
+                    segment={segment}
+                    onSegmentChange={setSegment}
+                    systemSize={systemSize}
+                    onSystemSizeChange={setSystemSize}
+                    province={province}
+                    onProvinceChange={setProvince}
+                    commissionDate={commissionDate}
+                    onCommissionDateChange={setCommissionDate}
+                    errors={errors}
+                    onCalculate={handleCalculate}
+                    isCalculating={isCalculating}
+                  />
+                </motion.div>
+              ) : estimate ? (
+                <motion.div
+                  key="calculator-results"
+                  initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: prefersReducedMotion ? 0 : 0.45 }}
+                  className="space-y-8"
+                >
+                  <HeadlineResultPanel estimate={estimate} onEdit={handleEditDetails} />
 
-            {estimate && step === "calculated" && (
-              <>
-                <HeadlineResultPanel estimate={estimate} />
-
-                {!proposalId || !proposalToken ? (
-                  <EmailGatePanel estimate={estimate} onEmailSubmitted={handleEmailSubmitted} />
-                ) : (
-                  <>
-                    <FullForecastPanel estimate={estimate} />
-                    <ProposalPreviewPanel
-                      estimate={estimate}
-                      proposalId={proposalId}
-                      proposalToken={proposalToken}
-                    />
-                  </>
-                )}
-              </>
-            )}
+                  {!proposalId || !proposalToken ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: prefersReducedMotion ? 0 : 0.45,
+                        delay: prefersReducedMotion ? 0 : 0.85,
+                      }}
+                    >
+                      <EmailGatePanel estimate={estimate} onEmailSubmitted={handleEmailSubmitted} />
+                    </motion.div>
+                  ) : (
+                    <>
+                      <FullForecastPanel estimate={estimate} />
+                      <ProposalPreviewPanel
+                        estimate={estimate}
+                        proposalId={proposalId}
+                        proposalToken={proposalToken}
+                      />
+                    </>
+                  )}
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
           </div>
         </section>
 

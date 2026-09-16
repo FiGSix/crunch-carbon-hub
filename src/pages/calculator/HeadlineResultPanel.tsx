@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Zap, Leaf, Flame, TreePine, Info } from "lucide-react";
+import { Zap, Leaf, Flame, TreePine, Info, Pencil, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface HeadlineResultPanelProps {
   estimate: {
@@ -12,6 +13,7 @@ interface HeadlineResultPanelProps {
     clientSharePercentage: number;
     currentYearAnnualRevenue: number;
   };
+  onEdit: () => void;
 }
 
 const useCountUp = (target: number, duration = 1500) => {
@@ -50,7 +52,8 @@ const useCountUp = (target: number, duration = 1500) => {
   return value;
 };
 
-export const HeadlineResultPanel = ({ estimate }: HeadlineResultPanelProps) => {
+export const HeadlineResultPanel = ({ estimate, onEdit }: HeadlineResultPanelProps) => {
+  const prefersReducedMotion = useReducedMotion();
   const {
     systemSizeKwp,
     province,
@@ -101,6 +104,40 @@ export const HeadlineResultPanel = ({ estimate }: HeadlineResultPanelProps) => {
       className="meta-card p-6 md:p-8 overflow-hidden"
       aria-live="polite"
     >
+      <div className="relative flex justify-center mb-4" aria-hidden="true">
+        {!prefersReducedMotion && [
+          { x: -112, y: 14, rotate: -18, delay: 0.05 },
+          { x: -76, y: -14, rotate: 16, delay: 0.12 },
+          { x: -34, y: 8, rotate: -10, delay: 0.2 },
+          { x: 34, y: -8, rotate: 12, delay: 0.08 },
+          { x: 78, y: 12, rotate: -16, delay: 0.16 },
+          { x: 112, y: -12, rotate: 20, delay: 0.24 },
+        ].map((particle, index) => (
+          <motion.span
+            key={index}
+            className="absolute top-1/2 h-2 w-2 rounded-sm bg-crunch-yellow"
+            initial={{ opacity: 0, x: 0, y: 0, scale: 0.4, rotate: 0 }}
+            animate={{
+              opacity: [0, 1, 1, 0],
+              x: particle.x,
+              y: particle.y,
+              scale: [0.4, 1, 0.8],
+              rotate: particle.rotate,
+            }}
+            transition={{ duration: 1.15, delay: particle.delay, ease: "easeOut" }}
+          />
+        ))}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.85 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: prefersReducedMotion ? 0 : 0.35 }}
+          className="inline-flex items-center gap-2 rounded-full bg-crunch-yellow/15 px-4 py-2 text-sm font-semibold text-crunch-black"
+        >
+          <Sparkles className="h-4 w-4 text-crunch-yellow" />
+          Your solar is already creating value
+        </motion.div>
+      </div>
+
       <div className="text-center mb-6">
         <p className="text-sm font-medium text-crunch-black/60 mb-2">
           Your {systemSizeKwp.toLocaleString()} kWp system in {province}
@@ -146,6 +183,19 @@ export const HeadlineResultPanel = ({ estimate }: HeadlineResultPanelProps) => {
           This is an estimate only. Actual revenue depends on verified system performance,
           market carbon prices, and final cession agreement terms.
         </span>
+      </div>
+
+      <div className="mt-5 flex justify-center">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onEdit}
+          className="text-crunch-black/60 hover:text-crunch-black"
+        >
+          <Pencil className="mr-2 h-4 w-4" />
+          Edit solar system details
+        </Button>
       </div>
     </motion.div>
   );
