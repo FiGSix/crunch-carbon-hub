@@ -69,6 +69,7 @@ const Calculator = () => {
   const [step, setStep] = useState<CalculatorStep>("input");
   const [estimate, setEstimate] = useState<EstimateData | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   // Proposal state (unlocked after email)
   const [proposalId, setProposalId] = useState<string | null>(null);
