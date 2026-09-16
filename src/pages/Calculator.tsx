@@ -153,6 +153,17 @@ const Calculator = () => {
     setProposalToken(token);
   }, []);
 
+  useEffect(() => {
+    if (step === "calculated" && resultsRef.current) {
+      // Allow one frame for AnimatePresence to mount the panel, then bring the
+      // celebration badge into clear view below the sticky header.
+      const timer = setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [step]);
+
   const handleEditDetails = useCallback(() => {
     setStep("input");
     setEstimate(null);
