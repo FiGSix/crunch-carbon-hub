@@ -70,11 +70,11 @@ const Celebration = () => {
 
   const particles = useMemo<ParticleConfig[]>(() => {
     const colors = [
-      "bg-crunch-yellow",
-      "bg-crunch-black",
-      "bg-white",
-      "bg-crunch-yellow/80",
-      "bg-crunch-black/70",
+      "text-crunch-yellow",
+      "text-crunch-black",
+      "text-white",
+      "text-crunch-yellow",
+      "text-crunch-black/70",
     ];
     const shapes: ParticleShape[] = ["square", "circle", "star"];
     return Array.from({ length: 24 }, (_, i) => {
