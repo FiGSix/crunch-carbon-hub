@@ -133,7 +133,7 @@ const Celebration = () => {
         >
           {p.shape === "circle" && <Circle className="h-full w-full" strokeWidth={0} fill="currentColor" />}
           {p.shape === "star" && <Star className="h-full w-full" strokeWidth={0} fill="currentColor" />}
-          {p.shape === "square" && <div className="h-full w-full rounded-sm" />}
+          {p.shape === "square" && <div className="h-full w-full rounded-sm bg-current" />}
         </motion.div>
       ))}
 
