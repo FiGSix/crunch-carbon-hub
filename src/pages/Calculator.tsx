@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/footer";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -69,6 +69,7 @@ const Calculator = () => {
   const [step, setStep] = useState<CalculatorStep>("input");
   const [estimate, setEstimate] = useState<EstimateData | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   // Proposal state (unlocked after email)
   const [proposalId, setProposalId] = useState<string | null>(null);
@@ -152,6 +153,17 @@ const Calculator = () => {
     setProposalToken(token);
   }, []);
 
+  useEffect(() => {
+    if (step === "calculated" && resultsRef.current) {
+      // Allow one frame for AnimatePresence to mount the panel, then bring the
+      // celebration badge into clear view below the sticky header.
+      const timer = setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [step]);
+
   const handleEditDetails = useCallback(() => {
     setStep("input");
     setEstimate(null);
@@ -209,11 +221,12 @@ const Calculator = () => {
                 </motion.div>
               ) : estimate ? (
                 <motion.div
+                  ref={resultsRef}
                   key="calculator-results"
                   initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 14 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: prefersReducedMotion ? 0 : 0.45 }}
-                  className="space-y-8"
+                  className="space-y-8 scroll-mt-24"
                 >
                   <HeadlineResultPanel estimate={estimate} onEdit={handleEditDetails} />
 
