@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
- import { Slider } from "@/components/ui/slider";
-import { TrendingUp } from "lucide-react";
- import { useState } from "react";
+import { Slider } from "@/components/ui/slider";
+import { TrendingUp, Calculator } from "lucide-react";
+import { useState } from "react";
 
 interface EarningsEstimatorProps {
   onCalculateClick: () => void;
