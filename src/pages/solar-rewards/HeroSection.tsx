@@ -71,13 +71,24 @@ export function HeroSection({ onCTAClick }: HeroSectionProps) {
               animate: { opacity: 1, y: 0 }
             }}
             transition={{ duration: 0.4, ease: "easeOut" }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-3"
           >
-            <Button 
+            <Button
               size="lg"
               onClick={onCTAClick}
-              className="h-14 md:h-16 px-8 md:px-12 text-lg md:text-xl font-semibold w-full md:w-auto shadow-lg hover:shadow-xl transition-all"
+              className="h-14 md:h-16 px-8 md:px-12 text-lg md:text-xl font-semibold w-full sm:w-auto shadow-lg hover:shadow-xl transition-all"
             >
+              <Calculator className="mr-2 h-5 w-5" />
               Get My Free Solar Credit Estimate
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={onCTAClick}
+              className="h-14 md:h-16 px-8 md:px-12 text-lg md:text-xl font-semibold w-full sm:w-auto border-2 border-crunch-black/20 hover:bg-crunch-yellow hover:text-crunch-black hover:border-crunch-yellow transition-all"
+            >
+              <ClipboardCheck className="mr-2 h-5 w-5" />
+              Check Eligibility
             </Button>
           </motion.div>
           
