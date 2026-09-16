@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { AvatarStack } from "@/components/solar-rewards/AvatarStack";
 import { useHomeownerStats } from "@/hooks/useHomeownerStats";
+import { Calculator, ClipboardCheck } from "lucide-react";
 
 interface HeroSectionProps {
   onCTAClick: () => void;
