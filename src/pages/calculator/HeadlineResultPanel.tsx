@@ -67,6 +67,7 @@ export const HeadlineResultPanel = ({ estimate, onEdit }: HeadlineResultPanelPro
   const animatedRevenue = useCountUp(currentYearAnnualRevenue);
   const animatedEnergy = useCountUp(Math.round(annualEnergyKwh));
   const animatedCredits = useCountUp(Math.round(carbonCreditsPerYear));
+  const animatedCoal = useCountUp(Math.round(annualEnergyKwh * 0.85));
   const animatedTrees = useCountUp(Math.round(carbonCreditsPerYear * 50));
 
   const stats = [
@@ -84,7 +85,7 @@ export const HeadlineResultPanel = ({ estimate, onEdit }: HeadlineResultPanelPro
     },
     {
       icon: Flame,
-      value: Math.round(annualEnergyKwh * 0.85).toLocaleString(),
+      value: animatedCoal.toLocaleString(),
       unit: "kg",
       label: "Coal avoided per year",
     },
