@@ -109,7 +109,7 @@ export function ProposalActionFooter({
           onClick={() => setShowRejectDialog(true)}
           disabled={isRejecting}
         >
-          <X className="mr-2 h-4 w-4" /> Reject Proposal
+          <X className="mr-2 h-4 w-4" /> Decline Proposal
         </Button>
         <Button 
           variant="default" 
@@ -118,7 +118,7 @@ export function ProposalActionFooter({
           disabled={isRejecting}
         >
           <CheckCircle2 className="mr-2 h-4 w-4" /> 
-          {accessedViaToken ? "Accept Agreement" : "Approve Proposal"}
+          {accessedViaToken ? "Accept Proposal" : "Approve Proposal"}
         </Button>
       </CardFooter>
       
@@ -135,9 +135,9 @@ export function ProposalActionFooter({
       <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Reject Proposal</AlertDialogTitle>
+            <AlertDialogTitle>Decline Proposal</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to reject this proposal? If you have any questions or would like to discuss modifications, please contact the agent directly.
+              Are you sure you want to decline this proposal? If you have any questions or would like to discuss modifications, please contact the agent directly.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex flex-col-reverse sm:flex-row gap-2">
@@ -153,7 +153,7 @@ export function ProposalActionFooter({
                   Processing...
                 </>
               ) : (
-                "Yes, Reject"
+                "Yes, Decline"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
