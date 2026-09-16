@@ -65,39 +65,25 @@ const SolarRewards = () => {
         })}</script>
       </Helmet>
       <Header />
-      
+
       <main className="flex-1">
-        <HeroSection onCTAClick={() => setShowCalculator(true)} />
-         
-         <ImpactStats />
-        <HowItWorks onCheckEligibility={() => setShowEligibility(true)} />
+        <HeroSection onCTAClick={goToCalculator} />
+
+        <ImpactStats />
+        <HowItWorks onCheckEligibility={goToCalculator} />
         <BenefitsSection />
         <ValueCards />
-         <TestimonialsSection />
-        <EarningsEstimator onCalculateClick={() => setShowCalculator(true)} />
-        <QualificationSection onCheckEligibility={() => setShowEligibility(true)} />
-         <FAQSection />
+        <TestimonialsSection />
+        <EarningsEstimator onCalculateClick={goToCalculator} />
+        <QualificationSection onCheckEligibility={goToCalculator} />
+        <FAQSection />
         <TrustSection />
-        <FinalCTA onCTAClick={() => setShowCalculator(true)} />
+        <FinalCTA onCTAClick={goToCalculator} />
       </main>
-      
+
       <Footer />
-      
-      <QuickCalculatorModal 
-        open={showCalculator} 
-        onOpenChange={setShowCalculator} 
-      />
-      
-      <EligibilityModal 
-        open={showEligibility} 
-        onOpenChange={setShowEligibility}
-        onQualified={() => {
-          setShowEligibility(false);
-          setShowCalculator(true);
-        }}
-      />
-       
-       <StickyCtaBar onCTAClick={() => setShowCalculator(true)} />
+
+      <StickyCtaBar onCTAClick={goToCalculator} />
     </div>
   );
 };
