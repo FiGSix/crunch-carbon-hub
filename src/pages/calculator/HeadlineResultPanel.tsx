@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Zap, Leaf, Flame, TreePine, Info, Pencil, Sparkles } from "lucide-react";
+import { Zap, Leaf, Flame, TreePine, Info, Pencil, Sparkles, Sun, Circle, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeadlineResultPanelProps {
@@ -34,7 +34,6 @@ const useCountUp = (target: number, duration = 1500) => {
     const step = (timestamp: number) => {
       if (!startTimeRef.current) startTimeRef.current = timestamp;
       const progress = Math.min((timestamp - startTimeRef.current) / duration, 1);
-      // easeOutQuart
       const eased = 1 - Math.pow(1 - progress, 4);
       setValue(Math.round(target * eased));
       if (progress < 1) {
@@ -50,6 +49,113 @@ const useCountUp = (target: number, duration = 1500) => {
   }, [target, duration, prefersReducedMotion]);
 
   return value;
+};
+
+type ParticleShape = "square" | "circle" | "star";
+
+interface ParticleConfig {
+  id: number;
+  x: number;
+  y: number;
+  rotate: number;
+  scale: number;
+  delay: number;
+  duration: number;
+  color: string;
+  shape: ParticleShape;
+}
+
+const Celebration = () => {
+  const prefersReducedMotion = useReducedMotion();
+
+  const particles = useMemo<ParticleConfig[]>(() => {
+    const colors = [
+      "bg-crunch-yellow",
+      "bg-crunch-black",
+      "bg-white",
+      "bg-crunch-yellow/80",
+      "bg-crunch-black/70",
+    ];
+    const shapes: ParticleShape[] = ["square", "circle", "star"];
+    return Array.from({ length: 24 }, (_, i) => {
+      const angle = (i / 24) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+      const distance = 90 + Math.random() * 110;
+      return {
+        id: i,
+        x: Math.cos(angle) * distance,
+        y: Math.sin(angle) * distance - 30 + Math.random() * 40,
+        rotate: Math.random() * 360,
+        scale: 0.5 + Math.random() * 0.9,
+        delay: Math.random() * 0.18,
+        duration: 0.9 + Math.random() * 0.6,
+        color: colors[i % colors.length],
+        shape: shapes[i % shapes.length],
+      };
+    });
+  }, []);
+
+  const floatingIcons = useMemo(() => {
+    return [
+      { Icon: Sparkles, color: "text-crunch-yellow", x: -140, y: -40, delay: 0.1, scale: 1.1 },
+      { Icon: Leaf, color: "text-crunch-yellow", x: 130, y: -60, delay: 0.25, scale: 0.9 },
+      { Icon: Zap, color: "text-crunch-black/70", x: -100, y: 50, delay: 0.4, scale: 0.8 },
+      { Icon: Sun, color: "text-crunch-yellow", x: 110, y: 40, delay: 0.55, scale: 1 },
+    ];
+  }, []);
+
+  if (prefersReducedMotion) return null;
+
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-visible" aria-hidden="true">
+      {/* Flash ring behind the badge */}
+      <motion.div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-crunch-yellow/30"
+        initial={{ width: 40, height: 40, opacity: 0 }}
+        animate={{ width: 320, height: 320, opacity: [0, 0.6, 0] }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      />
+
+      {/* Confetti particles */}
+      {particles.map((p) => (
+        <motion.div
+          key={p.id}
+          className={`absolute left-1/2 top-1/2 ${p.color}`}
+          initial={{ opacity: 0, x: 0, y: 0, scale: 0.3, rotate: 0 }}
+          animate={{
+            opacity: [0, 1, 1, 0],
+            x: [0, p.x * 0.55, p.x],
+            y: [0, p.y * 0.45, p.y + 80],
+            scale: [0.3, p.scale, p.scale * 0.6],
+            rotate: [0, p.rotate * 0.5, p.rotate],
+          }}
+          transition={{ duration: p.duration, delay: p.delay, ease: "easeOut" }}
+          style={{ width: 8, height: 8 }}
+        >
+          {p.shape === "circle" && <Circle className="h-full w-full" strokeWidth={0} fill="currentColor" />}
+          {p.shape === "star" && <Star className="h-full w-full" strokeWidth={0} fill="currentColor" />}
+          {p.shape === "square" && <div className="h-full w-full rounded-sm" />}
+        </motion.div>
+      ))}
+
+      {/* Floating icon accents */}
+      {floatingIcons.map(({ Icon, color, x, y, delay, scale }, i) => (
+        <motion.div
+          key={i}
+          className={`absolute left-1/2 top-1/2 ${color}`}
+          initial={{ opacity: 0, x: 0, y: 0, scale: 0.5 }}
+          animate={{
+            opacity: [0, 1, 0],
+            x: [0, x * 0.6, x],
+            y: [0, y * 0.7, y - 60],
+            scale: [0.5, scale, scale * 0.7],
+          }}
+          transition={{ duration: 1.6, delay, ease: "easeOut" }}
+        >
+          <Icon className="h-7 w-7" strokeWidth={2} />
+        </motion.div>
+      ))}
+    </div>
+  );
 };
 
 export const HeadlineResultPanel = ({ estimate, onEdit }: HeadlineResultPanelProps) => {
@@ -101,40 +207,25 @@ export const HeadlineResultPanel = ({ estimate, onEdit }: HeadlineResultPanelPro
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.1 }}
-      className="meta-card p-6 md:p-8 overflow-hidden"
+      transition={{ duration: prefersReducedMotion ? 0 : 0.5, delay: 0.1 }}
+      className="meta-card p-6 md:p-8 overflow-hidden relative"
       aria-live="polite"
     >
-      <div className="relative flex justify-center mb-4" aria-hidden="true">
-        {!prefersReducedMotion && [
-          { x: -112, y: 14, rotate: -18, delay: 0.05 },
-          { x: -76, y: -14, rotate: 16, delay: 0.12 },
-          { x: -34, y: 8, rotate: -10, delay: 0.2 },
-          { x: 34, y: -8, rotate: 12, delay: 0.08 },
-          { x: 78, y: 12, rotate: -16, delay: 0.16 },
-          { x: 112, y: -12, rotate: 20, delay: 0.24 },
-        ].map((particle, index) => (
-          <motion.span
-            key={index}
-            className="absolute top-1/2 h-2 w-2 rounded-sm bg-crunch-yellow"
-            initial={{ opacity: 0, x: 0, y: 0, scale: 0.4, rotate: 0 }}
-            animate={{
-              opacity: [0, 1, 1, 0],
-              x: particle.x,
-              y: particle.y,
-              scale: [0.4, 1, 0.8],
-              rotate: particle.rotate,
-            }}
-            transition={{ duration: 1.15, delay: particle.delay, ease: "easeOut" }}
-          />
-        ))}
+      <div className="relative flex justify-center mb-5" aria-hidden="true">
+        <Celebration />
+
         <motion.div
-          initial={{ opacity: 0, scale: 0.85 }}
+          initial={{ opacity: 0, scale: 0.7 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: prefersReducedMotion ? 0 : 0.35 }}
-          className="inline-flex items-center gap-2 rounded-full bg-crunch-yellow/15 px-4 py-2 text-sm font-semibold text-crunch-black"
+          transition={{
+            type: "spring",
+            stiffness: 220,
+            damping: 12,
+            delay: prefersReducedMotion ? 0 : 0.15,
+          }}
+          className="relative inline-flex items-center gap-2 rounded-full bg-crunch-yellow/15 px-4 py-2.5 text-sm md:text-base font-semibold text-crunch-black shadow-sm ring-1 ring-crunch-yellow/30"
         >
-          <Sparkles className="h-4 w-4 text-crunch-yellow" />
+          <Sparkles className="h-4 w-4 md:h-5 md:w-5 text-crunch-yellow" />
           Your solar is already creating value
         </motion.div>
       </div>
