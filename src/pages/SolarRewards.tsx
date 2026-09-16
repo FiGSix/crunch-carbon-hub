@@ -8,9 +8,7 @@ import { EarningsEstimator } from "./solar-rewards/EarningsEstimator";
 import { QualificationSection } from "./solar-rewards/QualificationSection";
 import { TrustSection } from "./solar-rewards/TrustSection";
 import { FinalCTA } from "./solar-rewards/FinalCTA";
-import { useState } from "react";
-import { QuickCalculatorModal } from "./solar-rewards/QuickCalculatorModal";
-import { EligibilityModal } from "./solar-rewards/EligibilityModal";
+import { useNavigate } from "react-router-dom";
 import { ImpactStats } from "./solar-rewards/ImpactStats";
 import { StickyCtaBar } from "@/components/solar-rewards/StickyCtaBar";
 import { FAQSection } from "./solar-rewards/FAQSection";
@@ -19,8 +17,8 @@ import { TestimonialsSection } from "./solar-rewards/TestimonialsSection";
 import { Helmet } from "react-helmet-async";
 
 const SolarRewards = () => {
-  const [showCalculator, setShowCalculator] = useState(false);
-  const [showEligibility, setShowEligibility] = useState(false);
+  const navigate = useNavigate();
+  const goToCalculator = () => navigate("/calculator?segment=homeowner");
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -67,39 +65,25 @@ const SolarRewards = () => {
         })}</script>
       </Helmet>
       <Header />
-      
+
       <main className="flex-1">
-        <HeroSection onCTAClick={() => setShowCalculator(true)} />
-         
-         <ImpactStats />
-        <HowItWorks onCheckEligibility={() => setShowEligibility(true)} />
+        <HeroSection onCTAClick={goToCalculator} />
+
+        <ImpactStats />
+        <HowItWorks onCheckEligibility={goToCalculator} />
         <BenefitsSection />
         <ValueCards />
-         <TestimonialsSection />
-        <EarningsEstimator onCalculateClick={() => setShowCalculator(true)} />
-        <QualificationSection onCheckEligibility={() => setShowEligibility(true)} />
-         <FAQSection />
+        <TestimonialsSection />
+        <EarningsEstimator onCalculateClick={goToCalculator} />
+        <QualificationSection onCheckEligibility={goToCalculator} />
+        <FAQSection />
         <TrustSection />
-        <FinalCTA onCTAClick={() => setShowCalculator(true)} />
+        <FinalCTA onCTAClick={goToCalculator} />
       </main>
-      
+
       <Footer />
-      
-      <QuickCalculatorModal 
-        open={showCalculator} 
-        onOpenChange={setShowCalculator} 
-      />
-      
-      <EligibilityModal 
-        open={showEligibility} 
-        onOpenChange={setShowEligibility}
-        onQualified={() => {
-          setShowEligibility(false);
-          setShowCalculator(true);
-        }}
-      />
-       
-       <StickyCtaBar onCTAClick={() => setShowCalculator(true)} />
+
+      <StickyCtaBar onCTAClick={goToCalculator} />
     </div>
   );
 };

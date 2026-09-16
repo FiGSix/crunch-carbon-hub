@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
- import { Slider } from "@/components/ui/slider";
-import { TrendingUp } from "lucide-react";
- import { useState } from "react";
+import { Slider } from "@/components/ui/slider";
+import { TrendingUp, Calculator } from "lucide-react";
+import { useState } from "react";
 
 interface EarningsEstimatorProps {
   onCalculateClick: () => void;
@@ -65,13 +65,14 @@ export function EarningsEstimator({ onCalculateClick }: EarningsEstimatorProps) 
              </div>
            </div>
           
-          <Button 
-            size="lg"
-            onClick={onCalculateClick}
-            className="h-14 px-10 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
-          >
+           <Button
+             size="lg"
+             onClick={onCalculateClick}
+             className="h-14 px-10 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+           >
+             <Calculator className="mr-2 h-5 w-5" />
              Get My Detailed Calculation
-          </Button>
+           </Button>
            
            <p className="text-xs text-muted-foreground mt-4">
              * Estimates based on average South African solar production. Actual earnings may vary.

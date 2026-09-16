@@ -57,7 +57,9 @@ const Calculator = () => {
   }, []);
 
   // Input state
-  const [segment, setSegment] = useState<Segment>("homeowner");
+  const initialSegment: Segment =
+    searchParams.get("segment") === "business" ? "business" : "homeowner";
+  const [segment, setSegment] = useState<Segment>(initialSegment);
   const [systemSize, setSystemSize] = useState("");
   const [province, setProvince] = useState("");
   const [commissionDate, setCommissionDate] = useState<Date | undefined>(undefined);

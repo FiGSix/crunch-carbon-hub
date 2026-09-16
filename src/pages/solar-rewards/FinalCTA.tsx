@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Calculator } from "lucide-react";
 
 interface FinalCTAProps {
   onCTAClick: () => void;
@@ -18,11 +19,12 @@ export function FinalCTA({ onCTAClick }: FinalCTAProps) {
             Your green energy is valuable — let us unlock that value for you.
           </p>
           
-          <Button 
+          <Button
             size="lg"
             onClick={onCTAClick}
             className="h-16 px-12 text-xl font-bold shadow-xl hover:shadow-2xl transition-all mb-6"
           >
+            <Calculator className="mr-2 h-6 w-6" />
             Get Started
           </Button>
           
