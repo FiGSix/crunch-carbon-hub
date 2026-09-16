@@ -221,11 +221,12 @@ const Calculator = () => {
                 </motion.div>
               ) : estimate ? (
                 <motion.div
+                  ref={resultsRef}
                   key="calculator-results"
                   initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 14 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: prefersReducedMotion ? 0 : 0.45 }}
-                  className="space-y-8"
+                  className="space-y-8 scroll-mt-24"
                 >
                   <HeadlineResultPanel estimate={estimate} onEdit={handleEditDetails} />
 
