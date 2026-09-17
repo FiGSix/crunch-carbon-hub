@@ -88,8 +88,14 @@ const handler = async (req: Request): Promise<Response> => {
       clientName, 
       invitationToken,
       projectName,
-      clientId 
+      clientId,
+      ccEmails,
+      ccNames
     } = validatedRequest;
+
+    if (ccEmails?.length) {
+      console.log(`CC'ing ${ccEmails.length} additional client(s): ${ccEmails.join(', ')}`);
+    }
 
     // CRITICAL: Verify the token from the request matches what's stored in the database
     const verifiedToken = await verifyTokenConsistency(proposalId, invitationToken, supabase);
@@ -199,7 +205,8 @@ const handler = async (req: Request): Promise<Response> => {
         projectName,
         emailTemplate,
         agentEmail,
-        emailPlainText
+        emailPlainText,
+        ccEmails
       );
 
       // Store the Resend message_id for webhook tracking
@@ -221,7 +228,9 @@ const handler = async (req: Request): Promise<Response> => {
             details: {
               recipient: clientEmail,
               subject: `Carbon Credit Proposal: ${projectName}`,
-              agent_email: agentEmail
+              agent_email: agentEmail,
+              cc: ccEmails?.length ? ccEmails : undefined,
+              cc_names: ccNames?.length ? ccNames : undefined
             }
           });
 

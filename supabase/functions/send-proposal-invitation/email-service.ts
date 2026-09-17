@@ -196,7 +196,8 @@ export class EmailService {
     projectName: string,
     emailTemplate: string,
     ccEmail?: string,
-    plainText?: string
+    plainText?: string,
+    additionalCc?: string[]
   ) {
     const emailPayload: any = {
       from: "Crunch Carbon <proposals@crunchcarbon.com>",
@@ -209,9 +210,14 @@ export class EmailService {
       emailPayload.text = plainText;
     }
 
-    // Add CC if agent email is provided
-    if (ccEmail) {
-      emailPayload.cc = [ccEmail];
+    // CC the agent and any additional clients on the same email.
+    const ccList = [
+      ...(ccEmail ? [ccEmail] : []),
+      ...(additionalCc ?? []),
+    ].filter((email, index, all) => all.indexOf(email) === index);
+
+    if (ccList.length > 0) {
+      emailPayload.cc = ccList;
     }
 
     return await this.resend.emails.send(emailPayload);

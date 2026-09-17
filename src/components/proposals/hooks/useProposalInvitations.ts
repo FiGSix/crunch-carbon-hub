@@ -11,6 +11,7 @@ import { logger } from '@/lib/logger';
 interface ProposalContent {
   clientInfo?: ClientInformation;
   projectInfo?: ProjectInformation;
+  additionalClients?: { name?: string; email?: string }[];
 }
 
 interface InvitationResponse {
@@ -213,6 +214,31 @@ export function useProposalInvitations(onProposalUpdate?: () => void) {
         toast({ title: "Email blocked", description: msg, variant: "destructive" });
         return { success: false, error: msg };
       }
+
+      // Additional clients are CC'd on the same email. Suppressed or duplicate
+      // addresses are dropped silently — a CC must never block the primary send.
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const seen = new Set<string>([resolvedEmail.trim().toLowerCase()]);
+      if (user?.email) seen.add(user.email.trim().toLowerCase());
+      const ccEmails: string[] = [];
+      const ccNames: string[] = [];
+      const additionalClients = Array.isArray(content?.additionalClients)
+        ? content.additionalClients
+        : [];
+      for (const additional of additionalClients) {
+        const email = additional?.email?.trim().toLowerCase();
+        if (!email || !emailPattern.test(email) || seen.has(email)) continue;
+        if (await isEmailSuppressed(email)) {
+          logger.info("Skipping suppressed additional client email", { email });
+          continue;
+        }
+        seen.add(email);
+        ccEmails.push(email);
+        ccNames.push(additional.name?.trim() || email);
+      }
+      if (ccEmails.length > 0) {
+        logger.info("Additional clients will be CC'd", { count: ccEmails.length });
+      }
       
       logger.info("Calling email function", { tokenPrefix: tokenToUse.substring(0, 8) });
       
@@ -225,7 +251,9 @@ export function useProposalInvitations(onProposalUpdate?: () => void) {
           clientName: resolvedName,
           invitationToken: tokenToUse,
           projectName: content?.projectInfo?.name || 'Carbon Credit Project',
-          clientId: clientId
+          clientId: clientId,
+          ccEmails: ccEmails.length > 0 ? ccEmails : undefined,
+          ccNames: ccNames.length > 0 ? ccNames : undefined
         })
       });
       const invokeDuration = Date.now() - invokeStartTime;
