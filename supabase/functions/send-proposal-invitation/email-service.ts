@@ -165,17 +165,17 @@ export class EmailService {
       ? `If you have questions, or you did not expect this email, please contact ${agentName} at ${contactEmail}${data.agentEmail ? " (copied on this email too)" : ""}.`
       : `If you have questions, or you did not expect this email, please contact us at ${contactEmail}.`);
     lines.push("");
-    lines.push("What's next?");
-    lines.push("Below are three options you can select:");
+    lines.push("What happens next?");
+    lines.push("You are in control. Choose one of the options below and we'll take care of the rest.");
     lines.push("");
-    lines.push("1. Review Proposal");
-    lines.push("Click Review Proposal below to view your proposal on the Crunch Carbon platform. Review it, then accept or decline it when you are ready.");
+    lines.push("Review your proposal first");
+    lines.push("Open your proposal on the Crunch Carbon platform, read through the details, and decide when you're ready.");
     lines.push("");
-    lines.push("2. Accept & Sign");
-    lines.push("If you are ready to proceed, click Accept & Sign to accept the proposal and sign the Cession Agreement securely online.");
+    lines.push("Accept & sign online");
+    lines.push("Ready to move forward? Accept the proposal and sign the Cession Agreement securely in just a few clicks.");
     lines.push("");
-    lines.push("3. Decline");
-    lines.push("Decline the proposal by clicking Decline below.");
+    lines.push("Decline this proposal");
+    lines.push("If this isn't right for you, select Decline and we'll close this proposal with no follow-up pressure.");
     lines.push("");
     lines.push(`Review Proposal: ${data.viewLink}`);
     lines.push(`Accept & Sign: ${data.acceptLink}`);
