@@ -86,15 +86,23 @@ export class EmailService {
 
       <tr><td class="email-gutter" style="padding:20px 30px 0 30px;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:${BRAND.ink};line-height:1.7">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${BRAND.surfaceAlt};border:1px solid ${BRAND.border};border-radius:10px">
-          <tr><td style="padding:16px 18px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${BRAND.ink};line-height:1.8">
-            <strong style="font-size:17px">What’s next?</strong><br/>
-            Below are three options you can select:<br/><br/>
-            <strong>1. Review Proposal</strong><br/>
-            Click Review Proposal below to view your proposal on the Crunch Carbon platform. Review it, then accept or decline it when you are ready.<br/><br/>
-            <strong>2. Accept &amp; Sign</strong><br/>
-            If you are ready to proceed, click Accept &amp; Sign to accept the proposal and sign the Cession Agreement securely online.<br/><br/>
-            <strong>3. Decline</strong><br/>
-            Decline the proposal by clicking Decline below.
+          <tr><td style="padding:18px 18px 10px 18px;font-family:Arial,Helvetica,sans-serif;font-size:17px;color:${BRAND.ink};line-height:1.5">
+            <strong>What happens next?</strong>
+          </td></tr>
+          <tr><td style="padding:0 18px 10px 18px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${BRAND.inkMuted};line-height:1.6">
+            You are in control. Choose one of the options below and we'll take care of the rest.
+          </td></tr>
+          <tr><td style="padding:12px 18px;border-top:1px solid ${BRAND.border};font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${BRAND.ink};line-height:1.7">
+            <strong style="color:${BRAND.ink}">Review your proposal first</strong><br/>
+            Open your proposal on the Crunch Carbon platform, read through the details, and decide when you're ready.
+          </td></tr>
+          <tr><td style="padding:12px 18px;border-top:1px solid ${BRAND.border};font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${BRAND.ink};line-height:1.7">
+            <strong style="color:${BRAND.ink}">Accept &amp; sign online</strong><br/>
+            Ready to move forward? Accept the proposal and sign the Cession Agreement securely in just a few clicks.
+          </td></tr>
+          <tr><td style="padding:12px 18px 16px 18px;border-top:1px solid ${BRAND.border};font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${BRAND.ink};line-height:1.7">
+            <strong style="color:${BRAND.ink}">Decline this proposal</strong><br/>
+            If this isn't right for you, select Decline and we'll close this proposal with no follow-up pressure.
           </td></tr>
         </table>
       </td></tr>
@@ -103,13 +111,13 @@ export class EmailService {
         <table class="proposal-actions" role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
           <tr>
             <td class="proposal-action-cell" width="33.33%" style="padding:4px">
-              <a class="proposal-action-link" href="${data.viewLink}" target="_blank" style="display:block;padding:14px 6px;border:1px solid ${BRAND.ink};border-radius:8px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;color:${BRAND.ink};text-align:center;text-decoration:none;white-space:nowrap">Review Proposal</a>
+              <a class="proposal-action-link" href="${data.viewLink}" target="_blank" style="display:block;padding:14px 6px;border-radius:8px;background:#22C55E;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;color:#ffffff;text-align:center;text-decoration:none;white-space:nowrap">Review Proposal</a>
             </td>
             <td class="proposal-action-cell" width="33.33%" style="padding:4px">
-              <a class="proposal-action-link" href="${data.acceptLink}" target="_blank" style="display:block;padding:14px 6px;border:1px solid ${BRAND.ink};border-radius:8px;background:${BRAND.yellow};font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;color:${BRAND.ink};text-align:center;text-decoration:none;white-space:nowrap">Accept &amp; Sign</a>
+              <a class="proposal-action-link" href="${data.acceptLink}" target="_blank" style="display:block;padding:14px 6px;border-radius:8px;background:${BRAND.yellow};font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;color:${BRAND.ink};text-align:center;text-decoration:none;white-space:nowrap">Accept &amp; Sign</a>
             </td>
             <td class="proposal-action-cell" width="33.33%" style="padding:4px">
-              <a class="proposal-action-link" href="${data.declineLink}" target="_blank" style="display:block;padding:14px 6px;border:1px solid ${BRAND.border};border-radius:8px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;color:${BRAND.ink};text-align:center;text-decoration:none;white-space:nowrap">Decline</a>
+              <a class="proposal-action-link" href="${data.declineLink}" target="_blank" style="display:block;padding:14px 6px;border-radius:8px;background:#DC2626;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;color:#ffffff;text-align:center;text-decoration:none;white-space:nowrap">Decline</a>
             </td>
           </tr>
         </table>
@@ -157,17 +165,17 @@ export class EmailService {
       ? `If you have questions, or you did not expect this email, please contact ${agentName} at ${contactEmail}${data.agentEmail ? " (copied on this email too)" : ""}.`
       : `If you have questions, or you did not expect this email, please contact us at ${contactEmail}.`);
     lines.push("");
-    lines.push("What's next?");
-    lines.push("Below are three options you can select:");
+    lines.push("What happens next?");
+    lines.push("You are in control. Choose one of the options below and we'll take care of the rest.");
     lines.push("");
-    lines.push("1. Review Proposal");
-    lines.push("Click Review Proposal below to view your proposal on the Crunch Carbon platform. Review it, then accept or decline it when you are ready.");
+    lines.push("Review your proposal first");
+    lines.push("Open your proposal on the Crunch Carbon platform, read through the details, and decide when you're ready.");
     lines.push("");
-    lines.push("2. Accept & Sign");
-    lines.push("If you are ready to proceed, click Accept & Sign to accept the proposal and sign the Cession Agreement securely online.");
+    lines.push("Accept & sign online");
+    lines.push("Ready to move forward? Accept the proposal and sign the Cession Agreement securely in just a few clicks.");
     lines.push("");
-    lines.push("3. Decline");
-    lines.push("Decline the proposal by clicking Decline below.");
+    lines.push("Decline this proposal");
+    lines.push("If this isn't right for you, select Decline and we'll close this proposal with no follow-up pressure.");
     lines.push("");
     lines.push(`Review Proposal: ${data.viewLink}`);
     lines.push(`Accept & Sign: ${data.acceptLink}`);
