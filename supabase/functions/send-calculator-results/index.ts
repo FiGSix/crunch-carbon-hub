@@ -356,6 +356,8 @@ serve(async (req: Request) => {
           if (existing?.id && existing.invitation_token) {
             proposal = existing;
             responseToken = existing.invitation_token;
+            reusedExisting = true;
+
           } else {
             return jsonResponse({
               error: "We already have a report on file for this project. Please contact Crunch Carbon and we will send it to you.",
