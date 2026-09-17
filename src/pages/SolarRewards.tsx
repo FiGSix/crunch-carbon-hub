@@ -9,6 +9,8 @@ import { QualificationSection } from "./solar-rewards/QualificationSection";
 import { TrustSection } from "./solar-rewards/TrustSection";
 import { FinalCTA } from "./solar-rewards/FinalCTA";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { EligibilityModal } from "./solar-rewards/EligibilityModal";
 import { ImpactStats } from "./solar-rewards/ImpactStats";
 import { StickyCtaBar } from "@/components/solar-rewards/StickyCtaBar";
 import { FAQSection } from "./solar-rewards/FAQSection";
@@ -18,7 +20,14 @@ import { Helmet } from "react-helmet-async";
 
 const SolarRewards = () => {
   const navigate = useNavigate();
-  const goToCalculator = () => navigate("/calculator?segment=homeowner");
+  const [showEligibility, setShowEligibility] = useState(false);
+  const goToCalculator = () =>
+    navigate("/calculator?segment=homeowner#crunch-the-numbers");
+  const openEligibility = () => setShowEligibility(true);
+  const handleQualified = () => {
+    setShowEligibility(false);
+    goToCalculator();
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
