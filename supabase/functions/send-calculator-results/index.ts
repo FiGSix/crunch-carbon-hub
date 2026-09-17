@@ -258,6 +258,19 @@ serve(async (req: Request) => {
       return jsonResponse({ error: "We could not save your contact details. Please try again.", code: "CLIENT_SAVE_FAILED" }, 500);
     }
 
+    // Keep the client record current when the calculator supplies newer contact details.
+    const clientPatch: Record<string, unknown> = {};
+    if (normalizedPhone) clientPatch.phone = normalizedPhone;
+    if (normalizedCompany) clientPatch.company_name = normalizedCompany;
+    if (Object.keys(clientPatch).length > 0) {
+      const { error: clientPatchError } = await supabase
+        .from('clients')
+        .update(clientPatch)
+        .eq('id', clientReferenceId);
+      if (clientPatchError) console.error('Client detail update error:', clientPatchError);
+    }
+
+
     const { data: clientRecord, error: clientLookupError } = await supabase
       .from('clients')
       .select('user_id')
