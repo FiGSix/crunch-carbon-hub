@@ -317,6 +317,8 @@ serve(async (req: Request) => {
 
     let proposal: { id: string; invitation_token?: string | null } | null = recentProposal;
     let responseToken = recentProposal?.invitation_token ?? token;
+    let reusedExisting = Boolean(recentProposal);
+
 
     if (!proposal) {
       const { data: insertedProposal, error: insertError } = await supabase
