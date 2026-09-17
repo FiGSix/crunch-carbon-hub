@@ -380,6 +380,36 @@ serve(async (req: Request) => {
       return jsonResponse({ error: "Your proposal was saved, but its secure link could not be prepared.", code: "PROPOSAL_LINK_FAILED" }, 500);
     }
 
+    // A reused estimate must still carry the latest contact and address details
+    // so the cession agreement is filled in correctly.
+    if (reusedExisting) {
+      const { data: existingRow } = await supabase
+        .from('proposals')
+        .select('content, project_info')
+        .eq('id', proposal.id)
+        .maybeSingle();
+
+      const existingContent = (existingRow?.content ?? {}) as Record<string, unknown>;
+      const existingProjectInfo = (existingRow?.project_info ?? {}) as Record<string, unknown>;
+
+      const { error: patchError } = await supabase
+        .from('proposals')
+        .update({
+          content: {
+            ...existingContent,
+            ...proposalContent,
+            source: 'public_calculator',
+          },
+          project_info: {
+            ...existingProjectInfo,
+            ...projectInfoPayload,
+            source: 'public_calculator',
+          },
+        })
+        .eq('id', proposal.id);
+      if (patchError) console.error('Could not refresh reused calculator proposal:', patchError);
+    }
+
     // Build proposal URL
     const siteUrl = Deno.env.get("SITE_URL") || "https://crunchcarbon.com";
     const resultsUrl = `${siteUrl}/proposals/${proposal.id}?token=${responseToken}`;
@@ -387,6 +417,8 @@ serve(async (req: Request) => {
     let emailDelivered = false;
     // Email delivery does not revoke an otherwise valid on-screen proposal link.
     try {
+      if (!shouldSendEmail) throw new Error("EMAIL_SKIPPED");
+
       const emailResponse = await resend.emails.send({
         from: "Crunch Carbon <results@crunchcarbon.com>",
         to: [normalizedEmail],
