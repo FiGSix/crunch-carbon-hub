@@ -240,27 +240,21 @@ const Calculator = () => {
                 >
                   <HeadlineResultPanel estimate={estimate} onEdit={handleEditDetails} />
 
-                  {!proposalId || !proposalToken ? (
-                    <motion.div
-                      initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: prefersReducedMotion ? 0 : 0.45,
-                        delay: prefersReducedMotion ? 0 : 0.85,
-                      }}
-                    >
-                      <EmailGatePanel estimate={estimate} onEmailSubmitted={handleEmailSubmitted} />
-                    </motion.div>
-                  ) : (
-                    <>
-                      <FullForecastPanel estimate={estimate} />
-                      <ProposalPreviewPanel
-                        estimate={estimate}
-                        proposalId={proposalId}
-                        proposalToken={proposalToken}
-                      />
-                    </>
-                  )}
+                  <motion.div
+                    initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: prefersReducedMotion ? 0 : 0.45,
+                      delay: prefersReducedMotion ? 0 : 0.85,
+                    }}
+                  >
+                    <ContactDetailsPanel
+                      estimate={estimate}
+                      onEdit={handleEditDetails}
+                      onReady={handleProposalReady}
+                    />
+                  </motion.div>
+
                 </motion.div>
               ) : null}
             </AnimatePresence>
