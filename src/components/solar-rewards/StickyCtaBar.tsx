@@ -5,10 +5,11 @@ import { Calculator, ClipboardCheck } from "lucide-react";
  
  interface StickyCtaBarProps {
    onCTAClick: () => void;
-   onCheckEligibility: () => void;
+   onCheckEligibility?: () => void;
  }
  
  export function StickyCtaBar({ onCTAClick, onCheckEligibility }: StickyCtaBarProps) {
+   const handleEligibility = onCheckEligibility ?? onCTAClick;
    const [isVisible, setIsVisible] = useState(false);
  
    useEffect(() => {
