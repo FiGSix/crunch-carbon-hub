@@ -11,6 +11,7 @@ import { logger } from '@/lib/logger';
 interface ProposalContent {
   clientInfo?: ClientInformation;
   projectInfo?: ProjectInformation;
+  additionalClients?: { name?: string; email?: string }[];
 }
 
 interface InvitationResponse {
@@ -221,8 +222,8 @@ export function useProposalInvitations(onProposalUpdate?: () => void) {
       if (user?.email) seen.add(user.email.trim().toLowerCase());
       const ccEmails: string[] = [];
       const ccNames: string[] = [];
-      const additionalClients = Array.isArray(clientInfo?.additionalClients)
-        ? clientInfo.additionalClients
+      const additionalClients = Array.isArray(content?.additionalClients)
+        ? content.additionalClients
         : [];
       for (const additional of additionalClients) {
         const email = additional?.email?.trim().toLowerCase();
