@@ -81,9 +81,8 @@ const Calculator = () => {
   const [isCalculating, setIsCalculating] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  // Proposal state (unlocked after email)
-  const [proposalId, setProposalId] = useState<string | null>(null);
-  const [proposalToken, setProposalToken] = useState<string | null>(null);
+  // Once details are captured we hand straight over to the signing page.
+
 
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
