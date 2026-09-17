@@ -157,10 +157,12 @@ const Calculator = () => {
     }
   }, [validate, systemSize, province, commissionDate, segment]);
 
-  const handleEmailSubmitted = useCallback((id: string, token: string) => {
-    setProposalId(id);
-    setProposalToken(token);
-  }, []);
+  const handleProposalReady = useCallback(
+    (id: string, token: string) => {
+      navigate(`/proposals/${id}/accept?token=${encodeURIComponent(token)}`);
+    },
+    [navigate]
+  );
 
   useEffect(() => {
     if (step === "calculated" && resultsRef.current) {
@@ -176,9 +178,8 @@ const Calculator = () => {
   const handleEditDetails = useCallback(() => {
     setStep("input");
     setEstimate(null);
-    setProposalId(null);
-    setProposalToken(null);
   }, []);
+
 
   return (
     <div className="min-h-screen flex flex-col">
