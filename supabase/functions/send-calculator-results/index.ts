@@ -209,23 +209,30 @@ serve(async (req: Request) => {
     expiresAt.setHours(expiresAt.getHours() + 240);
 
     // Create proposal content
+    const projectInfoPayload = {
+      size: String(normalizedSize),
+      size_display: `${normalizedSize} kWp`,
+      commissionDate: commissioningDate,
+      commissioning_date: commissioningDate,
+      system_size_kwp: normalizedSize,
+      annual_energy_kwh: annualEnergy,
+      address: normalizedAddress || undefined,
+      latitude: latitude ?? undefined,
+      longitude: longitude ?? undefined,
+      province: province || undefined,
+      segment: segment || undefined,
+    };
+
     const proposalContent = {
       clientInfo: {
         email: normalizedEmail,
         name: `${firstName} ${lastName}`.trim(),
         first_name: firstName,
         last_name: lastName,
+        phone: normalizedPhone || undefined,
+        company_name: normalizedCompany || undefined,
       },
-      projectInfo: {
-        size: normalizedSize,
-        size_display: `${normalizedSize} kWp`,
-        commissionDate: commissioningDate,
-        system_size_kwp: normalizedSize,
-        annual_energy_kwh: annualEnergy,
-        address: address || undefined,
-        province: province || undefined,
-        segment: segment || undefined,
-      },
+      projectInfo: projectInfoPayload,
       financialInfo: {
         carbon_credits: carbonCredits,
         client_share_percentage: clientSharePercentage,
@@ -240,11 +247,12 @@ serve(async (req: Request) => {
         p_email: normalizedEmail,
         p_first_name: firstName,
         p_last_name: lastName,
-        p_phone: null,
-        p_company_name: null,
+        p_phone: normalizedPhone || null,
+        p_company_name: normalizedCompany || null,
         p_created_by: agentId,
       },
     );
+
     if (clientError || !clientReferenceId) {
       console.error('Client creation error:', clientError);
       return jsonResponse({ error: "We could not save your contact details. Please try again.", code: "CLIENT_SAVE_FAILED" }, 500);
