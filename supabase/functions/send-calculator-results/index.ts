@@ -78,25 +78,42 @@ serve(async (req: Request) => {
     const {
       email,
       name,
+      firstName: rawFirstName,
+      lastName: rawLastName,
+      phone,
+      companyName,
       systemSizeKwp,
       commissioningDate,
       referralCode,
       ipAddress,
       userAgent,
       address,
+      addressLat,
+      addressLng,
       province,
       segment,
+      sendEmail,
     } = requestBody;
 
+    const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
     const normalizedEmail = typeof email === "string" ? email.toLowerCase().trim() : "";
-    const normalizedName = typeof name === "string" ? name.trim() : "";
+    const normalizedName = str(name);
     const normalizedSize = Number(systemSizeKwp);
     const parsedCommissioningDate = new Date(`${commissioningDate}T00:00:00Z`);
     const minimumCommissioningDate = new Date("2022-09-15T00:00:00Z");
     const maximumCommissioningDate = new Date("2030-12-31T00:00:00Z");
 
+    // Explicit first/last name is preferred; a single "name" stays supported for older callers.
+    const nameParts = normalizedName.split(/\s+/).filter(Boolean);
+    const firstName = str(rawFirstName) || nameParts[0] || '';
+    const lastName = str(rawLastName) || nameParts.slice(1).join(' ') || '';
+    const normalizedPhone = str(phone);
+    const normalizedCompany = str(companyName);
+    const normalizedAddress = str(address);
+    const shouldSendEmail = sendEmail !== false;
+
     // Validate inputs
-    if (!normalizedEmail || !normalizedName || !commissioningDate) {
+    if (!normalizedEmail || !firstName || !commissioningDate) {
       return jsonResponse({ error: "Please complete your name, email, and commissioning date.", code: "INVALID_INPUT" }, 400);
     }
     if (!Number.isFinite(normalizedSize) || normalizedSize <= 0 || normalizedSize > 15000) {
@@ -115,6 +132,14 @@ serve(async (req: Request) => {
     if (segment && segment !== "homeowner" && segment !== "business") {
       return jsonResponse({ error: "Please select homeowner or business.", code: "INVALID_SEGMENT" }, 400);
     }
+    if (normalizedPhone && normalizedPhone.replace(/\D/g, "").length < 9) {
+      return jsonResponse({ error: "Please enter a valid contact number.", code: "INVALID_PHONE" }, 400);
+    }
+    if (segment === "business" && companyName !== undefined && normalizedCompany.length < 2) {
+      return jsonResponse({ error: "Please enter your business name.", code: "INVALID_COMPANY" }, 400);
+    }
+    const latitude = Number.isFinite(Number(addressLat)) ? Number(addressLat) : null;
+    const longitude = Number.isFinite(Number(addressLng)) ? Number(addressLng) : null;
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -122,11 +147,6 @@ serve(async (req: Request) => {
       return jsonResponse({ error: "Please enter a valid email address.", code: "INVALID_EMAIL" }, 400);
     }
 
-    // Name validation
-    // Parse name into first and last name
-    const nameParts = normalizedName.split(/\s+/);
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
 
     // Determine agent_id: referral agent or default Crunch Carbon admin
     let agentId: string | null = null;
