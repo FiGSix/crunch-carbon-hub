@@ -233,8 +233,7 @@ export function useProposalInvitations(onProposalUpdate?: () => void) {
         }
         seen.add(email);
         ccEmails.push(email);
-        const fullName = `${additional.firstName || ''} ${additional.lastName || ''}`.trim();
-        ccNames.push(fullName || email);
+        ccNames.push(additional.name?.trim() || email);
       }
       if (ccEmails.length > 0) {
         logger.info("Additional clients will be CC'd", { count: ccEmails.length });
