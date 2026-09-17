@@ -355,11 +355,11 @@ export function EligibilityModal({ open, onOpenChange, onQualified }: Eligibilit
               </h3>
               <p className="text-muted-foreground">
                 {failedStep === 0 && "Currently, we only work with solar systems in South Africa."}
-                {failedStep === 1 && "You must NOT be registered for any other Greenhouse Gas Emissions program to qualify."}
+                {failedStep === 1 && "You must NOT be registered for any other Greenhouse Gas Emissions programs to qualify."}
                 {failedStep === 2 && "Systems over 50 kWp require a different registration process. Contact us for enterprise solutions."}
-                {failedStep === 3 && "Your system must have been commissioned on or after September 15, 2022."}
-                {failedStep === 4 && "You must have legal ownership of the system or green attributes."}
-                {failedStep === 5 && "Participation in South African Government Funding Initiatives affects eligibility."}
+                {failedStep === 3 && "Your system must have been commissioned on or after the 15th September 2022."}
+                {failedStep === 4 && "You must be the legal owner of the solar system or the green attributes to qualify."}
+                {failedStep === 5 && "Systems funded by South African Government Grants or Funding Initiatives are not eligible."}
               </p>
             </div>
             
