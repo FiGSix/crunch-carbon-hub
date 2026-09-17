@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Zap, Leaf, Flame, TreePine, Info, Pencil, Sparkles, Sun, Circle, Star } from "lucide-react";
+import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 
 interface HeadlineResultPanelProps {
@@ -158,8 +159,73 @@ const Celebration = () => {
   );
 };
 
+const useFullScreenCelebration = (enabled: boolean) => {
+  useEffect(() => {
+    if (!enabled) return;
+
+    const rootStyles = getComputedStyle(document.documentElement);
+    const tokenColor = (token: string) => `hsl(${rootStyles.getPropertyValue(token).trim()})`;
+    const greenSwatch = document.createElement("span");
+    greenSwatch.className = "bg-green-500";
+    greenSwatch.style.position = "fixed";
+    greenSwatch.style.opacity = "0";
+    document.body.appendChild(greenSwatch);
+
+    const colors = [
+      tokenColor("--crunch-yellow"),
+      tokenColor("--crunch-black"),
+      tokenColor("--background"),
+      getComputedStyle(greenSwatch).backgroundColor,
+    ];
+    greenSwatch.remove();
+
+    let animationFrame = 0;
+    const startTimer = window.setTimeout(() => {
+      const end = Date.now() + 1900;
+
+      const launch = () => {
+        confetti({
+          particleCount: 2,
+          angle: 82,
+          spread: 26,
+          startVelocity: 38,
+          gravity: 1.15,
+          ticks: 180,
+          origin: { x: 0.02, y: 0.76 },
+          colors,
+          disableForReducedMotion: true,
+          zIndex: 60,
+        });
+        confetti({
+          particleCount: 2,
+          angle: 98,
+          spread: 26,
+          startVelocity: 38,
+          gravity: 1.15,
+          ticks: 180,
+          origin: { x: 0.98, y: 0.76 },
+          colors,
+          disableForReducedMotion: true,
+          zIndex: 60,
+        });
+
+        if (Date.now() < end) animationFrame = requestAnimationFrame(launch);
+      };
+
+      launch();
+    }, 180);
+
+    return () => {
+      window.clearTimeout(startTimer);
+      cancelAnimationFrame(animationFrame);
+      confetti.reset();
+    };
+  }, [enabled]);
+};
+
 export const HeadlineResultPanel = ({ estimate, onEdit }: HeadlineResultPanelProps) => {
   const prefersReducedMotion = useReducedMotion();
+  useFullScreenCelebration(!prefersReducedMotion);
   const {
     systemSizeKwp,
     province,
