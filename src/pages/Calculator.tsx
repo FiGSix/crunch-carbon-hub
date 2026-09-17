@@ -12,11 +12,10 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { HeroSection } from "./calculator/HeroSection";
 import { SystemInputPanel } from "./calculator/SystemInputPanel";
 import { HeadlineResultPanel } from "./calculator/HeadlineResultPanel";
-import { EmailGatePanel } from "./calculator/EmailGatePanel";
-import { FullForecastPanel } from "./calculator/FullForecastPanel";
-import { ProposalPreviewPanel } from "./calculator/ProposalPreviewPanel";
+import { ContactDetailsPanel } from "./calculator/ContactDetailsPanel";
 import { HowItWorksSection } from "./calculator/HowItWorksSection";
 import { FinalCTASection } from "./calculator/FinalCTASection";
+
 
 type Segment = "homeowner" | "business";
 type CalculatorStep = "input" | "calculated";
@@ -82,9 +81,8 @@ const Calculator = () => {
   const [isCalculating, setIsCalculating] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  // Proposal state (unlocked after email)
-  const [proposalId, setProposalId] = useState<string | null>(null);
-  const [proposalToken, setProposalToken] = useState<string | null>(null);
+  // Once details are captured we hand straight over to the signing page.
+
 
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
@@ -159,10 +157,12 @@ const Calculator = () => {
     }
   }, [validate, systemSize, province, commissionDate, segment]);
 
-  const handleEmailSubmitted = useCallback((id: string, token: string) => {
-    setProposalId(id);
-    setProposalToken(token);
-  }, []);
+  const handleProposalReady = useCallback(
+    (id: string, token: string) => {
+      navigate(`/proposals/${id}/accept?token=${encodeURIComponent(token)}`);
+    },
+    [navigate]
+  );
 
   useEffect(() => {
     if (step === "calculated" && resultsRef.current) {
@@ -178,9 +178,8 @@ const Calculator = () => {
   const handleEditDetails = useCallback(() => {
     setStep("input");
     setEstimate(null);
-    setProposalId(null);
-    setProposalToken(null);
   }, []);
+
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -241,27 +240,21 @@ const Calculator = () => {
                 >
                   <HeadlineResultPanel estimate={estimate} onEdit={handleEditDetails} />
 
-                  {!proposalId || !proposalToken ? (
-                    <motion.div
-                      initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{
-                        duration: prefersReducedMotion ? 0 : 0.45,
-                        delay: prefersReducedMotion ? 0 : 0.85,
-                      }}
-                    >
-                      <EmailGatePanel estimate={estimate} onEmailSubmitted={handleEmailSubmitted} />
-                    </motion.div>
-                  ) : (
-                    <>
-                      <FullForecastPanel estimate={estimate} />
-                      <ProposalPreviewPanel
-                        estimate={estimate}
-                        proposalId={proposalId}
-                        proposalToken={proposalToken}
-                      />
-                    </>
-                  )}
+                  <motion.div
+                    initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: prefersReducedMotion ? 0 : 0.45,
+                      delay: prefersReducedMotion ? 0 : 0.85,
+                    }}
+                  >
+                    <ContactDetailsPanel
+                      estimate={estimate}
+                      onEdit={handleEditDetails}
+                      onReady={handleProposalReady}
+                    />
+                  </motion.div>
+
                 </motion.div>
               ) : null}
             </AnimatePresence>

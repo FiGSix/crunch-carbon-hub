@@ -338,7 +338,7 @@ export const SystemInputPanel = ({
         </Button>
 
         <p className="text-center text-xs text-crunch-black/50">
-          We'll show your Rand earnings instantly. The full year-by-year forecast is unlocked after you share your email.
+          We'll show your Rand earnings instantly. Add your details afterwards to go straight to signing.
         </p>
       </div>
     </motion.div>

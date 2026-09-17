@@ -10,15 +10,23 @@ const corsHeaders = {
 interface CalculatorRequest {
   email: string;
   name?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  companyName?: string;
   systemSizeKwp: number;
   commissioningDate: string;
   referralCode?: string;
   ipAddress?: string;
   userAgent?: string;
   address?: string;
+  addressLat?: number;
+  addressLng?: number;
   province?: string;
   segment?: string;
+  sendEmail?: boolean;
 }
+
 
 interface CalculatorSuccessResponse {
   success: true;
@@ -70,25 +78,42 @@ serve(async (req: Request) => {
     const {
       email,
       name,
+      firstName: rawFirstName,
+      lastName: rawLastName,
+      phone,
+      companyName,
       systemSizeKwp,
       commissioningDate,
       referralCode,
       ipAddress,
       userAgent,
       address,
+      addressLat,
+      addressLng,
       province,
       segment,
+      sendEmail,
     } = requestBody;
 
+    const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
     const normalizedEmail = typeof email === "string" ? email.toLowerCase().trim() : "";
-    const normalizedName = typeof name === "string" ? name.trim() : "";
+    const normalizedName = str(name);
     const normalizedSize = Number(systemSizeKwp);
     const parsedCommissioningDate = new Date(`${commissioningDate}T00:00:00Z`);
     const minimumCommissioningDate = new Date("2022-09-15T00:00:00Z");
     const maximumCommissioningDate = new Date("2030-12-31T00:00:00Z");
 
+    // Explicit first/last name is preferred; a single "name" stays supported for older callers.
+    const nameParts = normalizedName.split(/\s+/).filter(Boolean);
+    const firstName = str(rawFirstName) || nameParts[0] || '';
+    const lastName = str(rawLastName) || nameParts.slice(1).join(' ') || '';
+    const normalizedPhone = str(phone);
+    const normalizedCompany = str(companyName);
+    const normalizedAddress = str(address);
+    const shouldSendEmail = sendEmail !== false;
+
     // Validate inputs
-    if (!normalizedEmail || !normalizedName || !commissioningDate) {
+    if (!normalizedEmail || !firstName || !commissioningDate) {
       return jsonResponse({ error: "Please complete your name, email, and commissioning date.", code: "INVALID_INPUT" }, 400);
     }
     if (!Number.isFinite(normalizedSize) || normalizedSize <= 0 || normalizedSize > 15000) {
@@ -107,6 +132,14 @@ serve(async (req: Request) => {
     if (segment && segment !== "homeowner" && segment !== "business") {
       return jsonResponse({ error: "Please select homeowner or business.", code: "INVALID_SEGMENT" }, 400);
     }
+    if (normalizedPhone && normalizedPhone.replace(/\D/g, "").length < 9) {
+      return jsonResponse({ error: "Please enter a valid contact number.", code: "INVALID_PHONE" }, 400);
+    }
+    if (segment === "business" && companyName !== undefined && normalizedCompany.length < 2) {
+      return jsonResponse({ error: "Please enter your business name.", code: "INVALID_COMPANY" }, 400);
+    }
+    const latitude = Number.isFinite(Number(addressLat)) ? Number(addressLat) : null;
+    const longitude = Number.isFinite(Number(addressLng)) ? Number(addressLng) : null;
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -114,11 +147,6 @@ serve(async (req: Request) => {
       return jsonResponse({ error: "Please enter a valid email address.", code: "INVALID_EMAIL" }, 400);
     }
 
-    // Name validation
-    // Parse name into first and last name
-    const nameParts = normalizedName.split(/\s+/);
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
 
     // Determine agent_id: referral agent or default Crunch Carbon admin
     let agentId: string | null = null;
@@ -181,23 +209,30 @@ serve(async (req: Request) => {
     expiresAt.setHours(expiresAt.getHours() + 240);
 
     // Create proposal content
+    const projectInfoPayload = {
+      size: String(normalizedSize),
+      size_display: `${normalizedSize} kWp`,
+      commissionDate: commissioningDate,
+      commissioning_date: commissioningDate,
+      system_size_kwp: normalizedSize,
+      annual_energy_kwh: annualEnergy,
+      address: normalizedAddress || undefined,
+      latitude: latitude ?? undefined,
+      longitude: longitude ?? undefined,
+      province: province || undefined,
+      segment: segment || undefined,
+    };
+
     const proposalContent = {
       clientInfo: {
         email: normalizedEmail,
         name: `${firstName} ${lastName}`.trim(),
         first_name: firstName,
         last_name: lastName,
+        phone: normalizedPhone || undefined,
+        company_name: normalizedCompany || undefined,
       },
-      projectInfo: {
-        size: normalizedSize,
-        size_display: `${normalizedSize} kWp`,
-        commissionDate: commissioningDate,
-        system_size_kwp: normalizedSize,
-        annual_energy_kwh: annualEnergy,
-        address: address || undefined,
-        province: province || undefined,
-        segment: segment || undefined,
-      },
+      projectInfo: projectInfoPayload,
       financialInfo: {
         carbon_credits: carbonCredits,
         client_share_percentage: clientSharePercentage,
@@ -212,15 +247,29 @@ serve(async (req: Request) => {
         p_email: normalizedEmail,
         p_first_name: firstName,
         p_last_name: lastName,
-        p_phone: null,
-        p_company_name: null,
+        p_phone: normalizedPhone || null,
+        p_company_name: normalizedCompany || null,
         p_created_by: agentId,
       },
     );
+
     if (clientError || !clientReferenceId) {
       console.error('Client creation error:', clientError);
       return jsonResponse({ error: "We could not save your contact details. Please try again.", code: "CLIENT_SAVE_FAILED" }, 500);
     }
+
+    // Keep the client record current when the calculator supplies newer contact details.
+    const clientPatch: Record<string, unknown> = {};
+    if (normalizedPhone) clientPatch.phone = normalizedPhone;
+    if (normalizedCompany) clientPatch.company_name = normalizedCompany;
+    if (Object.keys(clientPatch).length > 0) {
+      const { error: clientPatchError } = await supabase
+        .from('clients')
+        .update(clientPatch)
+        .eq('id', clientReferenceId);
+      if (clientPatchError) console.error('Client detail update error:', clientPatchError);
+    }
+
 
     const { data: clientRecord, error: clientLookupError } = await supabase
       .from('clients')
@@ -268,6 +317,8 @@ serve(async (req: Request) => {
 
     let proposal: { id: string; invitation_token?: string | null } | null = recentProposal;
     let responseToken = recentProposal?.invitation_token ?? token;
+    let reusedExisting = Boolean(recentProposal);
+
 
     if (!proposal) {
       const { data: insertedProposal, error: insertError } = await supabase
@@ -276,12 +327,10 @@ serve(async (req: Request) => {
         title: proposalTitle,
         content: { ...proposalContent, source: 'public_calculator' },
         project_info: {
-          system_size_kwp: normalizedSize,
-          commissioning_date: commissioningDate,
-          province: province || undefined,
-          segment: segment || undefined,
+          ...projectInfoPayload,
           source: 'public_calculator',
         },
+
         eligibility_criteria: {},
         status: 'sent',
         carbon_credits: carbonCredits,
@@ -307,6 +356,8 @@ serve(async (req: Request) => {
           if (existing?.id && existing.invitation_token) {
             proposal = existing;
             responseToken = existing.invitation_token;
+            reusedExisting = true;
+
           } else {
             return jsonResponse({
               error: "We already have a report on file for this project. Please contact Crunch Carbon and we will send it to you.",
@@ -329,13 +380,46 @@ serve(async (req: Request) => {
       return jsonResponse({ error: "Your proposal was saved, but its secure link could not be prepared.", code: "PROPOSAL_LINK_FAILED" }, 500);
     }
 
+    // A reused estimate must still carry the latest contact and address details
+    // so the cession agreement is filled in correctly.
+    if (reusedExisting) {
+      const { data: existingRow } = await supabase
+        .from('proposals')
+        .select('content, project_info')
+        .eq('id', proposal.id)
+        .maybeSingle();
+
+      const existingContent = (existingRow?.content ?? {}) as Record<string, unknown>;
+      const existingProjectInfo = (existingRow?.project_info ?? {}) as Record<string, unknown>;
+
+      const { error: patchError } = await supabase
+        .from('proposals')
+        .update({
+          content: {
+            ...existingContent,
+            ...proposalContent,
+            source: 'public_calculator',
+          },
+          project_info: {
+            ...existingProjectInfo,
+            ...projectInfoPayload,
+            source: 'public_calculator',
+          },
+        })
+        .eq('id', proposal.id);
+      if (patchError) console.error('Could not refresh reused calculator proposal:', patchError);
+    }
+
     // Build proposal URL
     const siteUrl = Deno.env.get("SITE_URL") || "https://crunchcarbon.com";
     const resultsUrl = `${siteUrl}/proposals/${proposal.id}?token=${responseToken}`;
 
     let emailDelivered = false;
     // Email delivery does not revoke an otherwise valid on-screen proposal link.
-    try {
+    // Callers that take the user straight to signing opt out with sendEmail: false.
+    if (shouldSendEmail) try {
+
+
       const emailResponse = await resend.emails.send({
         from: "Crunch Carbon <results@crunchcarbon.com>",
         to: [normalizedEmail],
@@ -435,7 +519,12 @@ serve(async (req: Request) => {
         proposalId: proposal.id,
         token: responseToken,
         emailDelivered,
-        message: emailDelivered ? "Proposal created and emailed successfully" : "Proposal created; email delivery failed",
+        message: !shouldSendEmail
+          ? "Proposal created"
+          : emailDelivered
+            ? "Proposal created and emailed successfully"
+            : "Proposal created; email delivery failed",
+
     };
     return jsonResponse(response);
   } catch (error: any) {
