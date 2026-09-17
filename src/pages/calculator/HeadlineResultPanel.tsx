@@ -181,29 +181,29 @@ const useFullScreenCelebration = (enabled: boolean) => {
 
     let animationFrame = 0;
     const startTimer = window.setTimeout(() => {
-      const end = Date.now() + 2400;
+      const end = Date.now() + 1900;
 
       const launch = () => {
         confetti({
-          particleCount: 3,
-          angle: 58,
-          spread: 62,
-          startVelocity: 46,
-          gravity: 0.9,
-          ticks: 220,
-          origin: { x: 0, y: 0.7 },
+          particleCount: 2,
+          angle: 72,
+          spread: 42,
+          startVelocity: 42,
+          gravity: 1.15,
+          ticks: 180,
+          origin: { x: 0, y: 0.78 },
           colors,
           disableForReducedMotion: true,
           zIndex: 60,
         });
         confetti({
-          particleCount: 3,
-          angle: 122,
-          spread: 62,
-          startVelocity: 46,
-          gravity: 0.9,
-          ticks: 220,
-          origin: { x: 1, y: 0.7 },
+          particleCount: 2,
+          angle: 108,
+          spread: 42,
+          startVelocity: 42,
+          gravity: 1.15,
+          ticks: 180,
+          origin: { x: 1, y: 0.78 },
           colors,
           disableForReducedMotion: true,
           zIndex: 60,
