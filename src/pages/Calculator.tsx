@@ -12,11 +12,10 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { HeroSection } from "./calculator/HeroSection";
 import { SystemInputPanel } from "./calculator/SystemInputPanel";
 import { HeadlineResultPanel } from "./calculator/HeadlineResultPanel";
-import { EmailGatePanel } from "./calculator/EmailGatePanel";
-import { FullForecastPanel } from "./calculator/FullForecastPanel";
-import { ProposalPreviewPanel } from "./calculator/ProposalPreviewPanel";
+import { ContactDetailsPanel } from "./calculator/ContactDetailsPanel";
 import { HowItWorksSection } from "./calculator/HowItWorksSection";
 import { FinalCTASection } from "./calculator/FinalCTASection";
+
 
 type Segment = "homeowner" | "business";
 type CalculatorStep = "input" | "calculated";
