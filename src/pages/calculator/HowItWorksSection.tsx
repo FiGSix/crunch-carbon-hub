@@ -14,7 +14,7 @@ const steps = [
     icon: FileText,
     title: "Make your proposal",
     description:
-      "Share your email to unlock the full 2025–2030 forecast and generate your personalised Crunch Carbon proposal.",
+      "Add your contact and site details to generate your personalised Crunch Carbon proposal.",
   },
   {
     number: "03",
