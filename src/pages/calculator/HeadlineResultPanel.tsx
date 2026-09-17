@@ -343,18 +343,6 @@ export const HeadlineResultPanel = ({ estimate, onEdit }: HeadlineResultPanelPro
         </span>
       </div>
 
-      <div className="mt-5 flex justify-center">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onEdit}
-          className="text-crunch-black/60 hover:text-crunch-black"
-        >
-          <Pencil className="mr-2 h-4 w-4" />
-          Edit solar system details
-        </Button>
-      </div>
     </motion.div>
   );
 };
