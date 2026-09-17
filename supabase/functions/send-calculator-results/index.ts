@@ -519,7 +519,12 @@ serve(async (req: Request) => {
         proposalId: proposal.id,
         token: responseToken,
         emailDelivered,
-        message: emailDelivered ? "Proposal created and emailed successfully" : "Proposal created; email delivery failed",
+        message: !shouldSendEmail
+          ? "Proposal created"
+          : emailDelivered
+            ? "Proposal created and emailed successfully"
+            : "Proposal created; email delivery failed",
+
     };
     return jsonResponse(response);
   } catch (error: any) {
