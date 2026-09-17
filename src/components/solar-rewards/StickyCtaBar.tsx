@@ -42,7 +42,7 @@ import { Calculator, ClipboardCheck } from "lucide-react";
                 Calculate My Earnings
               </Button>
               <Button
-                 onClick={onCheckEligibility}
+                 onClick={handleEligibility}
                  variant="outline"
                 className="w-full h-12 text-base font-semibold gap-2 border-2 border-crunch-black/20 hover:bg-crunch-yellow hover:text-crunch-black hover:border-crunch-yellow"
                 size="lg"
