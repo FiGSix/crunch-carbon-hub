@@ -10,15 +10,23 @@ const corsHeaders = {
 interface CalculatorRequest {
   email: string;
   name?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  companyName?: string;
   systemSizeKwp: number;
   commissioningDate: string;
   referralCode?: string;
   ipAddress?: string;
   userAgent?: string;
   address?: string;
+  addressLat?: number;
+  addressLng?: number;
   province?: string;
   segment?: string;
+  sendEmail?: boolean;
 }
+
 
 interface CalculatorSuccessResponse {
   success: true;
