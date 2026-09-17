@@ -76,15 +76,15 @@ const SolarRewards = () => {
       <Header />
 
       <main className="flex-1">
-        <HeroSection onCTAClick={goToCalculator} />
+        <HeroSection onCTAClick={goToCalculator} onCheckEligibility={openEligibility} />
 
         <ImpactStats />
-        <HowItWorks onCheckEligibility={goToCalculator} />
+        <HowItWorks onCheckEligibility={openEligibility} />
         <BenefitsSection />
         <ValueCards />
         <TestimonialsSection />
         <EarningsEstimator onCalculateClick={goToCalculator} />
-        <QualificationSection onCheckEligibility={goToCalculator} />
+        <QualificationSection onCheckEligibility={openEligibility} />
         <FAQSection />
         <TrustSection />
         <FinalCTA onCTAClick={goToCalculator} />
@@ -92,7 +92,13 @@ const SolarRewards = () => {
 
       <Footer />
 
-      <StickyCtaBar onCTAClick={goToCalculator} />
+      <StickyCtaBar onCTAClick={goToCalculator} onCheckEligibility={openEligibility} />
+
+      <EligibilityModal
+        open={showEligibility}
+        onOpenChange={setShowEligibility}
+        onQualified={handleQualified}
+      />
     </div>
   );
 };

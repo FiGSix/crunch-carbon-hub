@@ -56,6 +56,17 @@ const Calculator = () => {
     });
   }, []);
 
+  // Land on the "Crunch the Numbers" input panel when linked with that hash
+  useEffect(() => {
+    if (window.location.hash !== "#crunch-the-numbers") return;
+    const timer = setTimeout(() => {
+      document
+        .getElementById("crunch-the-numbers")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 120);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Input state
   const initialSegment: Segment =
     searchParams.get("segment") === "business" ? "business" : "homeowner";
