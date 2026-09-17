@@ -325,12 +325,10 @@ serve(async (req: Request) => {
         title: proposalTitle,
         content: { ...proposalContent, source: 'public_calculator' },
         project_info: {
-          system_size_kwp: normalizedSize,
-          commissioning_date: commissioningDate,
-          province: province || undefined,
-          segment: segment || undefined,
+          ...projectInfoPayload,
           source: 'public_calculator',
         },
+
         eligibility_criteria: {},
         status: 'sent',
         carbon_credits: carbonCredits,
