@@ -7,6 +7,10 @@ export interface InvitationRequest {
   projectName: string;
   clientId?: string;
   agentEmail?: string; // Agent email fetched server-side for CC
+  /** Additional clients CC'd on the same invitation email (primary client still signs). */
+  ccEmails?: string[];
+  /** Display names matching ccEmails, used for logging only. */
+  ccNames?: string[];
 }
 
 /** Values shown in the "Your proposal in 30 seconds" block. Any field may be absent. */
