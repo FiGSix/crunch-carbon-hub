@@ -416,8 +416,9 @@ serve(async (req: Request) => {
 
     let emailDelivered = false;
     // Email delivery does not revoke an otherwise valid on-screen proposal link.
-    try {
-      if (!shouldSendEmail) throw new Error("EMAIL_SKIPPED");
+    // Callers that take the user straight to signing opt out with sendEmail: false.
+    if (shouldSendEmail) try {
+
 
       const emailResponse = await resend.emails.send({
         from: "Crunch Carbon <results@crunchcarbon.com>",
