@@ -33,11 +33,11 @@ export function EligibilityModal({ open, onOpenChange, onQualified }: Eligibilit
 
   const questions = [
     {
-      question: "The project is located in South Africa?",
+      question: "Are your solar project located in South Africa?",
       correctAnswer: true
     },
     {
-      question: "Are you registered for any other Greenhouse Gas Emissions program?",
+      question: "Are you registered for any other Greenhouse Gas Emissions programs?",
       correctAnswer: false
     },
     {
@@ -45,15 +45,15 @@ export function EligibilityModal({ open, onOpenChange, onQualified }: Eligibilit
       correctAnswer: true
     },
     {
-      question: "Was it commissioned or switched on for the first time on or after September 15, 2022?",
+      question: "Was it commissioned or switched on for the first time, on or after the 15th September 2022?",
       correctAnswer: true
     },
     {
-      question: "Are you the legal ownership of system or green attributes?",
+      question: "Are you the legal owner of the solar system or the green attributes?",
       correctAnswer: true
     },
     {
-      question: "Are you participating in any South African Government Funding Initiatives?",
+      question: "Was your solar system funded by any South African Government Grants or Funding Initiatives?",
       correctAnswer: false
     }
   ];
