@@ -96,7 +96,8 @@ export const SystemInputPanel = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="meta-card p-6 md:p-8 relative"
+      id="crunch-the-numbers"
+      className="meta-card p-6 md:p-8 relative scroll-mt-28"
     >
       <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-crunch-yellow/90 text-crunch-black font-medium px-4 py-2 rounded-full shadow-md whitespace-nowrap">
         <span className="flex items-center justify-center text-sm">

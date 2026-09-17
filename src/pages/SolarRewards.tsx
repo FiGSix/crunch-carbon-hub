@@ -9,6 +9,8 @@ import { QualificationSection } from "./solar-rewards/QualificationSection";
 import { TrustSection } from "./solar-rewards/TrustSection";
 import { FinalCTA } from "./solar-rewards/FinalCTA";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { EligibilityModal } from "./solar-rewards/EligibilityModal";
 import { ImpactStats } from "./solar-rewards/ImpactStats";
 import { StickyCtaBar } from "@/components/solar-rewards/StickyCtaBar";
 import { FAQSection } from "./solar-rewards/FAQSection";
@@ -18,7 +20,14 @@ import { Helmet } from "react-helmet-async";
 
 const SolarRewards = () => {
   const navigate = useNavigate();
-  const goToCalculator = () => navigate("/calculator?segment=homeowner");
+  const [showEligibility, setShowEligibility] = useState(false);
+  const goToCalculator = () =>
+    navigate("/calculator?segment=homeowner#crunch-the-numbers");
+  const openEligibility = () => setShowEligibility(true);
+  const handleQualified = () => {
+    setShowEligibility(false);
+    goToCalculator();
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -67,15 +76,15 @@ const SolarRewards = () => {
       <Header />
 
       <main className="flex-1">
-        <HeroSection onCTAClick={goToCalculator} />
+        <HeroSection onCTAClick={goToCalculator} onCheckEligibility={openEligibility} />
 
         <ImpactStats />
-        <HowItWorks onCheckEligibility={goToCalculator} />
+        <HowItWorks onCheckEligibility={openEligibility} />
         <BenefitsSection />
         <ValueCards />
         <TestimonialsSection />
         <EarningsEstimator onCalculateClick={goToCalculator} />
-        <QualificationSection onCheckEligibility={goToCalculator} />
+        <QualificationSection onCheckEligibility={openEligibility} />
         <FAQSection />
         <TrustSection />
         <FinalCTA onCTAClick={goToCalculator} />
@@ -83,7 +92,13 @@ const SolarRewards = () => {
 
       <Footer />
 
-      <StickyCtaBar onCTAClick={goToCalculator} />
+      <StickyCtaBar onCTAClick={goToCalculator} onCheckEligibility={openEligibility} />
+
+      <EligibilityModal
+        open={showEligibility}
+        onOpenChange={setShowEligibility}
+        onQualified={handleQualified}
+      />
     </div>
   );
 };

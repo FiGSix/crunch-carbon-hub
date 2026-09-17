@@ -6,9 +6,10 @@ import { Calculator, ClipboardCheck } from "lucide-react";
 
 interface HeroSectionProps {
   onCTAClick: () => void;
+  onCheckEligibility: () => void;
 }
 
-export function HeroSection({ onCTAClick }: HeroSectionProps) {
+export function HeroSection({ onCTAClick, onCheckEligibility }: HeroSectionProps) {
   const { stats } = useHomeownerStats();
   return (
     <section className="relative bg-gradient-to-br from-accent via-background to-muted overflow-hidden">
@@ -84,7 +85,7 @@ export function HeroSection({ onCTAClick }: HeroSectionProps) {
             <Button
               size="lg"
               variant="outline"
-              onClick={onCTAClick}
+              onClick={onCheckEligibility}
               className="h-14 md:h-16 px-8 md:px-12 text-lg md:text-xl font-semibold w-full sm:w-auto border-2 border-crunch-black/20 hover:bg-crunch-yellow hover:text-crunch-black hover:border-crunch-yellow transition-all"
             >
               <ClipboardCheck className="mr-2 h-5 w-5" />
