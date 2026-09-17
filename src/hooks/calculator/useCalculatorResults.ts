@@ -5,12 +5,19 @@ import { parseEdgeFunctionError } from "@/lib/errors/edgeFunctionErrors";
 interface SendCalculatorResultsParams {
   email: string;
   name?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  companyName?: string;
   systemSizeKwp: number;
   commissioningDate: string;
   referralCode?: string;
   address?: string;
+  addressLat?: number;
+  addressLng?: number;
   province?: string;
   segment?: string;
+  sendEmail?: boolean;
 }
 
 export interface CalculatorResultsResponse {
@@ -28,12 +35,19 @@ export const useSendCalculatorResults = () => {
         body: {
           email: params.email,
           name: params.name,
+          firstName: params.firstName,
+          lastName: params.lastName,
+          phone: params.phone,
+          companyName: params.companyName,
           systemSizeKwp: params.systemSizeKwp,
           commissioningDate: params.commissioningDate,
           referralCode: params.referralCode,
           address: params.address,
+          addressLat: params.addressLat,
+          addressLng: params.addressLng,
           province: params.province,
           segment: params.segment,
+          sendEmail: params.sendEmail,
           ipAddress: null,
           userAgent: navigator.userAgent,
         },
