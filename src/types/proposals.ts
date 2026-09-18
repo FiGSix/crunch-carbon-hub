@@ -267,6 +267,11 @@ export interface ProposalFilters {
 export interface ProposalListProps {
   proposals: ProposalListItem[];
   onProposalUpdate?: () => void;
+  /** Admin-only bulk selection */
+  selectable?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
+  onToggleSelectAll?: () => void;
 }
 
 /**

@@ -8,6 +8,8 @@ import { ProposalActions } from "@/components/proposals/ProposalActions";
 import { ProposalLoadingState } from "@/components/proposals/ProposalLoadingState";
 import { EngagementDashboard } from "@/components/proposals/engagement/EngagementDashboard";
 import { AdvancedProposalFilters, applyAdvancedFilters } from "@/components/proposals/filters/AdvancedProposalFilters";
+import { BulkSelectionBar } from "@/components/proposals/bulk/BulkSelectionBar";
+import { ConfirmMoveToOnboardingDialog } from "@/components/proposals/bulk/ConfirmMoveToOnboardingDialog";
 
 import { useProposals } from "@/hooks/useProposals";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -36,6 +38,44 @@ export function ProposalsSectionOptimized() {
   const filteredProposals = useMemo(() => {
     return applyAdvancedFilters(proposals, advancedFilters);
   }, [proposals, advancedFilters]);
+
+  // Admin-only bulk selection of visible proposals
+  const isAdmin = userRole === 'admin';
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+
+  // Drop selections that are no longer visible after filtering/refresh
+  useEffect(() => {
+    setSelectedIds(prev => {
+      if (prev.size === 0) return prev;
+      const visible = new Set(filteredProposals.map(p => p.id));
+      const next = new Set([...prev].filter(id => visible.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [filteredProposals]);
+
+  const handleToggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleToggleSelectAll = useCallback(() => {
+    setSelectedIds(prev => {
+      const selectable = filteredProposals.filter(p => !p.signed_at);
+      const allSelected =
+        selectable.length > 0 && selectable.every(p => prev.has(p.id));
+      return allSelected ? new Set() : new Set(selectable.map(p => p.id));
+    });
+  }, [filteredProposals]);
+
+  const selectedProposals = useMemo(
+    () => filteredProposals.filter(p => selectedIds.has(p.id)),
+    [filteredProposals, selectedIds]
+  );
   
   // Optimized auth state logging - only on significant changes
   useEffect(() => {
@@ -168,10 +208,23 @@ export function ProposalsSectionOptimized() {
           />
           
           {!loading && filteredProposals.length > 0 && (
-            <ProposalList 
-              proposals={filteredProposals} 
-              onProposalUpdate={handleProposalUpdate}
-            />
+            <>
+              {isAdmin && (
+                <BulkSelectionBar
+                  selectedCount={selectedIds.size}
+                  onMove={() => setShowMoveDialog(true)}
+                  onClear={() => setSelectedIds(new Set())}
+                />
+              )}
+              <ProposalList 
+                proposals={filteredProposals} 
+                onProposalUpdate={handleProposalUpdate}
+                selectable={isAdmin}
+                selectedIds={selectedIds}
+                onToggleSelect={handleToggleSelect}
+                onToggleSelectAll={handleToggleSelectAll}
+              />
+            </>
           )}
           
           {!loading && proposals.length > 0 && filteredProposals.length === 0 && (
@@ -183,6 +236,18 @@ export function ProposalsSectionOptimized() {
           )}
         </CardContent>
       </Card>
+
+      {isAdmin && (
+        <ConfirmMoveToOnboardingDialog
+          open={showMoveDialog}
+          onOpenChange={setShowMoveDialog}
+          proposals={selectedProposals}
+          onSuccess={() => {
+            setSelectedIds(new Set());
+            handleProposalUpdate();
+          }}
+        />
+      )}
     </div>
   );
 }

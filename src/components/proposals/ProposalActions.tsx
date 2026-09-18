@@ -1,17 +1,15 @@
 
 import { useState } from "react";
-import { Plus, Upload, Package } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth";
 import { BulkProposalUpload } from "./BulkProposalUpload";
-import { BulkMoveToOnboardingDialog } from "./BulkMoveToOnboardingDialog";
 
 export function ProposalActions() {
   const navigate = useNavigate();
   const { userRole, profile } = useAuth();
   const [showBulkUpload, setShowBulkUpload] = useState(false);
-  const [showBulkMoveToOnboarding, setShowBulkMoveToOnboarding] = useState(false);
   
   // Only show for agents and admins
   if (userRole !== "agent" && userRole !== "admin") {
@@ -33,39 +31,18 @@ export function ProposalActions() {
           Create New Proposal
         </Button>
         
-        {(userRole === "agent" || userRole === "admin") && (
-          <Button 
-            variant="outline"
-            onClick={() => setShowBulkUpload(true)}
-          >
-            <Upload className="h-5 w-5 mr-2" />
-            Bulk Upload
-          </Button>
-        )}
-        
-        {userRole === "admin" && (
-          <Button 
-            variant="outline"
-            onClick={() => setShowBulkMoveToOnboarding(true)}
-          >
-            <Package className="h-5 w-5 mr-2" />
-            Bulk Move to Onboarding
-          </Button>
-        )}
+        <Button 
+          variant="outline"
+          onClick={() => setShowBulkUpload(true)}
+        >
+          <Upload className="h-5 w-5 mr-2" />
+          Bulk Upload
+        </Button>
       </div>
       
       <BulkProposalUpload
         open={showBulkUpload}
         onOpenChange={setShowBulkUpload}
-        onSuccess={() => {
-          // Refresh proposals list
-          window.location.reload();
-        }}
-      />
-      
-      <BulkMoveToOnboardingDialog
-        open={showBulkMoveToOnboarding}
-        onOpenChange={setShowBulkMoveToOnboarding}
         onSuccess={() => {
           // Refresh proposals list
           window.location.reload();

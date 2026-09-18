@@ -2,6 +2,7 @@
 import { useEffect, memo, useMemo, useCallback } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ProposalActionButtons } from "./components/ProposalActionButtons";
 import { ClientShareCell } from "./components/ClientShareCell";
 import { ProposalStatusBadge } from "./list/ProposalStatusBadge";
@@ -20,6 +21,9 @@ interface ProposalRowProps {
   userRole: UserRole | null;
   isCurrentUser: boolean;
   onProposalUpdate?: () => void;
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
 // Optimized row component with deep comparison for proposal data
@@ -27,7 +31,10 @@ const MemoizedProposalRow = memo<ProposalRowProps>(({
   proposal,
   userRole,
   isCurrentUser,
-  onProposalUpdate
+  onProposalUpdate,
+  selectable,
+  selected,
+  onToggleSelect
 }) => {
   const formattedDate = useMemo(
     () => new Date(proposal.date).toLocaleDateString(),
@@ -38,9 +45,26 @@ const MemoizedProposalRow = memo<ProposalRowProps>(({
     () => formatSystemSizeForDisplay(proposal.size),
     [proposal.size]
   );
+
+  const alreadyOnboarding = !!proposal.signed_at;
   
   return (
     <TableRow className={isCurrentUser ? "bg-carbon-green-50" : ""}>
+      {selectable && (
+        <TableCell className="w-10">
+          <Checkbox
+            checked={!!selected}
+            disabled={alreadyOnboarding}
+            aria-label={
+              alreadyOnboarding
+                ? `${proposal.name} is already in onboarding`
+                : `Select ${proposal.name}`
+            }
+            title={alreadyOnboarding ? "Already in onboarding" : undefined}
+            onCheckedChange={() => onToggleSelect?.(proposal.id)}
+          />
+        </TableCell>
+      )}
       <TableCell className="font-medium">{proposal.name}</TableCell>
       <TableCell>{proposal.client}</TableCell>
       <TableCell>
@@ -86,13 +110,22 @@ const MemoizedProposalRow = memo<ProposalRowProps>(({
     prevProps.proposal.onboarding_complete === nextProps.proposal.onboarding_complete &&
     prevProps.proposal.signed_at === nextProps.proposal.signed_at &&
     prevProps.userRole === nextProps.userRole &&
-    prevProps.isCurrentUser === nextProps.isCurrentUser
+    prevProps.isCurrentUser === nextProps.isCurrentUser &&
+    prevProps.selectable === nextProps.selectable &&
+    prevProps.selected === nextProps.selected
   );
 });
 
 MemoizedProposalRow.displayName = "MemoizedProposalRow";
 
-export function ProposalList({ proposals, onProposalUpdate }: ProposalListProps) {
+export function ProposalList({
+  proposals,
+  onProposalUpdate,
+  selectable = false,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectAll
+}: ProposalListProps) {
   const { userRole, user } = useAuth();
 
   // Create a contextualized logger
@@ -100,6 +133,19 @@ export function ProposalList({ proposals, onProposalUpdate }: ProposalListProps)
     component: 'ProposalList',
     feature: 'proposals'
   }), []);
+
+  // Selectable proposals are those not yet signed (already-signed ones are in onboarding)
+  const selectableProposals = useMemo(
+    () => proposals.filter(p => !p.signed_at),
+    [proposals]
+  );
+
+  const allSelected = useMemo(
+    () =>
+      selectableProposals.length > 0 &&
+      selectableProposals.every(p => selectedIds?.has(p.id)),
+    [selectableProposals, selectedIds]
+  );
 
   // Memoize the empty state message
   const emptyStateMessage = useMemo(() => {
@@ -153,6 +199,16 @@ export function ProposalList({ proposals, onProposalUpdate }: ProposalListProps)
     <>
       {/* Mobile: card list */}
       <div className="grid gap-3 md:hidden">
+        {selectable && selectableProposals.length > 0 && (
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={() => onToggleSelectAll?.()}
+              aria-label="Select all shown proposals"
+            />
+            Select all shown ({selectableProposals.length})
+          </label>
+        )}
         {proposals.map(proposal => (
           <ProposalMobileCard
             key={proposal.id}
@@ -160,6 +216,9 @@ export function ProposalList({ proposals, onProposalUpdate }: ProposalListProps)
             userRole={userRole}
             isCurrentUser={proposal.agent_id === user?.id}
             onProposalUpdate={onProposalUpdate}
+            selectable={selectable}
+            selected={selectedIds?.has(proposal.id)}
+            onToggleSelect={onToggleSelect}
           />
         ))}
       </div>
@@ -169,6 +228,16 @@ export function ProposalList({ proposals, onProposalUpdate }: ProposalListProps)
         <Table>
           <TableHeader>
             <TableRow>
+              {selectable && (
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={allSelected}
+                    disabled={selectableProposals.length === 0}
+                    onCheckedChange={() => onToggleSelectAll?.()}
+                    aria-label="Select all shown proposals"
+                  />
+                </TableHead>
+              )}
               <TableHead>Project Name</TableHead>
               <TableHead>Client</TableHead>
               <TableHead>Date</TableHead>
@@ -186,7 +255,10 @@ export function ProposalList({ proposals, onProposalUpdate }: ProposalListProps)
                 proposal={proposal} 
                 userRole={userRole} 
                 isCurrentUser={proposal.agent_id === user?.id} 
-                onProposalUpdate={onProposalUpdate} 
+                onProposalUpdate={onProposalUpdate}
+                selectable={selectable}
+                selected={selectedIds?.has(proposal.id)}
+                onToggleSelect={onToggleSelect}
               />
             ))}
           </TableBody>
