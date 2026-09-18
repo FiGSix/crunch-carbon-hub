@@ -187,7 +187,11 @@ export default function ProjectOnboardingList() {
       }
       // Admin sees all projects (no filter needed)
 
-      const { data: onboardingData, error } = await query.order('updated_at', { ascending: false });
+      // Generous safety cap: well above current volumes, so nothing is hidden today,
+      // but the query can never grow unbounded.
+      const { data: onboardingData, error } = await query
+        .order('updated_at', { ascending: false })
+        .range(0, 4999);
 
       if (error) throw error;
 
