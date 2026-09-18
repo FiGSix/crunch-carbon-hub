@@ -38,6 +38,44 @@ export function ProposalsSectionOptimized() {
   const filteredProposals = useMemo(() => {
     return applyAdvancedFilters(proposals, advancedFilters);
   }, [proposals, advancedFilters]);
+
+  // Admin-only bulk selection of visible proposals
+  const isAdmin = userRole === 'admin';
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+
+  // Drop selections that are no longer visible after filtering/refresh
+  useEffect(() => {
+    setSelectedIds(prev => {
+      if (prev.size === 0) return prev;
+      const visible = new Set(filteredProposals.map(p => p.id));
+      const next = new Set([...prev].filter(id => visible.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [filteredProposals]);
+
+  const handleToggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleToggleSelectAll = useCallback(() => {
+    setSelectedIds(prev => {
+      const selectable = filteredProposals.filter(p => !p.signed_at);
+      const allSelected =
+        selectable.length > 0 && selectable.every(p => prev.has(p.id));
+      return allSelected ? new Set() : new Set(selectable.map(p => p.id));
+    });
+  }, [filteredProposals]);
+
+  const selectedProposals = useMemo(
+    () => filteredProposals.filter(p => selectedIds.has(p.id)),
+    [filteredProposals, selectedIds]
+  );
   
   // Optimized auth state logging - only on significant changes
   useEffect(() => {
