@@ -141,7 +141,7 @@ export class ProposalsDataService {
       const clientIds = new Set<string>();
       const agentIds = new Set<string>();
 
-      data.forEach((proposal: ProposalRow) => {
+      data.forEach((proposal: any) => {
         if (proposal.client_id) clientIds.add(proposal.client_id);
         if (proposal.client_reference_id) clientIds.add(proposal.client_reference_id);
         if (proposal.agent_id) agentIds.add(proposal.agent_id);
