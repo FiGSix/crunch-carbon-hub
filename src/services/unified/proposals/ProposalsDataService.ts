@@ -62,7 +62,11 @@ export class ProposalsDataService {
           last_email_sent_at,
           engagement_count,
           last_engagement_at
-        `)
+        `;
+
+      let query: any = supabase
+        .from('proposals')
+        .select(PROPOSAL_LIST_SELECT)
         .is('deleted_at', null); // Exclude soft-deleted proposals
 
       // Apply role-based filtering - RLS will handle the actual security
