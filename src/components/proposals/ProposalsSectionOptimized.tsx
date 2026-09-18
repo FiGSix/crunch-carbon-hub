@@ -8,6 +8,8 @@ import { ProposalActions } from "@/components/proposals/ProposalActions";
 import { ProposalLoadingState } from "@/components/proposals/ProposalLoadingState";
 import { EngagementDashboard } from "@/components/proposals/engagement/EngagementDashboard";
 import { AdvancedProposalFilters, applyAdvancedFilters } from "@/components/proposals/filters/AdvancedProposalFilters";
+import { BulkSelectionBar } from "@/components/proposals/bulk/BulkSelectionBar";
+import { ConfirmMoveToOnboardingDialog } from "@/components/proposals/bulk/ConfirmMoveToOnboardingDialog";
 
 import { useProposals } from "@/hooks/useProposals";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
