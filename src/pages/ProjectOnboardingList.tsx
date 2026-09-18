@@ -100,7 +100,7 @@ export default function ProjectOnboardingList() {
             client_reference_id,
             agent_id,
             signed_at,
-            content,
+            clientInfo:content->clientInfo,
             profiles:client_id (
               first_name,
               last_name,
@@ -194,7 +194,7 @@ export default function ProjectOnboardingList() {
         
         // Check clients table first (legacy projects), then profiles table, then fall back to JSON content
         const clientFromTable = proposal.clients?.[0] || proposal.profiles?.[0];
-        const clientFromJson = proposal.content?.clientInfo || {};
+        const clientFromJson = proposal.clientInfo || {};
         
         const clientName = clientFromTable 
           ? `${clientFromTable.first_name || ''} ${clientFromTable.last_name || ''}`.trim() || 'Unknown Client'
