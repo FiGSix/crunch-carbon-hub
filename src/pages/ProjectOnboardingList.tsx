@@ -78,10 +78,9 @@ export default function ProjectOnboardingList() {
     try {
       setIsLoading(true);
 
-      // Build base query
-      let query = supabase
-        .from('project_onboarding')
-        .select(`
+      // Kept as a plain string so the JSON-path select below doesn't blow up
+      // TypeScript's generated query types.
+      const ONBOARDING_LIST_SELECT: string = `
           id,
           proposal_id,
           updated_at,
