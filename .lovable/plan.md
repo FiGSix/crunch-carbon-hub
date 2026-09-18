@@ -52,6 +52,15 @@ From 11 December the database has been applying two overlapping rules to every p
 - Re-run the slow-query measurement after each step and compare against the numbers above.
 - Target: main screens under 300ms average, no query over 1 second.
 
+## Impact on the platform
+
+- **Who sees what does not change.** The combined effect of the two proposal rules is reproduced exactly in the one rule that remains: own projects, team members' projects, client-owned projects, client-company colleagues' projects, admins, and invitation-link access. Before applying it, I compare the list of visible projects for an admin, an agent, a super partner and a client against today's results, and only keep the change if the lists match.
+- **Expected gain:** the heaviest screens (proposals, onboarding lists, follow-ups) should drop from roughly half a second to a second down to well under a third of a second, with the 3–4 second spikes gone.
+- **Risk of the permission change:** if a rule is mis-transcribed, someone could see too few or too many projects. This is why it is verified per role before and after, and it is reversible in one step.
+- **Risk of the list-screen change:** a column could lose a value if it secretly depended on the full stored content. Each list column is checked against a real row before and after.
+- **No downtime, no data changes, no emails sent.** Nothing about proposals, signatures, onboarding or the path to Audit Ready is touched.
+
+
 ## Technical notes
 
 - Drop `proposals_select_policy`, keep `proposals_select_unified`, and rewrite its predicate using `(select auth.uid())`, `(select is_current_user_admin())` and `(select get_user_client_ids())` so Postgres evaluates them as initplans. Same for the update/delete policies and for `project_onboarding` / `onboarding_documents`.
