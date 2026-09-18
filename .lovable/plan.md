@@ -13,13 +13,24 @@ Slowest work in the last period (average time per call):
 - Homepage statistics: 1,491 calls, 82ms average, never cached
 - A connection "health ping" against the profiles table: 9,338 calls
 
+## When this started, and why it wasn't noticed
+
+Nothing broke suddenly — this crept in.
+
+- 6 Nov 2025: the single proposal visibility rule (`proposals_select_unified`) was created.
+- 11 Dec 2025: a second visibility rule (`proposals_select_policy`) was added to give client-company teams shared access.
+- 12 Dec 2025: that second rule was extended again with company-client lookups.
+
+From 11 December the database has been applying two overlapping rules to every proposal row on every read, instead of one. At the time there were a few hundred proposals and light traffic, so the extra work was invisible. The cost grows with rows multiplied by visits — and the platform has since reached roughly 965 proposals, 1,354 visitors and 7,747 page views a week. Same rules, far more rows and traffic, so the delay has become visible now.
+
 ## The three root causes
 
-1. **Permission rules are re-checked for every single row.** The proposals table has two separate, overlapping read rules, and both run on every query. Each one calls `auth.uid()`, an admin check and a client-lookup function per row rather than once per query. With ~1,000 proposals this multiplies into hundreds of thousands of function calls per page load.
+1. **Permission rules are re-checked for every single row.** Two overlapping read rules both run on every query. Each calls the current-user lookup, an admin check and a client-lookup function once per row rather than once per query. Across ~1,000 proposals that is hundreds of thousands of function calls per page load.
 
 2. **List screens download the entire proposal record.** The onboarding lists pull each proposal's full stored content (the whole calculation and document payload) just to show a name, a date and a status. That is the single biggest contributor to the 4-second spikes.
 
 3. **Repeated chatter.** Homepage statistics are recomputed on every visit instead of being cached briefly, and the connection health check runs thousands of extra queries that serve no user-visible purpose.
+
 
 ## The fix
 
