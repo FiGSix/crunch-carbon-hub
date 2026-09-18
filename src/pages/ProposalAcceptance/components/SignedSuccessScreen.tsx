@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, Loader2, MailCheck, MessageCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  FileCheck2,
+  FileUp,
+  Gauge,
+  Loader2,
+  MailCheck,
+  MessageCircle,
+  Send,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,7 +22,7 @@ import {
 } from "@/lib/referral";
 
 interface SignedSuccessScreenProps {
-  proposalId: string;
+  onboardingProjectId: string | null;
   clientEmail?: string | null;
   /** True when the signer already has an active session. */
   isAuthenticated: boolean;
@@ -24,7 +33,7 @@ interface SignedSuccessScreenProps {
  * this renders, so nothing here can put the legal record at risk.
  */
 export function SignedSuccessScreen({
-  proposalId,
+  onboardingProjectId,
   clientEmail,
   isAuthenticated,
 }: SignedSuccessScreenProps) {
@@ -35,9 +44,20 @@ export function SignedSuccessScreen({
   const [linkSent, setLinkSent] = useState(false);
   const [deferred, setDeferred] = useState(false);
 
-  const onboardingPath = `/onboarding/${proposalId}`;
+  const onboardingPath = onboardingProjectId
+    ? `/onboarding/${onboardingProjectId}?tab=onboarding`
+    : null;
 
   const handleStartOnboarding = async () => {
+    if (!onboardingPath) {
+      toast({
+        description:
+          "Your agreement is signed, but we could not open onboarding. Please contact support@crunchcarbon.com.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (isAuthenticated) {
       navigate(onboardingPath);
       return;
@@ -46,7 +66,7 @@ export function SignedSuccessScreen({
     if (!clientEmail) {
       toast({
         description:
-          "We could not determine your email address. Please check your inbox for the signed copy, which includes a link to onboarding.",
+          "We could not determine your email address. Please contact support@crunchcarbon.com for your onboarding access link.",
         variant: "destructive",
       });
       return;
@@ -65,7 +85,8 @@ export function SignedSuccessScreen({
     } catch (err) {
       console.error("Failed to send onboarding access link:", err);
       toast({
-        description: "We could not send your access link. Please try again in a moment.",
+        description:
+          "We could not send your access link. Please try again in a moment.",
         variant: "destructive",
       });
     } finally {
@@ -86,10 +107,45 @@ export function SignedSuccessScreen({
           <p className="text-muted-foreground mb-2">
             Thank you — your acceptance has been recorded.
           </p>
-          <p className="text-muted-foreground">
+          <p className="mb-8 text-muted-foreground">
             A signed copy of your Cession Agreement has been emailed to you
             {clientEmail ? ` at ${clientEmail}` : ""}.
           </p>
+
+          <div className="border-t border-border pt-7 text-left">
+            <h2 className="text-xl font-semibold">Next: complete onboarding</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Signing secures your agreement. Your project becomes Audit Ready
+              after the steps below are completed and reviewed.
+            </p>
+            <ol className="mt-5 space-y-4">
+              <JourneyStep
+                icon={FileCheck2}
+                number={1}
+                title="Complete project details"
+              >
+                Confirm the system, installer and ownership information.
+              </JourneyStep>
+              <JourneyStep icon={FileUp} number={2} title="Upload documents">
+                Provide the required certificates, invoices and supporting
+                documents.
+              </JourneyStep>
+              <JourneyStep
+                icon={Gauge}
+                number={3}
+                title="Connect generation data"
+              >
+                Configure inverter or meter access and verify the connection.
+              </JourneyStep>
+              <JourneyStep icon={Send} number={4} title="Submit for review">
+                Crunch Carbon checks the information and follows up on anything
+                outstanding.
+              </JourneyStep>
+              <JourneyStep icon={CheckCircle2} number={5} title="Audit Ready">
+                We notify you when the project is ready for the audit process.
+              </JourneyStep>
+            </ol>
+          </div>
 
           {linkSent ? (
             <div className="mt-8 rounded-lg border border-border bg-muted/40 p-5 text-left flex gap-3">
@@ -97,8 +153,9 @@ export function SignedSuccessScreen({
               <div>
                 <p className="font-medium">Check your inbox</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  We've sent a secure link to {clientEmail}. Opening it takes you straight to
-                  onboarding for this project — no password needed.
+                  We've sent a secure link to {clientEmail}. Opening it takes
+                  you straight to onboarding for this project — no password
+                  needed.
                 </p>
               </div>
             </div>
@@ -106,22 +163,27 @@ export function SignedSuccessScreen({
             <div className="mt-8 rounded-lg border border-border bg-muted/40 p-5 text-left">
               <p className="font-medium">No problem</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Your agreement is signed and safe. When you're ready, use the link in your email to
-                complete onboarding for this project.
+                Your agreement is signed and safe, but the project is not Audit
+                Ready yet. When you're ready, use the onboarding link in your
+                signed-agreement email.
               </p>
             </div>
           ) : (
             <div className="mt-8 space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Next, we'll onboard your project: system details, compliance documents and data
-                access. Your EPC partner can help complete this quickly.
-              </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button size="lg" onClick={handleStartOnboarding} disabled={sending}>
+                <Button
+                  size="lg"
+                  onClick={handleStartOnboarding}
+                  disabled={sending}
+                >
                   {sending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Start onboarding
                 </Button>
-                <Button size="lg" variant="outline" onClick={() => setDeferred(true)}>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => setDeferred(true)}
+                >
                   I'll do this later
                 </Button>
               </div>
@@ -133,20 +195,23 @@ export function SignedSuccessScreen({
       <Card className="mt-6">
         <CardContent className="p-6 text-center">
           <h2 className="text-lg font-semibold mb-2">
-            You're now earning carbon credits from your solar system. Tell someone.
+            You're now earning carbon credits from your solar system. Tell
+            someone.
           </h2>
           <p className="text-sm text-muted-foreground mb-5">
-            Share it as a message or a WhatsApp status — anyone with solar can check what
-            theirs could earn.
+            Share it as a message or a WhatsApp status — anyone with solar can
+            check what theirs could earn.
           </p>
           <Button
             size="lg"
             className="bg-[#25D366] text-white hover:bg-[#1FB855]"
             onClick={() =>
               window.open(
-                buildWhatsAppShareUrl(signedClientShareMessage(buildReferralUrl(profile?.id))),
+                buildWhatsAppShareUrl(
+                  signedClientShareMessage(buildReferralUrl(profile?.id)),
+                ),
                 "_blank",
-                "noopener,noreferrer"
+                "noopener,noreferrer",
               )
             }
           >
@@ -156,5 +221,32 @@ export function SignedSuccessScreen({
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function JourneyStep({
+  icon: Icon,
+  number,
+  title,
+  children,
+}: {
+  icon: typeof CheckCircle2;
+  number: number;
+  title: string;
+  children: string;
+}) {
+  return (
+    <li className="flex gap-3">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <Icon className="h-4 w-4" aria-hidden="true" />
+        <span className="sr-only">Step {number}</span>
+      </div>
+      <div>
+        <p className="text-sm font-semibold">
+          {number}. {title}
+        </p>
+        <p className="mt-0.5 text-sm text-muted-foreground">{children}</p>
+      </div>
+    </li>
   );
 }

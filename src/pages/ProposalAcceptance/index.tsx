@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ProposalData, ProposalContent } from "@/types/proposals";
-import { resolveClientInfo, LiveClientRecord } from "@/utils/proposals/resolveClientInfo";
+import {
+  resolveClientInfo,
+  LiveClientRecord,
+} from "@/utils/proposals/resolveClientInfo";
 import { PageLoading } from "@/components/ui/loading-states";
 import { ProposalSummarySection } from "./components/ProposalSummarySection";
 import { ThirtySecondSummary } from "./components/ThirtySecondSummary";
@@ -15,7 +18,10 @@ import {
 } from "./components/ProjectDetailsStep";
 import { SignedSuccessScreen } from "./components/SignedSuccessScreen";
 import { useToast } from "@/hooks/use-toast";
-import { parseEdgeFunctionError, parseEdgeFunctionErrorResponse } from "@/lib/errors/edgeFunctionErrors";
+import {
+  parseEdgeFunctionError,
+  parseEdgeFunctionErrorResponse,
+} from "@/lib/errors/edgeFunctionErrors";
 import { AlertTriangle, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -33,13 +39,20 @@ export default function ProposalAcceptance() {
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
   const [hasAgreed, setHasAgreed] = useState(false);
   const [signatoryName, setSignatoryName] = useState("");
-  const [authenticatedSignerName, setAuthenticatedSignerName] = useState<string | null>(null);
+  const [authenticatedSignerName, setAuthenticatedSignerName] = useState<
+    string | null
+  >(null);
   const [signatureImage, setSignatureImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSignedSuccess, setShowSignedSuccess] = useState(false);
+  const [onboardingProjectId, setOnboardingProjectId] = useState<string | null>(
+    null,
+  );
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [tokenExpired, setTokenExpired] = useState(false);
-  const [clientRecord, setClientRecord] = useState<LiveClientRecord | null>(null);
+  const [clientRecord, setClientRecord] = useState<LiveClientRecord | null>(
+    null,
+  );
   const [projectDetails, setProjectDetails] = useState<ProjectDetailsValue>({
     systemAddress: "",
     systemLat: null,
@@ -55,11 +68,14 @@ export default function ProposalAcceptance() {
       const userId = data.session?.user?.id;
       if (!userId) return;
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('first_name, last_name')
-        .eq('id', userId)
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("id", userId)
         .maybeSingle();
-      const verifiedName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
+      const verifiedName = [profile?.first_name, profile?.last_name]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
       if (verifiedName) {
         setAuthenticatedSignerName(verifiedName);
         setSignatoryName(verifiedName);
@@ -83,9 +99,11 @@ export default function ProposalAcceptance() {
   const fetchProposalByToken = async () => {
     try {
       setLoading(true);
-      
-      const { data, error } = await supabase
-        .rpc('get_proposal_by_token_direct', { token_param: token });
+
+      const { data, error } = await supabase.rpc(
+        "get_proposal_by_token_direct",
+        { token_param: token },
+      );
 
       if (error) throw error;
       if (!data || data.length === 0) {
@@ -93,13 +111,13 @@ export default function ProposalAcceptance() {
       }
 
       const rawProposal = data[0];
-      
+
       // Transform the data to match ProposalData type
       const transformedProposal: ProposalData = {
         id: rawProposal.id,
         title: rawProposal.title,
         status: rawProposal.status,
-        content: (rawProposal.content as unknown) as ProposalContent,
+        content: rawProposal.content as unknown as ProposalContent,
         created_at: rawProposal.created_at,
         signed_at: rawProposal.signed_at,
         archived_at: rawProposal.archived_at,
@@ -113,7 +131,7 @@ export default function ProposalAcceptance() {
         invitation_token: rawProposal.invitation_token,
         invitation_expires_at: rawProposal.invitation_expires_at,
       };
-      
+
       setProposal(transformedProposal);
 
       // Fetch live client data and check existing agreement
@@ -125,28 +143,33 @@ export default function ProposalAcceptance() {
       }
     } catch (err) {
       console.error("Error fetching proposal by token:", err);
-      
+
       const errorMessage = err instanceof Error ? err.message : String(err);
-      const isExpiredError = errorMessage.includes('expired') || 
-                             errorMessage.includes('Invalid or expired');
-      
+      const isExpiredError =
+        errorMessage.includes("expired") ||
+        errorMessage.includes("Invalid or expired");
+
       // Check if user is authenticated admin or agent - can fallback to RLS access
       if (isExpiredError && id) {
-        const { data: { user } } = await supabase.auth.getUser();
-        
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
         if (user) {
           // Check user's role from user_roles table (secure approach)
           const { data: roles } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', user.id);
-          
-          const hasAgentOrAdminRole = roles?.some(r => 
-            r.role === 'admin' || r.role === 'agent'
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", user.id);
+
+          const hasAgentOrAdminRole = roles?.some(
+            (r) => r.role === "admin" || r.role === "agent",
           );
-          
+
           if (hasAgentOrAdminRole) {
-            console.log("Token expired but user is admin/agent, using RLS access");
+            console.log(
+              "Token expired but user is admin/agent, using RLS access",
+            );
             setTokenExpired(true);
             // fetchProposalAuthenticated will use RLS to check access
             await fetchProposalAuthenticated();
@@ -154,7 +177,7 @@ export default function ProposalAcceptance() {
           }
         }
       }
-      
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -164,29 +187,32 @@ export default function ProposalAcceptance() {
   const fetchProposalAuthenticated = async () => {
     try {
       setLoading(true);
-      
+
       // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         throw new Error("You must be logged in to view this proposal");
       }
 
       // Query proposal directly (RLS will ensure user has access)
       const { data, error } = await supabase
-        .from('proposals')
-        .select('*')
-        .eq('id', id)
+        .from("proposals")
+        .select("*")
+        .eq("id", id)
         .single();
 
       if (error) throw error;
-      if (!data) throw new Error("Proposal not found or you don't have access to it");
+      if (!data)
+        throw new Error("Proposal not found or you don't have access to it");
 
       // Transform the data to match ProposalData type
       const transformedProposal: ProposalData = {
         id: data.id,
         title: data.title,
         status: data.status,
-        content: (data.content as unknown) as ProposalContent,
+        content: data.content as unknown as ProposalContent,
         created_at: data.created_at,
         signed_at: data.signed_at,
         archived_at: data.archived_at,
@@ -200,7 +226,7 @@ export default function ProposalAcceptance() {
         invitation_token: data.invitation_token,
         invitation_expires_at: data.invitation_expires_at,
       };
-      
+
       setProposal(transformedProposal);
 
       // Fetch live client data and check existing agreement
@@ -224,20 +250,24 @@ export default function ProposalAcceptance() {
   // 406s on the public signing page.
   const fetchClientRecord = async (clientReferenceId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data, error } = await supabase
-        .from('clients')
-        .select('first_name, last_name, email, phone, company_name, registration_number')
-        .eq('id', clientReferenceId)
+        .from("clients")
+        .select(
+          "first_name, last_name, email, phone, company_name, registration_number",
+        )
+        .eq("id", clientReferenceId)
         .single();
 
       if (!error && data) {
         setClientRecord(data);
       }
     } catch (err) {
-      console.error('Error fetching client record:', err);
+      console.error("Error fetching client record:", err);
     }
   };
 
@@ -250,30 +280,36 @@ export default function ProposalAcceptance() {
   const resolveAgreementState = async (proposalId: string) => {
     try {
       const { data, error } = await supabase.functions.invoke(
-        'ensure-proposal-agreement',
+        "ensure-proposal-agreement",
         { body: { proposalId, token } },
       );
       if (error) throw error;
 
       const state = (data as { state?: string } | null)?.state;
-      if (state === 'inherited' || state === 'existing') {
+      if (state === "inherited" || state === "existing") {
         setHasExistingAgreement(true);
       }
     } catch (err) {
-      console.error('Error resolving agreement state:', err);
+      console.error("Error resolving agreement state:", err);
     }
   };
 
   const getClientName = (): string => {
     if (!proposal) return "";
-    const resolved = resolveClientInfo(proposal.content?.clientInfo || {}, clientRecord);
+    const resolved = resolveClientInfo(
+      proposal.content?.clientInfo || {},
+      clientRecord,
+    );
     return resolved.name || "";
   };
 
   /** Company cedents must name the natural person signing on their behalf. */
   const getCompanyName = (): string => {
     if (!proposal) return "";
-    const resolved = resolveClientInfo(proposal.content?.clientInfo || {}, clientRecord);
+    const resolved = resolveClientInfo(
+      proposal.content?.clientInfo || {},
+      clientRecord,
+    );
     return (resolved.companyName || "").trim();
   };
   const isCompanyCedent = getCompanyName().length > 0;
@@ -287,12 +323,13 @@ export default function ProposalAcceptance() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proposal, clientRecord, isAuthenticated]);
 
-
   // Referral-sourced proposals require pre-signature project details capture.
   const isReferralProposal = Boolean(
-    (proposal?.content as { referral_created?: boolean } | undefined)?.referral_created,
+    (proposal?.content as { referral_created?: boolean } | undefined)
+      ?.referral_created,
   );
-  const projectDetailsOk = !isReferralProposal || projectDetailsValid(projectDetails);
+  const projectDetailsOk =
+    !isReferralProposal || projectDetailsValid(projectDetails);
 
   const signatoryOk = !isCompanyCedent || signatoryName.trim().length >= 2;
 
@@ -304,44 +341,47 @@ export default function ProposalAcceptance() {
     signatoryOk &&
     signatureImage !== null;
 
-
   const handleSubmit = async () => {
     if (!canSubmit || !proposal) return;
 
     setIsSubmitting(true);
     try {
       // Get user info for audit trail
-      let ipAddress = '';
+      let ipAddress = "";
       try {
-        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipResponse = await fetch("https://api.ipify.org?format=json");
         const { ip } = await ipResponse.json();
         ipAddress = ip;
       } catch (e) {
-        console.warn('Failed to get IP address:', e);
+        console.warn("Failed to get IP address:", e);
       }
 
       // Refresh session to ensure valid JWT before edge function call
       await supabase.auth.getSession();
 
       // Call the public Edge Function
-      const { data, error } = await supabase.functions.invoke('accept-proposal', {
-        body: {
-          token: token || undefined,
-          proposalId: !token ? proposal.id : undefined,
-          // Typing a name is no longer a signing method. The name is still sent
-          // (and stored in typed_name) purely as the on-record signatory name,
-          // which the PDF, admin signature list and emails read.
-          typedName: (signatoryName || getClientName()).trim(),
-          signatoryName: (signatoryName || getClientName()).trim() || undefined,
-          isCompanyCedent,
-          signatureImage: signatureImage || undefined,
-          signatureType: 'canvas',
+      const { data, error } = await supabase.functions.invoke(
+        "accept-proposal",
+        {
+          body: {
+            token: token || undefined,
+            proposalId: !token ? proposal.id : undefined,
+            // Typing a name is no longer a signing method. The name is still sent
+            // (and stored in typed_name) purely as the on-record signatory name,
+            // which the PDF, admin signature list and emails read.
+            typedName: (signatoryName || getClientName()).trim(),
+            signatoryName:
+              (signatoryName || getClientName()).trim() || undefined,
+            isCompanyCedent,
+            signatureImage: signatureImage || undefined,
+            signatureType: "canvas",
 
-          ipAddress,
-          userAgent: navigator.userAgent,
-          projectDetails: isReferralProposal ? projectDetails : undefined,
-        }
-      });
+            ipAddress,
+            userAgent: navigator.userAgent,
+            projectDetails: isReferralProposal ? projectDetails : undefined,
+          },
+        },
+      );
 
       if (error) throw error;
 
@@ -350,7 +390,7 @@ export default function ProposalAcceptance() {
           description: "This proposal has already been signed.",
         });
         setTimeout(() => {
-          const redirectUrl = token 
+          const redirectUrl = token
             ? `/proposals/${proposal.id}?token=${token}`
             : `/proposals/${proposal.id}`;
           navigate(redirectUrl);
@@ -363,7 +403,7 @@ export default function ProposalAcceptance() {
           description: "Project successfully added to your existing agreement.",
         });
         setTimeout(() => {
-          navigate('/dashboard');
+          navigate("/dashboard");
         }, 1500);
         return;
       }
@@ -373,17 +413,17 @@ export default function ProposalAcceptance() {
       }
 
       // Signature is recorded — show the completion screen.
+      setOnboardingProjectId(data?.onboardingProjectId || null);
       setShowSignedSuccess(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
-
     } catch (err) {
       console.error("Error submitting agreement:", err);
       const errorResponse = await parseEdgeFunctionErrorResponse(err);
       const errorMessage = await parseEdgeFunctionError(
         err,
-        "Failed to submit agreement. Please try again."
+        "Failed to submit agreement. Please try again.",
       );
-      
+
       toast({
         description: errorMessage,
         variant: "destructive",
@@ -409,9 +449,9 @@ export default function ProposalAcceptance() {
         <div>
           <p className="text-amber-800 font-medium">Invitation Link Expired</p>
           <p className="text-amber-700 text-sm">
-            The client's invitation token has expired. You're viewing this proposal 
-            with your account privileges. To send a new working link to the client, 
-            regenerate the PDF which will create a fresh token.
+            The client's invitation token has expired. You're viewing this
+            proposal with your account privileges. To send a new working link to
+            the client, regenerate the PDF which will create a fresh token.
           </p>
         </div>
       </div>
@@ -422,7 +462,9 @@ export default function ProposalAcceptance() {
     return (
       <div className="container max-w-4xl mx-auto px-4 py-12">
         <div className="bg-destructive/10 border border-destructive rounded-lg p-6 text-center">
-          <h2 className="text-xl font-semibold text-destructive mb-2">Error Loading Proposal</h2>
+          <h2 className="text-xl font-semibold text-destructive mb-2">
+            Error Loading Proposal
+          </h2>
           <p className="text-muted-foreground">{error}</p>
         </div>
       </div>
@@ -434,17 +476,22 @@ export default function ProposalAcceptance() {
       <div className="container max-w-4xl mx-auto px-4 py-12">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Proposal Not Found</h2>
-          <p className="text-muted-foreground">The proposal you're looking for could not be found.</p>
+          <p className="text-muted-foreground">
+            The proposal you're looking for could not be found.
+          </p>
         </div>
       </div>
     );
   }
 
   if (showSignedSuccess) {
-    const resolvedClient = resolveClientInfo(proposal.content?.clientInfo || {}, clientRecord);
+    const resolvedClient = resolveClientInfo(
+      proposal.content?.clientInfo || {},
+      clientRecord,
+    );
     return (
       <SignedSuccessScreen
-        proposalId={proposal.id}
+        onboardingProjectId={onboardingProjectId}
         clientEmail={resolvedClient.email || null}
         isAuthenticated={isAuthenticated}
       />
@@ -458,32 +505,48 @@ export default function ProposalAcceptance() {
         {tokenExpired && <ExpiredTokenBanner />}
         <div className="container max-w-4xl mx-auto px-4 py-12">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Project Added to Your Agreement</h1>
+            <h1 className="text-3xl font-bold mb-2">
+              Project Added to Your Agreement
+            </h1>
             <p className="text-muted-foreground">
-              You already have a signed Cession Agreement. This project has been automatically added.
+              You already have a signed Cession Agreement. This project has been
+              automatically added.
             </p>
           </div>
 
           <div className="space-y-8">
             <ProposalSummarySection proposal={proposal} />
-            
+
             <div className="bg-accent/50 border border-accent rounded-lg p-6">
               <div className="flex items-start gap-4">
                 <div className="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-6 h-6 text-primary"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold mb-2">Automatically Added</h3>
+                  <h3 className="text-lg font-semibold mb-2">
+                    Automatically Added
+                  </h3>
                   <p className="text-muted-foreground mb-4">
-                    Per Clause 5.6 of your existing Cession Agreement, new projects are automatically included 
-                    without requiring a new signature. This project has been added to your portfolio and is ready 
-                    for onboarding.
+                    Per Clause 5.6 of your existing Cession Agreement, new
+                    projects are automatically included without requiring a new
+                    signature. This project has been added to your portfolio and
+                    is ready for onboarding.
                   </p>
                   <div className="flex gap-3">
                     <button
-                      onClick={() => navigate('/dashboard')}
+                      onClick={() => navigate("/dashboard")}
                       className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                     >
                       View Dashboard
@@ -525,7 +588,8 @@ export default function ProposalAcceptance() {
               Cession Agreement
             </h1>
             <p className="text-muted-foreground">
-              Please scroll through the agreement until you get to the bottom to unlock signing. Please review the proposal details and terms.
+              Please scroll through the agreement until you get to the bottom to
+              unlock signing. Please review the proposal details and terms.
             </p>
           </div>
 
@@ -537,8 +601,12 @@ export default function ProposalAcceptance() {
           {isReferralProposal && (
             <div id="project-details" className="scroll-mt-24">
               <div className="mb-3 flex items-center gap-2">
-                <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-primary text-primary-foreground text-sm font-bold">1</span>
-                <h2 className="text-lg font-semibold">Step 1 of 2 — Confirm your project details</h2>
+                <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-primary text-primary-foreground text-sm font-bold">
+                  1
+                </span>
+                <h2 className="text-lg font-semibold">
+                  Step 1 of 2 — Confirm your project details
+                </h2>
               </div>
               <ProjectDetailsStep
                 value={projectDetails}
@@ -550,23 +618,35 @@ export default function ProposalAcceptance() {
           <div id="review-and-sign" className="scroll-mt-24">
             {isReferralProposal && (
               <div className="mb-3 flex items-center gap-2">
-                <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-primary text-primary-foreground text-sm font-bold">2</span>
-                <h2 className="text-lg font-semibold">Step 2 of 2 — Review &amp; sign</h2>
+                <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-primary text-primary-foreground text-sm font-bold">
+                  2
+                </span>
+                <h2 className="text-lg font-semibold">
+                  Step 2 of 2 — Review &amp; sign
+                </h2>
               </div>
             )}
             {isReferralProposal && !projectDetailsOk && (
               <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-4 flex items-start gap-3">
                 <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-amber-900 font-medium">Before you can sign, please complete your project details above.</p>
-                  <p className="text-amber-800 text-sm mt-0.5">We need your system address, commissioning date and installer contact to register the project.</p>
+                  <p className="text-amber-900 font-medium">
+                    Before you can sign, please complete your project details
+                    above.
+                  </p>
+                  <p className="text-amber-800 text-sm mt-0.5">
+                    We need your system address, commissioning date and
+                    installer contact to register the project.
+                  </p>
                 </div>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    document.getElementById("project-details")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    document
+                      .getElementById("project-details")
+                      ?.scrollIntoView({ behavior: "smooth", block: "start" });
                   }}
                 >
                   Jump to project details
@@ -588,10 +668,8 @@ export default function ProposalAcceptance() {
               isSubmitting={isSubmitting}
               onSubmit={handleSubmit}
             />
-
           </div>
         </div>
-
       </div>
 
       {/* Sticky mobile "jump to sign" bar — hidden on md+ and after signing */}

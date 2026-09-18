@@ -43,3 +43,12 @@
 - [x] Remove the confirmation and proposal-summary cards from the signing journey
 - [x] Simplify the opening card and update the agreement/signing instructions
 - [x] Verify the exact emailed link on desktop and mobile
+
+# Post-signing path to Audit Ready
+
+- [x] Audit the success screen, confirmation email, reminders, and onboarding route
+- [x] Return and use the onboarding project ID after signing
+- [x] Explain the complete onboarding-to-Audit-Ready journey after signing
+- [x] Add a working onboarding action to the signed-agreement email
+- [x] Align post-signature reminders with live proposal statuses and template placeholders
+- [x] Verify the journey, emails, and build
