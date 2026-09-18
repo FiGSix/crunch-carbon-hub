@@ -63,7 +63,12 @@ export async function fetchProposalsCore(
       client_id: proposal.client_id,
       client_reference_id: proposal.client_reference_id,
       agent_id: proposal.agent_id,
-      content: proposal.content,
+      // Only the clientInfo/projectInfo branches of the stored content are used by
+      // list screens, so the query fetches just those instead of the full payload.
+      content: proposal.content ?? {
+        clientInfo: proposal.clientInfo ?? undefined,
+        projectInfo: proposal.projectInfo ?? undefined,
+      },
       annual_energy: proposal.annual_energy,
       carbon_credits: proposal.carbon_credits,
       client_share_percentage: proposal.client_share_percentage,

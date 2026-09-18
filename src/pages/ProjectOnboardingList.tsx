@@ -78,10 +78,9 @@ export default function ProjectOnboardingList() {
     try {
       setIsLoading(true);
 
-      // Build base query
-      let query = supabase
-        .from('project_onboarding')
-        .select(`
+      // Kept as a plain string so the JSON-path select below doesn't blow up
+      // TypeScript's generated query types.
+      const ONBOARDING_LIST_SELECT: string = `
           id,
           proposal_id,
           updated_at,
@@ -100,7 +99,7 @@ export default function ProjectOnboardingList() {
             client_reference_id,
             agent_id,
             signed_at,
-            content,
+            clientInfo:content->clientInfo,
             profiles:client_id (
               first_name,
               last_name,
@@ -114,7 +113,11 @@ export default function ProjectOnboardingList() {
               company_name
             )
           )
-        `)
+        `;
+
+      let query: any = supabase
+        .from('project_onboarding')
+        .select(ONBOARDING_LIST_SELECT)
         .not('proposals.signed_at', 'is', null)
         // Never show archived or deleted proposals in the onboarding pipeline
         .is('proposals.archived_at', null)
@@ -184,7 +187,11 @@ export default function ProjectOnboardingList() {
       }
       // Admin sees all projects (no filter needed)
 
-      const { data: onboardingData, error } = await query.order('updated_at', { ascending: false });
+      // Generous safety cap: well above current volumes, so nothing is hidden today,
+      // but the query can never grow unbounded.
+      const { data: onboardingData, error } = await query
+        .order('updated_at', { ascending: false })
+        .range(0, 4999);
 
       if (error) throw error;
 
@@ -194,7 +201,7 @@ export default function ProjectOnboardingList() {
         
         // Check clients table first (legacy projects), then profiles table, then fall back to JSON content
         const clientFromTable = proposal.clients?.[0] || proposal.profiles?.[0];
-        const clientFromJson = proposal.content?.clientInfo || {};
+        const clientFromJson = proposal.clientInfo || {};
         
         const clientName = clientFromTable 
           ? `${clientFromTable.first_name || ''} ${clientFromTable.last_name || ''}`.trim() || 'Unknown Client'

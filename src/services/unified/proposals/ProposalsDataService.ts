@@ -31,9 +31,9 @@ export class ProposalsDataService {
     }
 
     try {
-      let query = supabase
-        .from('proposals')
-        .select(`
+      // Kept as a plain string so the JSON-path selects below don't blow up
+      // TypeScript's generated query types.
+      const PROPOSAL_LIST_SELECT: string = `
           id,
           title,
           status,
@@ -45,7 +45,8 @@ export class ProposalsDataService {
           client_id,
           client_reference_id,
           agent_id,
-          content,
+          clientInfo:content->clientInfo,
+          projectInfo:content->projectInfo,
           annual_energy,
           carbon_credits,
           client_share_percentage,
@@ -61,7 +62,11 @@ export class ProposalsDataService {
           last_email_sent_at,
           engagement_count,
           last_engagement_at
-        `)
+        `;
+
+      let query: any = supabase
+        .from('proposals')
+        .select(PROPOSAL_LIST_SELECT)
         .is('deleted_at', null); // Exclude soft-deleted proposals
 
       // Apply role-based filtering - RLS will handle the actual security
@@ -140,7 +145,7 @@ export class ProposalsDataService {
       const clientIds = new Set<string>();
       const agentIds = new Set<string>();
 
-      data.forEach((proposal: ProposalRow) => {
+      data.forEach((proposal: any) => {
         if (proposal.client_id) clientIds.add(proposal.client_id);
         if (proposal.client_reference_id) clientIds.add(proposal.client_reference_id);
         if (proposal.agent_id) agentIds.add(proposal.agent_id);
@@ -172,9 +177,19 @@ export class ProposalsDataService {
         }
       }
 
+      // Rebuild the narrow content shape the transformers expect. Only the
+      // clientInfo/projectInfo branches are fetched, not the full payload.
+      const rows = (data as any[]).map((proposal) => ({
+        ...proposal,
+        content: {
+          clientInfo: proposal.clientInfo ?? undefined,
+          projectInfo: proposal.projectInfo ?? undefined,
+        },
+      }));
+
       // Transform proposals using the utility function
       const proposals = transformToProposalListItems(
-        data,
+        rows,
         clientProfiles,
         agentProfiles,
         userRole

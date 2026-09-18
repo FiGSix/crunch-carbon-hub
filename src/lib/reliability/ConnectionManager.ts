@@ -21,27 +21,11 @@ export class ConnectionManager {
     lastChecked: new Date(),
     errorCount: 0
   };
-  private healthCheckInterval: NodeJS.Timeout | null = null;
-
   static getInstance(): ConnectionManager {
     if (!this.instance) {
       this.instance = new ConnectionManager();
-      this.instance.startHealthMonitoring();
     }
     return this.instance;
-  }
-
-  /**
-   * Start continuous health monitoring
-   */
-  private startHealthMonitoring(): void {
-    // Check health every 30 seconds
-    this.healthCheckInterval = setInterval(() => {
-      this.checkConnectionHealth();
-    }, 30000);
-
-    // Initial health check
-    this.checkConnectionHealth();
   }
 
   /**
@@ -146,12 +130,15 @@ export class ConnectionManager {
   }
 
   /**
-   * Cleanup resources
+   * Cleanup resources. Health is now checked on demand (only when an operation
+   * fails or a caller waits for a healthy connection), so there is no timer to clear.
    */
   dispose(): void {
-    if (this.healthCheckInterval) {
-      clearInterval(this.healthCheckInterval);
-      this.healthCheckInterval = null;
-    }
+    this.health = {
+      isHealthy: true,
+      latency: 0,
+      lastChecked: new Date(),
+      errorCount: 0,
+    };
   }
 }
