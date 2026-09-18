@@ -31,9 +31,9 @@ export class ProposalsDataService {
     }
 
     try {
-      let query = supabase
-        .from('proposals')
-        .select(`
+      // Kept as a plain string so the JSON-path selects below don't blow up
+      // TypeScript's generated query types.
+      const PROPOSAL_LIST_SELECT: string = `
           id,
           title,
           status,
