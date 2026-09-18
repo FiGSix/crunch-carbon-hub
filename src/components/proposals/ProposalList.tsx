@@ -7,6 +7,7 @@ import { ClientShareCell } from "./components/ClientShareCell";
 import { ProposalStatusBadge } from "./list/ProposalStatusBadge";
 import { ProposalMobileCard } from "./list/ProposalMobileCard";
 import { ProposalListProps, ProposalListItem } from "@/types/proposals";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/auth";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { logger } from "@/lib/logger";
