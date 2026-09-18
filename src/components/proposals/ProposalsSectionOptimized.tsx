@@ -208,10 +208,23 @@ export function ProposalsSectionOptimized() {
           />
           
           {!loading && filteredProposals.length > 0 && (
-            <ProposalList 
-              proposals={filteredProposals} 
-              onProposalUpdate={handleProposalUpdate}
-            />
+            <>
+              {isAdmin && (
+                <BulkSelectionBar
+                  selectedCount={selectedIds.size}
+                  onMove={() => setShowMoveDialog(true)}
+                  onClear={() => setSelectedIds(new Set())}
+                />
+              )}
+              <ProposalList 
+                proposals={filteredProposals} 
+                onProposalUpdate={handleProposalUpdate}
+                selectable={isAdmin}
+                selectedIds={selectedIds}
+                onToggleSelect={handleToggleSelect}
+                onToggleSelectAll={handleToggleSelectAll}
+              />
+            </>
           )}
           
           {!loading && proposals.length > 0 && filteredProposals.length === 0 && (
