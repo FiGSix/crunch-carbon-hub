@@ -11,6 +11,21 @@ const BRAND = {
   logoUrl: "https://crunchcarbon.com/lovable-uploads/c818a4d4-97db-4b88-bd74-801376152ebc.png",
 };
 
+const AUDIT_2_NOTICE_DATE = "2026-09-18";
+const AUDIT_2_NOTICE_TITLE = "Important Audit 2 deadline";
+const AUDIT_2_NOTICE_TEXT = "Today, 18 September 2026 at 17:00, is the cut-off for projects to be Audit Ready for inclusion in Audit 2, covering the period from 1 January 2025 to 30 June 2026 on the Crunch Carbon platform. Projects that are not Audit Ready by the deadline will forfeit potential income for this period, but will still be eligible to participate in Audit 3 (timelines to be confirmed). If you are struggling with anything, please let us know — together, we can help get your project ready before closing.";
+
+export function shouldShowAudit2Notice(now: Date = new Date()): boolean {
+  const johannesburgDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Johannesburg",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+
+  return johannesburgDate === AUDIT_2_NOTICE_DATE;
+}
+
 function escapeHtml(value: string): string {
   const entities: Record<string, string> = {
     "&": "&amp;",
@@ -30,6 +45,20 @@ export class EmailService {
   }
 
   generateEmailTemplate(data: EmailTemplateData): string {
+    const showAudit2Notice = shouldShowAudit2Notice();
+    const audit2NoticeHtml = showAudit2Notice
+      ? `
+      <tr><td class="email-gutter" style="padding:16px 30px 0 30px;font-family:Arial,Helvetica,sans-serif">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#FFF8D6;border:2px solid ${BRAND.yellow};border-radius:10px">
+          <tr><td style="padding:16px 18px 6px 18px;font-family:Arial,Helvetica,sans-serif;font-size:16px;color:${BRAND.ink};line-height:1.5">
+            <strong>${AUDIT_2_NOTICE_TITLE}</strong>
+          </td></tr>
+          <tr><td style="padding:0 18px 16px 18px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:${BRAND.ink};line-height:1.7">
+            ${AUDIT_2_NOTICE_TEXT}
+          </td></tr>
+        </table>
+      </td></tr>`
+      : "";
     const hasNamedAgent = Boolean(data.agentFirstName && data.agentLastName);
     const agentName = hasNamedAgent
       ? `${escapeHtml(data.agentFirstName ?? "")} ${escapeHtml(data.agentLastName ?? "")}`
@@ -123,6 +152,8 @@ export class EmailService {
         </table>
       </td></tr>
 
+      ${audit2NoticeHtml}
+
       <tr><td class="email-gutter" style="padding:20px 30px 0 30px;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:${BRAND.inkMuted};line-height:1.6">
         All figures are estimates based on the system details provided and current carbon-credit assumptions. Actual income depends on verified generation from your system, audit outcomes and market prices at the time of sale. No account or password is required to sign — the link above opens your proposal directly and is valid for 10 days.
       </td></tr>
@@ -148,6 +179,7 @@ export class EmailService {
   }
 
   generatePlainTextTemplate(data: EmailTemplateData): string {
+    const showAudit2Notice = shouldShowAudit2Notice();
     const hasNamedAgent = Boolean(data.agentFirstName && data.agentLastName);
     const agentName = hasNamedAgent
       ? `${data.agentFirstName ?? ""} ${data.agentLastName ?? ""}`
@@ -181,6 +213,11 @@ export class EmailService {
     lines.push(`Accept & Sign: ${data.acceptLink}`);
     lines.push(`Decline: ${data.declineLink}`);
     lines.push("");
+    if (showAudit2Notice) {
+      lines.push(AUDIT_2_NOTICE_TITLE);
+      lines.push(AUDIT_2_NOTICE_TEXT);
+      lines.push("");
+    }
     lines.push(
       "All figures are estimates based on the system details provided and current carbon-credit assumptions. Actual income depends on verified generation from your system, audit outcomes and market prices at the time of sale. No account or password is required to sign — the link above opens your proposal directly and is valid for 10 days."
     );
