@@ -32,41 +32,37 @@ From 11 December the database has been applying two overlapping rules to every p
 3. **Repeated chatter.** Homepage statistics are recomputed on every visit instead of being cached briefly, and the connection health check runs thousands of extra queries that serve no user-visible purpose.
 
 
-## The fix
+## The fix, ordered from zero-risk to highest
 
-**Database permissions (biggest win)**
-- Remove the duplicate read rule on proposals so only one runs.
-- Rewrite the remaining rules so identity and admin checks are evaluated once per query instead of once per row.
-- Apply the same treatment to the onboarding and documents tables where the pattern repeats.
-- No change to who can see what — the logic stays identical, only the evaluation changes.
+**Step 1 — Zero-risk speed-ups (no visibility, no data, no screen content changes)**
+- Cache the homepage statistics for a few minutes.
+- Stop the constant background connection ping; run it only when a request actually fails.
+- Add proper paging limits to the big lists.
+- These alone remove thousands of database calls a week. Measure the gain before going further.
 
-**Stop over-fetching on list screens**
-- Onboarding lists and the proposals list request only the fields actually displayed; the full content payload is loaded on the detail screen where it is needed.
-- Cap list results with proper paging so the pages stay fast as volumes grow.
+**Step 2 — Stop the lists downloading the whole proposal (safe, provable)**
+- Before changing anything, I list every field each list screen actually reads out of the stored content. If any column genuinely needs it, that column keeps its data — it is fetched from a small derived field instead, not dropped.
+- The change is verified by loading the same screen with old and new data side by side and comparing every row and column. If a single cell differs, the change does not ship.
+- If anything is ambiguous, this step is skipped for that screen rather than guessed at.
 
-**Cut the repeated chatter**
-- Cache the homepage statistics for a short window.
-- Reduce the connection health ping to on-demand only.
-
-**Verify**
-- Re-run the slow-query measurement after each step and compare against the numbers above.
-- Target: main screens under 300ms average, no query over 1 second.
+**Step 3 — The permission rules (only after 1 and 2 are proven, and only with your go-ahead)**
+- This is the biggest win but it touches who can see what, so it gets its own approval and its own session.
+- Method: build the replacement rule alongside the current ones, then run an automated comparison that lists, for every single user account on the platform, the exact set of projects visible today versus under the new rule. Not a sample — all of them.
+- The change is only applied if the two lists are identical for every user. Any difference at all stops it.
+- The old rules are kept in a one-line rollback migration, so reverting is immediate.
+- If you would rather not touch permissions at all, say so — steps 1 and 2 still give a real improvement, just a smaller one.
 
 ## Impact on the platform
 
-- **Who sees what does not change.** The combined effect of the two proposal rules is reproduced exactly in the one rule that remains: own projects, team members' projects, client-owned projects, client-company colleagues' projects, admins, and invitation-link access. Before applying it, I compare the list of visible projects for an admin, an agent, a super partner and a client against today's results, and only keep the change if the lists match.
-- **Expected gain:** the heaviest screens (proposals, onboarding lists, follow-ups) should drop from roughly half a second to a second down to well under a third of a second, with the 3–4 second spikes gone.
-- **Risk of the permission change:** if a rule is mis-transcribed, someone could see too few or too many projects. This is why it is verified per role before and after, and it is reversible in one step.
-- **Risk of the list-screen change:** a column could lose a value if it secretly depended on the full stored content. Each list column is checked against a real row before and after.
-- **No downtime, no data changes, no emails sent.** Nothing about proposals, signatures, onboarding or the path to Audit Ready is touched.
-
+- **Expected gain:** steps 1 and 2 should take the heaviest screens from 0.5–0.8 seconds down to roughly 0.2–0.3 seconds and remove the 3–4 second spikes. Step 3 is what keeps it fast as volumes keep growing.
+- **On your two risk concerns:** both are now handled by proving equivalence rather than by promising care. The permission change is compared across every user account before it applies, and the list change is compared cell by cell. Neither ships on a judgement call.
+- **No downtime, no data changes, no emails sent.** Proposals, signatures, onboarding and the path to Audit Ready are untouched throughout.
+- **If we do nothing:** the platform keeps getting slower in proportion to growth — the underlying cost is rows multiplied by visits, and both are rising.
 
 ## Technical notes
 
-- Drop `proposals_select_policy`, keep `proposals_select_unified`, and rewrite its predicate using `(select auth.uid())`, `(select is_current_user_admin())` and `(select get_user_client_ids())` so Postgres evaluates them as initplans. Same for the update/delete policies and for `project_onboarding` / `onboarding_documents`.
-- `ProjectOnboardingList.tsx` currently selects `proposals!inner(... content ...)`; replace `content` with the specific derived fields the row needs, or expose a slim view for the list.
-- Run `EXPLAIN (ANALYZE, BUFFERS)` on the top two statements before and after; indexes are already comprehensive on these tables, so no new indexes are expected.
-- `ConnectionManager.checkConnection` polls `profiles`; make it event-driven (on failure/reconnect) rather than on an interval.
-- `get_public_homeowner_stats()` gets a React Query `staleTime` of several minutes on the homepage.
+- Step 1: `get_public_homeowner_stats()` gets a React Query `staleTime`; `ConnectionManager.checkConnection` becomes failure-triggered instead of interval-polled; explicit `.range()` limits on the proposal and onboarding list queries.
+- Step 2: `ProjectOnboardingList.tsx` and `ProposalsDataService.getProposals` both select `content`; audit `dataTransformer.ts` / `simplifiedTransformers.ts` for every field read out of it, then replace with narrowed selects or a slim list view.
+- Step 3: consolidate `proposals_select_policy` into `proposals_select_unified`, wrapping `auth.uid()`, `is_current_user_admin()`, `get_user_client_ids()` and `get_user_client_company_client_ids()` in `(select ...)` so they evaluate as initplans once per query. Equivalence harness: for each `auth.users` row, compare `old_policy_expr` vs `new_policy_expr` over all proposals with the user id substituted, and assert an empty symmetric difference.
+- `EXPLAIN (ANALYZE, BUFFERS)` before and after each step; indexes on these tables are already comprehensive, so no new indexes are expected.
 
-Work is sequenced permissions first, then over-fetching, then chatter, measuring after each.
