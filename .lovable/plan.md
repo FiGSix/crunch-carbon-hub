@@ -1,52 +1,28 @@
-# Close the "anyone can make themselves a company admin" hole
+# Temporary Audit 2 notice in proposal emails
 
-## The problem
+## Goal
+Add a prominent notice directly below the three proposal action buttons in every initial proposal invitation and resend sent on **18 September 2026**, then remove it automatically at midnight Johannesburg time.
 
-There is a rule on the client team-membership table that lets any signed-in
-person add themselves as an **account admin** of **any** company, with no
-invitation check. An account admin can see that company's projects, invite
-people, remove members and grant signing rights — so this is a real
-privilege-escalation risk.
+## Changes
+- Add a date-gated notice card beneath **Review Proposal**, **Accept & Sign**, and **Decline** in the shared proposal invitation email template.
+- Show the card through **23:59:59 on 18 September 2026 in Africa/Johannesburg**; emails generated from 19 September onward will use the normal template automatically.
+- Use polished wording while preserving the exact deadline, Audit 2 period, consequence, and offer of help:
 
-## What I confirmed
+  **Important Audit 2 deadline**
 
-- The permissive rule is `Users can create themselves as account admin`
-  (insert rule, requires only `role = account_admin`, `status = active`,
-  `user_id = auth.uid()` — no company check at all).
-- Legitimate memberships are **not** created through this rule:
-  - New client sign-ups get their company and admin membership from the
-    automatic `auto_create_client_company` database trigger, which runs with
-    elevated rights and bypasses these rules.
-  - Team invitations are created by the `send-client-team-invitation` server
-    function, which checks the inviter is an active account admin and also
-    runs with elevated rights.
-  - Admin linking/unlinking goes through dedicated admin-only database
-    functions.
-- The only app code that relied on self-insertion is `createClientCompany` in
-  `src/lib/supabase/clientCompany/clientCompanyOperations.ts`, which is
-  **not called anywhere** — dead code.
-- The separate insert rule for account admins (invite path) stays untouched:
-  it already requires `invited_by = auth.uid()`, `status = 'pending'` and
-  membership of the same company.
+  Today, 18 September 2026 at 17:00, is the cut-off for projects to be Audit Ready for inclusion in Audit 2, covering the period from 1 January 2025 to 30 June 2026 on the Crunch Carbon platform. Projects that are not Audit Ready by the deadline will forfeit potential income for this period, but will still be eligible to participate in Audit 3 (timelines to be confirmed). If you are struggling with anything, please let us know — together, we can help get your project ready before closing.
 
-## The fix
+- Add the same notice to the email's plain-text version so recipients who cannot view styled emails still receive it.
+- Keep all existing proposal wording, recipients, links, action buttons, and sending behavior unchanged.
 
-1. Migration: drop the `Users can create themselves as account admin` policy
-   on `public.client_company_members`. No replacement policy is needed —
-   every real path already runs server-side.
-2. Remove the unused `createClientCompany` function so no future code
-   accidentally depends on a path that can no longer work.
+## Coverage
+The shared template handles both first-time proposal invitations and resends. Other proposal-related emails do not contain these three buttons and will not be changed.
 
-## Verification
+## Validation
+- Preview the email at desktop and phone widths and confirm the notice sits directly below the buttons.
+- Verify the Johannesburg date boundary: visible during 18 September and absent from 19 September onward.
+- Confirm the HTML and plain-text versions contain matching notice content.
+- Check the project build after implementation.
 
-- Re-list the table's policies and confirm the permissive one is gone and the
-  invite/admin rules remain.
-- Confirm sign-up still produces a company + admin membership (trigger path is
-  unaffected by policies).
-- Confirm the team management page still loads members, pending approvals and
-  invitations, and that inviting a member still works.
-- Mark the security finding as fixed and re-run the scanner.
-
-## Note
-
-Existing memberships are untouched; nobody loses access.
+## Technical details
+Use an explicit `Africa/Johannesburg` date comparison when generating the email rather than relying on the server's timezone. Keep the temporary condition localized to the shared proposal invitation email service so it expires without a later cleanup deployment.
