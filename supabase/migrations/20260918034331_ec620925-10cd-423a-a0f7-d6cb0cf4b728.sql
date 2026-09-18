@@ -1,0 +1,3 @@
+UPDATE public.clients SET company_name = 'Clean and Renewable Energy Company (Pty) Ltd', registration_number = '2020/483761/07', updated_at = now() WHERE id = '1e3528af-b8d2-4939-82d9-705cdd7e1648';
+
+UPDATE public.proposals SET content = jsonb_set(jsonb_set(content, '{clientInfo,companyName}', to_jsonb('Clean and Renewable Energy Company (Pty) Ltd'::text), true), '{clientInfo,registrationNumber}', to_jsonb('2020/483761/07'::text), true), updated_at = now() WHERE client_reference_id = '1e3528af-b8d2-4939-82d9-705cdd7e1648' AND deleted_at IS NULL;
