@@ -173,9 +173,19 @@ export class ProposalsDataService {
         }
       }
 
+      // Rebuild the narrow content shape the transformers expect. Only the
+      // clientInfo/projectInfo branches are fetched, not the full payload.
+      const rows = (data as any[]).map((proposal) => ({
+        ...proposal,
+        content: {
+          clientInfo: proposal.clientInfo ?? undefined,
+          projectInfo: proposal.projectInfo ?? undefined,
+        },
+      }));
+
       // Transform proposals using the utility function
       const proposals = transformToProposalListItems(
-        data,
+        rows,
         clientProfiles,
         agentProfiles,
         userRole
