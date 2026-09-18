@@ -47,8 +47,8 @@
 # Post-signing path to Audit Ready
 
 - [x] Audit the success screen, confirmation email, reminders, and onboarding route
-- [ ] Return and use the onboarding project ID after signing
-- [ ] Explain the complete onboarding-to-Audit-Ready journey after signing
-- [ ] Add a working onboarding action to the signed-agreement email
-- [ ] Align post-signature reminders with live proposal statuses and template placeholders
-- [ ] Verify the journey, emails, and build
+- [x] Return and use the onboarding project ID after signing
+- [x] Explain the complete onboarding-to-Audit-Ready journey after signing
+- [x] Add a working onboarding action to the signed-agreement email
+- [x] Align post-signature reminders with live proposal statuses and template placeholders
+- [x] Verify the journey, emails, and build
