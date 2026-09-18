@@ -174,7 +174,7 @@ export function SignedSuccessScreen({
                 <Button
                   size="lg"
                   onClick={handleStartOnboarding}
-                  disabled={sending || !onboardingPath}
+                  disabled={sending}
                 >
                   {sending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Start onboarding

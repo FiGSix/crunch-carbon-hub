@@ -72,9 +72,11 @@ serve(async (req) => {
         "[Cession Email] Onboarding project not found:",
         onboardingError,
       );
-      throw new Error("Onboarding project not found");
     }
-    const onboardingUrl = `https://crunchcarbon.com/onboarding/${onboardingProject.id}?tab=onboarding`;
+    const onboardingPath = onboardingProject?.id
+      ? `/onboarding/${onboardingProject.id}?tab=onboarding`
+      : "/onboarding";
+    const onboardingUrl = `https://crunchcarbon.com/login?returnTo=${encodeURIComponent(onboardingPath)}`;
     const carbonCredits = proposal.carbon_credits
       ? `${proposal.carbon_credits.toLocaleString()} credits`
       : "N/A";

@@ -648,11 +648,8 @@ serve(async (req) => {
         "❌ Signed proposal has no onboarding project:",
         onboardingProjectError,
       );
-      throw new Error(
-        "Agreement signed, but onboarding could not be prepared. Please contact support.",
-      );
     }
-    const onboardingProjectId = onboardingProject.id;
+    const onboardingProjectId = onboardingProject?.id ?? null;
 
     // 7. Master-agreement propagation (client.cession_signed_at, first_agreement_id,
     //    sibling proposal approval, and cloned agreement rows) is performed by the
@@ -665,7 +662,7 @@ serve(async (req) => {
 
     // 10. Persist project details collected pre-signature + trigger installer invitation
     //     (referral-sourced proposals only).
-    if (isReferral && projectDetails) {
+    if (isReferral && projectDetails && onboardingProjectId) {
       try {
         const { data: existingFields } = await supabase
           .from("onboarding_fields")
