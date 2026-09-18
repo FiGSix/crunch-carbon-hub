@@ -21,27 +21,11 @@ export class ConnectionManager {
     lastChecked: new Date(),
     errorCount: 0
   };
-  private healthCheckInterval: NodeJS.Timeout | null = null;
-
   static getInstance(): ConnectionManager {
     if (!this.instance) {
       this.instance = new ConnectionManager();
-      this.instance.startHealthMonitoring();
     }
     return this.instance;
-  }
-
-  /**
-   * Start continuous health monitoring
-   */
-  private startHealthMonitoring(): void {
-    // Check health every 30 seconds
-    this.healthCheckInterval = setInterval(() => {
-      this.checkConnectionHealth();
-    }, 30000);
-
-    // Initial health check
-    this.checkConnectionHealth();
   }
 
   /**
