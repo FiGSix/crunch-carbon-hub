@@ -236,6 +236,18 @@ export function ProposalsSectionOptimized() {
           )}
         </CardContent>
       </Card>
+
+      {isAdmin && (
+        <ConfirmMoveToOnboardingDialog
+          open={showMoveDialog}
+          onOpenChange={setShowMoveDialog}
+          proposals={selectedProposals}
+          onSuccess={() => {
+            setSelectedIds(new Set());
+            handleProposalUpdate();
+          }}
+        />
+      )}
     </div>
   );
 }
