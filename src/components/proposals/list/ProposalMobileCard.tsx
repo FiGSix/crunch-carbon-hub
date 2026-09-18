@@ -1,5 +1,6 @@
 import { memo, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { ProposalListItem } from "@/types/proposals";
 import { UserRole } from "@/contexts/auth/types";
 import { formatSystemSizeForDisplay } from "@/lib/calculations/carbon";
@@ -12,6 +13,9 @@ interface ProposalMobileCardProps {
   userRole: UserRole | null;
   isCurrentUser: boolean;
   onProposalUpdate?: () => void;
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (id: string) => void;
 }
 
 /** Card representation of a proposal used on small screens instead of the table. */
@@ -20,6 +24,9 @@ export const ProposalMobileCard = memo<ProposalMobileCardProps>(({
   userRole,
   isCurrentUser,
   onProposalUpdate,
+  selectable,
+  selected,
+  onToggleSelect,
 }) => {
   const formattedDate = useMemo(
     () => new Date(proposal.date).toLocaleDateString(),
@@ -30,15 +37,35 @@ export const ProposalMobileCard = memo<ProposalMobileCardProps>(({
     [proposal.size]
   );
 
+  const alreadyOnboarding = !!proposal.signed_at;
+
   return (
     <div
       className={`rounded-lg border p-4 space-y-3 ${
         isCurrentUser ? "bg-carbon-green-50 border-carbon-green-200" : "bg-card"
       }`}
     >
-      <div className="space-y-1">
-        <p className="font-semibold leading-tight break-words">{proposal.name}</p>
-        <p className="text-sm text-muted-foreground break-words">{proposal.client}</p>
+      <div className="flex items-start gap-3">
+        {selectable && (
+          <Checkbox
+            className="mt-1"
+            checked={!!selected}
+            disabled={alreadyOnboarding}
+            aria-label={
+              alreadyOnboarding
+                ? `${proposal.name} is already in onboarding`
+                : `Select ${proposal.name}`
+            }
+            onCheckedChange={() => onToggleSelect?.(proposal.id)}
+          />
+        )}
+        <div className="space-y-1 min-w-0">
+          <p className="font-semibold leading-tight break-words">{proposal.name}</p>
+          <p className="text-sm text-muted-foreground break-words">{proposal.client}</p>
+          {selectable && alreadyOnboarding && (
+            <p className="text-xs text-muted-foreground">Already in onboarding</p>
+          )}
+        </div>
       </div>
 
       <ProposalStatusBadge proposal={proposal} />
