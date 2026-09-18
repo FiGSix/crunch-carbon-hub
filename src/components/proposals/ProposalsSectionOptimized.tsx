@@ -10,6 +10,7 @@ import { EngagementDashboard } from "@/components/proposals/engagement/Engagemen
 import { AdvancedProposalFilters, applyAdvancedFilters } from "@/components/proposals/filters/AdvancedProposalFilters";
 import { BulkSelectionBar } from "@/components/proposals/bulk/BulkSelectionBar";
 import { ConfirmMoveToOnboardingDialog } from "@/components/proposals/bulk/ConfirmMoveToOnboardingDialog";
+import { ExportProposalsButton } from "@/components/proposals/ExportProposalsButton";
 
 import { useProposals } from "@/hooks/useProposals";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
@@ -164,16 +165,18 @@ export function ProposalsSectionOptimized() {
               <FileText className="h-5 w-5 mr-2" />
               {sectionTitle}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleProposalUpdate}
-              disabled={loading}
-              className="ml-auto"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
+            <div className="ml-auto flex items-center gap-2">
+              {isAdmin && <ExportProposalsButton proposals={filteredProposals} />}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleProposalUpdate}
+                disabled={loading}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
