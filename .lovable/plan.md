@@ -21,9 +21,9 @@ The proposal already lists the `dave@thomasriver.com` record as an additional cl
 
 The onboarding record stays exactly as it is — it hangs off the project, not the contact, so the path to Audit Ready is unaffected. No emails will be sent.
 
-## One thing to decide
+## Regenerate the signed agreement
 
-The signed PDF that was generated today shows `southisdownhill@gmail.com` as the client's email. Moving the records does not rewrite that document. I can regenerate the signed agreement afterwards so the correct email appears on it, keeping the original signature, signing date and witness details. Tell me if you want that, otherwise I'll leave the existing PDF untouched.
+The signed PDF generated today shows `southisdownhill@gmail.com`. After the move I'll regenerate it so the correct email and contact details appear, keeping the original signature image, signing date, witnesses and agreement version. The regenerated document replaces the stored copy on the project; no email is sent to anyone.
 
 ## Technical notes
 
