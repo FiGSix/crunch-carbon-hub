@@ -312,6 +312,7 @@ export const SystemInputPanel = ({
                 endMonth={new Date(2030, 11)}
                 defaultMonth={commissionDate ?? new Date()}
                 initialFocus
+                classNames={{ caption_label: "hidden" }}
                 className="pointer-events-auto"
               />
             </PopoverContent>
