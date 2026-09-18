@@ -96,7 +96,7 @@ export function SignedSuccessScreen({
           <p className="text-muted-foreground mb-2">
             Thank you — your acceptance has been recorded.
           </p>
-          <p className="text-muted-foreground mb-8">
+          <p className="mb-8 text-muted-foreground">
             A signed copy of your Cession Agreement has been emailed to you
             {clientEmail ? ` at ${clientEmail}` : ""}.
           </p>

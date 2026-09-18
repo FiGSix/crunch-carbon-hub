@@ -5,6 +5,7 @@ import { Resend } from "npm:resend@2.0.0";
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const AUTOMATION_REPAIR_CUTOFF = '2026-09-18T00:00:00+02:00';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -46,74 +47,8 @@ serve(async (req: Request) => {
       errors: 0
     };
 
-    // ============= RULE 1: Signed Thank-You Email (Immediate) =============
-    const { data: acceptedProposals } = await supabase
-      .from('proposals')
-      .select('id, title, status, signed_at, agent_id, content, project_onboarding!inner(id)')
-      .eq('status', 'approved')
-      .not('signed_at', 'is', null)
-      .eq('automation_paused', false)
-      .is('deleted_at', null)
-      .is('archived_at', null);
-
-    for (const proposal of acceptedProposals || []) {
-      try {
-        // Check if thank-you already sent
-        const { data: thankYouLog } = await supabase
-          .from('proposal_automation_log')
-          .select('id')
-          .eq('proposal_id', proposal.id)
-          .eq('email_type', 'accepted_thank_you')
-          .single();
-        
-        if (!thankYouLog) {
-          console.log(`🎉 Sending thank-you email for accepted proposal ${proposal.id}`);
-          
-          const clientInfo = proposal.content?.clientInfo || {};
-          const clientEmail = clientInfo.email;
-          const clientName = clientInfo.name || 'Client';
-          
-          if (clientEmail) {
-            const { data: agentProfile } = await supabase
-              .from('profiles')
-              .select('email, first_name, last_name')
-              .eq('id', proposal.agent_id)
-              .single();
-
-            const agentEmail = agentProfile?.email || 'support@crunchcarbon.com';
-            const agentName = `${agentProfile?.first_name || ''} ${agentProfile?.last_name || ''}`.trim() || 'Your Agent';
-            
-            await sendPostSignatureEmail(
-              clientEmail,
-              clientName,
-              proposal.title,
-              proposal.id,
-              onboardingProjectId(proposal),
-              agentEmail,
-              agentName,
-              'accepted_thank_you',
-              emailTemplates
-            );
-
-            await supabase
-              .from('proposal_automation_log')
-              .insert({
-                proposal_id: proposal.id,
-                automation_type: 'post_signature_email',
-                trigger_event: 'accepted_immediate_thank_you',
-                email_type: 'accepted_thank_you',
-                old_status: proposal.status,
-                new_status: proposal.status
-              });
-
-            actions.thank_you_sent++;
-          }
-        }
-      } catch (error) {
-        console.error(`❌ Error processing accepted proposal ${proposal.id}:`, error);
-        actions.errors++;
-      }
-    }
+    // The signing function already sends the signed agreement and next steps
+    // immediately. Do not send a second overlapping thank-you email.
 
     // ============= RULE 2: Cession Reminder (+2 Days) =============
     const cessionReminderDays = timingConfig?.cession_reminder_days || 2;
@@ -126,6 +61,7 @@ serve(async (req: Request) => {
       `)
       .eq('status', 'approved')
       .not('signed_at', 'is', null)
+      .gte('signed_at', AUTOMATION_REPAIR_CUTOFF)
       .eq('automation_paused', false)
       .eq('project_onboarding.onboarding_complete', false)
       .eq('project_onboarding.submitted_for_review', false)
@@ -219,13 +155,15 @@ serve(async (req: Request) => {
     const { data: onboardingProposals } = await supabase
       .from('proposals')
       .select(`
-        id, title, status, agent_id, content,
-        project_onboarding!inner(id, onboarding_complete, last_activity_at)
+        id, title, status, signed_at, agent_id, content,
+        project_onboarding!inner(id, onboarding_complete, submitted_for_review, last_activity_at)
       `)
       .eq('status', 'approved')
       .not('signed_at', 'is', null)
+      .gte('signed_at', AUTOMATION_REPAIR_CUTOFF)
       .eq('automation_paused', false)
       .eq('project_onboarding.onboarding_complete', false)
+      .eq('project_onboarding.submitted_for_review', false)
       .is('deleted_at', null)
       .is('archived_at', null);
 
@@ -235,13 +173,10 @@ serve(async (req: Request) => {
           ? proposal.project_onboarding[0] 
           : proposal.project_onboarding;
         
-        const lastActivity = projectOnboarding?.last_activity_at 
-          ? new Date(projectOnboarding.last_activity_at)
-          : null;
-        
-        const daysSinceActivity = lastActivity
-          ? Math.floor((now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24))
-          : 999;
+        const lastActivity = new Date(projectOnboarding?.last_activity_at || proposal.signed_at);
+        const daysSinceActivity = Math.floor(
+          (now.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24),
+        );
         
         if (daysSinceActivity >= onboardingIdleDays) {
           // Check if help email sent recently (within 7 days)
@@ -280,7 +215,7 @@ serve(async (req: Request) => {
                 clientName,
                 proposal.title,
                 proposal.id,
-                projectOnboarding.id,
+                onboardingProjectId(proposal),
                 agentEmail,
                 agentName,
                 'onboarding_idle_help',

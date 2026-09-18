@@ -587,39 +587,42 @@ serve(async (req) => {
     //     (referral-sourced proposals only).
     if (isReferral && projectDetails) {
       try {
-        const po = { id: onboardingProjectId };
+        const { data: existingFields } = await supabase
+          .from('onboarding_fields')
+          .select('id')
+          .eq('project_id', onboardingProjectId)
+          .maybeSingle();
 
-        if (po) {
-          const { data: existingFields } = await supabase
-            .from('onboarding_fields')
-            .select('id')
-            .eq('project_id', po.id)
-            .maybeSingle();
-
-          const payload = {
-            project_id: po.id,
-            system_address: projectDetails.systemAddress!.trim(),
-            system_gps_lat: projectDetails.systemLat ?? null,
-            system_gps_lng: projectDetails.systemLng ?? null,
-            commissioning_date: projectDetails.commissioningDate!,
-            installer_company_name: projectDetails.installerCompanyName!.trim(),
-            installer_email: projectDetails.installerEmail!.trim().toLowerCase(),
-          };
-
-          if (existingFields) {
-            await supabase
-              .from('onboarding_fields')
-              .update(payload)
-              .eq('id', existingFields.id);
-          } else {
-            await supabase.from('onboarding_fields').insert(payload);
-          }
-
-          const { error: invErr } = await supabase.functions.invoke('send-installer-invitation', {
-            body: { proposalId: proposal.id },
-          });
-          if (invErr) console.error('[accept-proposal] installer invite failed', invErr);
+        const systemAddress = projectDetails.systemAddress?.trim();
+        const commissioningDate = projectDetails.commissioningDate;
+        const installerCompanyName = projectDetails.installerCompanyName?.trim();
+        const installerEmail = projectDetails.installerEmail?.trim().toLowerCase();
+        if (!systemAddress || !commissioningDate || !installerCompanyName || !installerEmail) {
+          throw new Error('Validated project details became unavailable');
         }
+        const payload = {
+          project_id: onboardingProjectId,
+          system_address: systemAddress,
+          system_gps_lat: projectDetails.systemLat ?? null,
+          system_gps_lng: projectDetails.systemLng ?? null,
+          commissioning_date: commissioningDate,
+          installer_company_name: installerCompanyName,
+          installer_email: installerEmail,
+        };
+
+        if (existingFields) {
+          await supabase
+            .from('onboarding_fields')
+            .update(payload)
+            .eq('id', existingFields.id);
+        } else {
+          await supabase.from('onboarding_fields').insert(payload);
+        }
+
+        const { error: invErr } = await supabase.functions.invoke('send-installer-invitation', {
+          body: { proposalId: proposal.id },
+        });
+        if (invErr) console.error('[accept-proposal] installer invite failed', invErr);
       } catch (e) {
         console.error('[accept-proposal] project details / installer invite error', e);
       }
