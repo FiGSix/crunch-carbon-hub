@@ -56,6 +56,17 @@ serve(async (req) => {
     const systemSize = proposal.system_size_kwp 
       ? `${(proposal.system_size_kwp / 1000).toFixed(2)} MWp`
       : 'N/A';
+
+    const { data: onboardingProject, error: onboardingError } = await supabase
+      .from('project_onboarding')
+      .select('id')
+      .eq('proposal_id', proposalId)
+      .maybeSingle();
+    if (onboardingError || !onboardingProject?.id) {
+      console.error('[Cession Email] Onboarding project not found:', onboardingError);
+      throw new Error('Onboarding project not found');
+    }
+    const onboardingUrl = `https://crunchcarbon.com/onboarding/${onboardingProject.id}?tab=onboarding`;
     const carbonCredits = proposal.carbon_credits 
       ? `${proposal.carbon_credits.toLocaleString()} credits`
       : 'N/A';
@@ -256,9 +267,23 @@ serve(async (req) => {
                       </tr>
                     </table>
 
-                    <p style="font-size: 16px; color: #1A1A1A; line-height: 1.6; margin: 0 0 20px 0;">
-                      Our team will now proceed with the next steps to process your carbon credits. You will receive updates as we progress through each stage of the project.
-                    </p>
+                    <table width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #E5E7EB; border-radius: 6px; margin: 25px 0;">
+                      <tr><td style="padding: 22px;">
+                        <h2 style="margin: 0 0 10px; color: #1A1A1A; font-size: 20px;">Next: complete onboarding</h2>
+                        <p style="margin: 0 0 16px; color: #4A5568; font-size: 15px; line-height: 1.6;">
+                          Signing secures your agreement. To become Audit Ready, please complete the remaining project details, documents and generation-data access, then submit the project for Crunch Carbon review.
+                        </p>
+                        <ol style="margin: 0 0 20px; padding-left: 20px; color: #4A5568; font-size: 15px; line-height: 1.8;">
+                          <li>Confirm the system, installer and ownership information</li>
+                          <li>Upload the required certificates, invoices and supporting documents</li>
+                          <li>Configure and verify inverter or meter data access</li>
+                          <li>Submit the completed onboarding for review</li>
+                        </ol>
+                        <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto;"><tr><td style="background-color: #F4C430; border-radius: 6px;">
+                          <a href="${onboardingUrl}" style="display: inline-block; padding: 14px 28px; color: #1A1A1A; text-decoration: none; font-size: 16px; font-weight: 700;">Complete onboarding</a>
+                        </td></tr></table>
+                      </td></tr>
+                    </table>
 
                     <p style="font-size: 16px; color: #1A1A1A; line-height: 1.6; margin: 0 0 30px 0;">
                       If you have any questions or need assistance, please don't hesitate to contact us.

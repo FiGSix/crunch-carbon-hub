@@ -37,6 +37,7 @@ export default function ProposalAcceptance() {
   const [signatureImage, setSignatureImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSignedSuccess, setShowSignedSuccess] = useState(false);
+  const [onboardingProjectId, setOnboardingProjectId] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [tokenExpired, setTokenExpired] = useState(false);
   const [clientRecord, setClientRecord] = useState<LiveClientRecord | null>(null);
@@ -373,6 +374,7 @@ export default function ProposalAcceptance() {
       }
 
       // Signature is recorded — show the completion screen.
+      setOnboardingProjectId(data?.onboardingProjectId || null);
       setShowSignedSuccess(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
 
@@ -444,7 +446,7 @@ export default function ProposalAcceptance() {
     const resolvedClient = resolveClientInfo(proposal.content?.clientInfo || {}, clientRecord);
     return (
       <SignedSuccessScreen
-        proposalId={proposal.id}
+        onboardingProjectId={onboardingProjectId}
         clientEmail={resolvedClient.email || null}
         isAuthenticated={isAuthenticated}
       />

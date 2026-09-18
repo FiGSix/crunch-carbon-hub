@@ -46,11 +46,12 @@ serve(async (req: Request) => {
       errors: 0
     };
 
-    // ============= RULE 1: Accepted Thank-You Email (Immediate) =============
+    // ============= RULE 1: Signed Thank-You Email (Immediate) =============
     const { data: acceptedProposals } = await supabase
       .from('proposals')
-      .select('id, title, status, signed_at, agent_id, content')
-      .eq('status', 'accepted')
+      .select('id, title, status, signed_at, agent_id, content, project_onboarding!inner(id)')
+      .eq('status', 'approved')
+      .not('signed_at', 'is', null)
       .eq('automation_paused', false)
       .is('deleted_at', null)
       .is('archived_at', null);
@@ -87,6 +88,7 @@ serve(async (req: Request) => {
               clientName,
               proposal.title,
               proposal.id,
+              onboardingProjectId(proposal),
               agentEmail,
               agentName,
               'accepted_thank_you',
@@ -120,11 +122,13 @@ serve(async (req: Request) => {
       .from('proposals')
       .select(`
         id, title, status, signed_at, agent_id, content,
-        project_onboarding!inner(id, assigned_epc_id, onboarding_complete)
+        project_onboarding!inner(id, assigned_epc_id, onboarding_complete, submitted_for_review)
       `)
-      .eq('status', 'cession_signed')
+      .eq('status', 'approved')
+      .not('signed_at', 'is', null)
       .eq('automation_paused', false)
       .eq('project_onboarding.onboarding_complete', false)
+      .eq('project_onboarding.submitted_for_review', false)
       .is('deleted_at', null)
       .is('archived_at', null);
 
@@ -180,6 +184,7 @@ serve(async (req: Request) => {
                 clientName,
                 proposal.title,
                 proposal.id,
+                projectOnboarding.id,
                 agentEmail,
                 agentName,
                 'cession_reminder',
@@ -217,7 +222,8 @@ serve(async (req: Request) => {
         id, title, status, agent_id, content,
         project_onboarding!inner(id, onboarding_complete, last_activity_at)
       `)
-      .eq('status', 'in_onboarding')
+      .eq('status', 'approved')
+      .not('signed_at', 'is', null)
       .eq('automation_paused', false)
       .eq('project_onboarding.onboarding_complete', false)
       .is('deleted_at', null)
@@ -274,6 +280,7 @@ serve(async (req: Request) => {
                 clientName,
                 proposal.title,
                 proposal.id,
+                projectOnboarding.id,
                 agentEmail,
                 agentName,
                 'onboarding_idle_help',
@@ -338,13 +345,14 @@ async function sendPostSignatureEmail(
   clientName: string,
   proposalTitle: string,
   proposalId: string,
+  projectOnboardingId: string,
   agentEmail: string,
   agentName: string,
   emailType: 'accepted_thank_you' | 'cession_reminder' | 'onboarding_idle_help',
   emailTemplates: any,
   epcEmail?: string | null
 ) {
-  const onboardingUrl = `https://crunchcarbon.com/onboarding/${proposalId}`;
+  const onboardingUrl = `https://crunchcarbon.com/onboarding/${projectOnboardingId}?tab=onboarding`;
 
   const template = emailTemplates[emailType];
   if (!template) {
@@ -352,16 +360,19 @@ async function sendPostSignatureEmail(
     throw new Error(`Template not found: ${emailType}`);
   }
 
-  let subject = template.subject
-    .replace(/\{\{clientName\}\}/g, clientName)
-    .replace(/\{\{proposalTitle\}\}/g, proposalTitle);
-
-  let html = template.html
-    .replace(/\{\{clientName\}\}/g, clientName)
-    .replace(/\{\{proposalTitle\}\}/g, proposalTitle)
-    .replace(/\{\{onboardingUrl\}\}/g, onboardingUrl)
-    .replace(/\{\{agentName\}\}/g, agentName)
-    .replace(/\{\{agentEmail\}\}/g, agentEmail);
+  const replacements: Array<[RegExp, string]> = [
+    [/\{\{clientName\}\}|\{\{client_name\}\}/g, clientName],
+    [/\{\{proposalTitle\}\}|\{\{proposal_title\}\}/g, proposalTitle],
+    [/\{\{onboardingUrl\}\}|\{\{onboarding_link\}\}/g, onboardingUrl],
+    [/\{\{agentName\}\}|\{\{agent_name\}\}/g, agentName],
+    [/\{\{agentEmail\}\}|\{\{agent_email\}\}/g, agentEmail],
+  ];
+  let subject = template.subject;
+  let html = template.html;
+  for (const [pattern, value] of replacements) {
+    subject = subject.replace(pattern, value);
+    html = html.replace(pattern, value);
+  }
 
   // Build recipient list
   const toAddresses = [clientEmail];
@@ -381,4 +392,12 @@ async function sendPostSignatureEmail(
 
   console.log(`✅ Post-signature email sent to ${clientEmail}:`, emailResponse);
   return emailResponse;
+}
+
+function onboardingProjectId(proposal: any): string {
+  const project = Array.isArray(proposal.project_onboarding)
+    ? proposal.project_onboarding[0]
+    : proposal.project_onboarding;
+  if (!project?.id) throw new Error(`No onboarding project found for proposal ${proposal.id}`);
+  return project.id;
 }

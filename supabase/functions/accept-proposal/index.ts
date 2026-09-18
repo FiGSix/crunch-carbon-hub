@@ -558,6 +558,21 @@ serve(async (req) => {
 
     console.log(`✅ Proposal ${proposal.id} successfully signed via ${signatureType}`);
 
+    // The signing trigger creates this row synchronously. Return its own ID to
+    // the browser because /onboarding/:projectId resolves project_onboarding.id,
+    // not the proposal ID.
+    const { data: onboardingProject, error: onboardingProjectError } = await supabase
+      .from('project_onboarding')
+      .select('id')
+      .eq('proposal_id', proposal.id)
+      .maybeSingle();
+
+    if (onboardingProjectError || !onboardingProject?.id) {
+      console.error('❌ Signed proposal has no onboarding project:', onboardingProjectError);
+      throw new Error('Agreement signed, but onboarding could not be prepared. Please contact support.');
+    }
+    const onboardingProjectId = onboardingProject.id;
+
     // 7. Master-agreement propagation (client.cession_signed_at, first_agreement_id,
     //    sibling proposal approval, and cloned agreement rows) is performed by the
     //    propagate_master_agreement() DB trigger on INSERT into proposal_agreements.
@@ -572,23 +587,7 @@ serve(async (req) => {
     //     (referral-sourced proposals only).
     if (isReferral && projectDetails) {
       try {
-        let { data: po } = await supabase
-          .from('project_onboarding')
-          .select('id')
-          .eq('proposal_id', proposal.id)
-          .maybeSingle();
-        if (!po) {
-          const { data: created, error: poErr } = await supabase
-            .from('project_onboarding')
-            .insert({ proposal_id: proposal.id })
-            .select('id')
-            .single();
-          if (poErr) {
-            console.error('[accept-proposal] create project_onboarding failed', poErr);
-          } else {
-            po = created;
-          }
-        }
+        const po = { id: onboardingProjectId };
 
         if (po) {
           const { data: existingFields } = await supabase
@@ -712,6 +711,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true,
         proposalId: proposal.id,
+        onboardingProjectId,
         message: "Proposal accepted successfully"
       }),
       { 
