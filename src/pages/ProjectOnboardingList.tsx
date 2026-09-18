@@ -113,7 +113,11 @@ export default function ProjectOnboardingList() {
               company_name
             )
           )
-        `)
+        `;
+
+      let query: any = supabase
+        .from('project_onboarding')
+        .select(ONBOARDING_LIST_SELECT)
         .not('proposals.signed_at', 'is', null)
         // Never show archived or deleted proposals in the onboarding pipeline
         .is('proposals.archived_at', null)
