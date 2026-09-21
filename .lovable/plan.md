@@ -1,39 +1,50 @@
-# Why Quintin Barnard could not sign
+# Getting missing Cession Agreements signed
 
-## What actually happened
+## What the records actually show
 
-Quintin tried to sign his Wildeklawer "WK Pakhuis" agreement four times between 16:49 and 16:51 (SA time) today. Each attempt reached our system with his drawn signature attached — nothing was wrong with his link, his details or his signature.
+Three different situations are mixed together right now, and only one of them needs a client to sign again.
 
-During those exact minutes the database host was unreachable (a hosting-side outage: "Web server is down", error 521). Every attempt failed at the very first step, before anything was saved. Two other clients signing at the same moment (Monty Kerslake, Nigel McLeod) hit the identical failure.
+**Group A — 38 projects: signed, document never produced.**
+The client's signature is on record, but the cession document was never built or emailed. Nothing needs re-signing. We generate the document from the signature we already hold and send it.
 
-The database is responding normally again as of 16:57.
+**Group B — 22 projects (13 clients): marked signed, no signature on record.**
+Mostly older records from 2024 (Matthew Ball 9, Peter du Plessis 8, plus single projects for Hilton Hunkin, Sue Riley, Craig Scott, Karel Rautenbach, Luqmaan Vallie). These carry no drawn signature, so a real signature is needed.
 
-Two separate problems come out of this:
+**Group C — 78 projects (21 clients): marked signed, no agreement at all.**
+Largest group. Biggest: Jonathan de Vrye (24), Marius van Rensburg (14), Dr Mohammed Essa (8), Grahame Cruickshanks (7), Justin Cackett (4). Only 2 of these clients hold a signature elsewhere on the platform. These need to sign.
 
-1. **Nothing was saved for Quintin.** His agreement is still unsigned and his signing link is valid until 28 September, so he can simply try again now.
-2. **The message he saw was wrong and alarming.** When the database is briefly unreachable, the signing page tells the client their invitation link is "invalid or expired". That sends people to support instead of telling them to try again in a minute — and it makes a healthy link look broken.
+So the real list to contact is Groups B and C — about 34 clients covering 100 projects. And because one signature covers every project under that client, most of them sign once, not 30 times.
 
-## One signature must cover all his projects
+## On the wording to clients
 
-Quintin has nine projects on his record: "WK Pakhuis" (the live link), three older ones whose links expired on 7 August, and five that were never sent.
+It is a genuine system fault — the agreement record was never completed on our side — so we do not need to invent anything. The honest version is also the strongest one: short, apologetic, our fault, one click to fix. I would not claim anything beyond that, because the email lands next to a legal document and the record has to stand up later.
 
-The platform already does this: when a client signs once, every other project under that client — including unsent drafts and expired ones — is automatically marked signed, gets its own cession agreement built from the same signature, and each document is generated and emailed. So once Quintin signs "WK Pakhuis", all nine become signed with their own cessions. No re-sending of the expired links is needed for signing purposes.
+Proposed wording:
 
-The one weak point: the step that builds and emails those extra documents runs only once, immediately after signing. If it is interrupted — exactly the kind of outage that just happened — the projects still show as signed but their documents never appear, with nothing to catch it. This plan adds a safety net.
+> Dear [Name],
+>
+> We picked up a system fault on our side: your Cession Agreement was not recorded correctly when you signed, so we do not have a valid copy on file.
+>
+> We're sorry for the inconvenience. Signing again takes under a minute, and one signature covers all [N] of your projects with us.
+>
+> [Sign Cession Agreement]
+>
+> Nothing else about your project changes and no action is needed beyond this.
 
 ## What I propose to do
 
-1. **Immediate:** confirm the signing path is healthy again and let Quintin retry his link. No data repair is needed — nothing partial was written.
-2. **Fix the misleading message:** separate "we could not reach the system" from "this link is not valid". A temporary connection failure gets its own wording — "We could not reach our system just now. Please try again in a moment." — plus an automatic short retry before the client sees any error, so brief blips resolve invisibly.
-3. **Same treatment on the page itself,** so a client who opens the agreement during an outage sees a retry prompt rather than a dead "link invalid" screen.
-4. **Safety net for the inherited documents:** a scheduled hourly check that finds any signed project whose cession document was never produced, builds it and emails it. This makes the "one signature covers everything" promise hold even when something fails mid-way.
-5. **After Quintin signs:** verify all nine of his projects show as signed and each has its own document, and report back.
+1. **Fix Group A silently** — regenerate and email the 38 missing documents from the signatures already on record. No client contact needed.
+2. **Build the list** — an admin screen showing every client in Groups B and C: name, email, project count, what is missing, whether they have been contacted. You confirm or trim the list before anything goes out.
+3. **Issue fresh signing links** — one valid link per client, pointing at their main project, with a long expiry.
+4. **Send the apology email** — wording above, sent per client (not per project), on your go-ahead. Sent in small batches so we can watch delivery.
+5. **Track it** — the same screen shows sent / opened / signed, so you can chase the stragglers. Once a client signs, all their projects flip to signed with their own cession documents automatically.
+6. **Stop it recurring** — an hourly check that catches any signed project whose document was never produced and finishes it, so Group A can never build up silently again.
 
 ## Technical notes
 
-- `supabase/functions/accept-proposal/index.ts` currently throws `Invalid or expired invitation token` whenever the `get_proposal_by_token_direct` lookup returns no row *or* errors. The 521 response arrived as an error object whose `message` was an HTML page; that path must be distinguished and returned as HTTP 503 with a `retryable: true` flag, not 400.
-- Add a bounded retry (2 attempts, short backoff) around the token lookup for network/5xx failures only — never for a genuine "no row" result.
-- Client side: `src/pages/ProposalAcceptance/index.tsx` and its submit handler map any failure to the invalid-link state; branch on the new retryable flag and show a retry prompt with the signature still held in memory so nothing has to be redrawn.
-- Propagation itself needs no change: the `propagate_master_agreement()` trigger already copies the signature to sibling proposals in `draft/sent/delivered/opened/viewed/stale` and flips them to `approved`. Verified it matches on client id, shared email and client company.
-- `sweep-agreement-documents` is currently only invoked inline by `accept-proposal`. Add a `pg_cron` job (hourly) posting to it with the service role, alongside the existing `weekly-roundup-emails` job; the function is already idempotent (`pdf_path is null` filter, capped batch).
-- No RLS, schema, legal-document or calculation changes. Existing signatures, agreements and audit records untouched.
+- Group A: existing `sweep-agreement-documents` already handles `pdf_path is null` rows idempotently; run it in batches, then schedule it hourly via `pg_cron` with the service role.
+- Group B/C detection queries: agreements with `pdf_path is null` split on `signature_image_url is null`; and proposals in `approved`/`signed` with no `proposal_agreements` row. Persist the working list in a small `agreement_resign_campaign` table (client_id, reason, status, link_token, sent_at, signed_at) so progress survives page reloads and re-runs.
+- Re-signing must not fabricate history: Group B/C rows get a new signature and new `signed_at`; existing rows are superseded, never edited in place. Keep the original record for audit.
+- New links are issued via the existing invitation-token mechanism on one nominated proposal per client; propagation to siblings is already handled by `propagate_master_agreement()`.
+- Email goes through the existing Resend send path with the suppression-list filter, so previously bounced addresses are excluded and surfaced in the list for manual follow-up.
+- No changes to calculations, RLS, legal document versions, or existing valid signatures.
