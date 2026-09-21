@@ -10,6 +10,10 @@
 
 **Rebuild is working correctly.** It is reporting the truth: these clients still have projects without agreements.
 
+## Scope
+
+This applies only to projects that are in onboarding. Checked against the live records: all 98 affected projects are already in onboarding, so nothing on the list falls outside the scope — but the rule is applied explicitly so no project outside onboarding is ever touched by the rebuild.
+
 ## What to build
 
 **1. One signature covers every project, signed or not**
