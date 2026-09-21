@@ -209,6 +209,14 @@ export function DashboardSidebar() {
       roles: ["admin"]
     },
     {
+      // Temporary: remove together with /admin/agreement-recovery once the
+      // missing-agreement backlog is cleared.
+      name: "Agreement Recovery",
+      href: "/admin/agreement-recovery",
+      icon: FileSignature,
+      roles: ["admin"]
+    },
+    {
       name: "Email Automation",
       href: "/admin/email-automation",
       icon: Mail,

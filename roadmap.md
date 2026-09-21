@@ -52,3 +52,12 @@
 - [x] Add a working onboarding action to the signed-agreement email
 - [x] Align post-signature reminders with live proposal statuses and template placeholders
 - [x] Verify the journey, emails, and build
+
+# Agreement Recovery (temporary admin page)
+- [x] Recovery list tables, refresh action and audit log
+- [x] Admin page with group filters, per-row and bulk actions, tracking
+- [x] Silent fix / fix with email for Group A
+- [x] Fresh signing link with apology email for Groups B and C
+- [x] Re-signing supersedes incomplete agreements instead of editing them
+- [x] Hourly safety net so Group A cannot build up again
+- [ ] Remove the page, route, sidebar entry and tables once all groups are clear

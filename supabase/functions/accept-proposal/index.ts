@@ -144,10 +144,27 @@ serve(async (req) => {
     //    + cloning the agreement onto each sibling) is handled by the
     //    propagate_master_agreement() DB trigger on INSERT into proposal_agreements.
 
-    // 3. Validate proposal status for new signatures
-    console.log("🔍 Validating proposal status:", proposal.status);
+    // Recovery flag: projects whose agreement was never recorded correctly are
+    // explicitly re-opened for a fresh signature even though they read as signed.
+    let resignRequired = false;
+    {
+      const { data: resignRow } = await supabase
+        .from("proposals")
+        .select("resign_required")
+        .eq("id", proposal.id)
+        .maybeSingle();
+      resignRequired = Boolean(resignRow?.resign_required);
+    }
 
-    if (proposal.status === "approved" || proposal.status === "signed") {
+    // 3. Validate proposal status for new signatures
+    console.log("🔍 Validating proposal status:", proposal.status, {
+      resignRequired,
+    });
+
+    if (
+      !resignRequired &&
+      (proposal.status === "approved" || proposal.status === "signed")
+    ) {
       console.error("❌ Proposal already signed:", proposal.id);
       return new Response(
         JSON.stringify({
@@ -546,17 +563,38 @@ serve(async (req) => {
       }
     }
 
-    // Check for existing agreement to prevent duplicates from retries
+    // Check for existing agreement to prevent duplicates from retries.
+    // Superseded rows are history and never reused.
     const { data: existingAgreement } = await supabase
       .from("proposal_agreements")
-      .select("id")
+      .select("id, signature_image_url")
       .eq("proposal_id", proposal.id)
+      .is("superseded_at", null)
+      .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
+
+    // A recovery re-signature must produce a new record: the incomplete one is
+    // superseded (kept for audit), never edited in place.
+    let supersededAgreementId: string | null = null;
+    if (
+      existingAgreement &&
+      resignRequired &&
+      !existingAgreement.signature_image_url
+    ) {
+      supersededAgreementId = existingAgreement.id;
+      await supabase
+        .from("proposal_agreements")
+        .update({ superseded_at: new Date().toISOString() })
+        .eq("id", existingAgreement.id);
+      console.log(
+        `♻️ Superseded incomplete agreement ${existingAgreement.id} for re-signature`,
+      );
+    }
 
     let newAgreement;
 
-    if (existingAgreement) {
+    if (existingAgreement && !supersededAgreementId) {
       console.log(
         `⚠️ Agreement already exists for proposal ${proposal.id}: ${existingAgreement.id}, reusing it`,
       );
@@ -611,6 +649,13 @@ serve(async (req) => {
         throw new Error("Failed to record agreement");
       }
       newAgreement = createdAgreement;
+
+      if (supersededAgreementId) {
+        await supabase
+          .from("proposal_agreements")
+          .update({ superseded_by: createdAgreement.id })
+          .eq("id", supersededAgreementId);
+      }
     }
 
     console.log(`✅ Agreement created with ID: ${newAgreement.id}`);
@@ -621,6 +666,7 @@ serve(async (req) => {
       .update({
         status: "approved",
         signed_at: new Date().toISOString(),
+        resign_required: false,
       })
       .eq("id", proposal.id);
 
