@@ -577,7 +577,11 @@ serve(async (req) => {
     // A recovery re-signature must produce a new record: the incomplete one is
     // superseded (kept for audit), never edited in place.
     let supersededAgreementId: string | null = null;
-    if (existingAgreement && resignRequired && !existingAgreement.signature_image_url) {
+    if (
+      existingAgreement &&
+      resignRequired &&
+      !existingAgreement.signature_image_url
+    ) {
       supersededAgreementId = existingAgreement.id;
       await supabase
         .from("proposal_agreements")

@@ -20,12 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,7 +62,10 @@ const STATE_LABEL: Record<RecoveryState, string> = {
   resolved: "Complete",
 };
 
-const STATE_VARIANT: Record<RecoveryState, "default" | "secondary" | "destructive" | "outline"> = {
+const STATE_VARIANT: Record<
+  RecoveryState,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
   not_started: "outline",
   fixed: "default",
   link_sent: "secondary",
@@ -127,7 +125,10 @@ export default function AdminAgreementRecovery() {
 
   const selectedItems = (items ?? []).filter((i) => selected.includes(i.id));
   const selectedGroups = new Set(selectedItems.map((i) => i.group_code));
-  const onlyGroupA = selectedGroups.size > 0 && selectedGroups.has("A") && selectedGroups.size === 1;
+  const onlyGroupA =
+    selectedGroups.size > 0 &&
+    selectedGroups.has("A") &&
+    selectedGroups.size === 1;
   const noGroupA = selectedItems.length > 0 && !selectedGroups.has("A");
   const everythingDone = open.length === 0 && (items?.length ?? 0) > 0;
 
@@ -244,8 +245,8 @@ export default function AdminAgreementRecovery() {
           <CardHeader>
             <CardTitle>Affected clients</CardTitle>
             <CardDescription>
-              One signature covers every project under a client, so most
-              clients only need to be contacted once.
+              One signature covers every project under a client, so most clients
+              only need to be contacted once.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -259,7 +260,10 @@ export default function AdminAgreementRecovery() {
                   className="pl-10"
                 />
               </div>
-              <Tabs value={group} onValueChange={(v) => setGroup(v as typeof group)}>
+              <Tabs
+                value={group}
+                onValueChange={(v) => setGroup(v as typeof group)}
+              >
                 <TabsList>
                   <TabsTrigger value="all">All</TabsTrigger>
                   <TabsTrigger value="A">Group A</TabsTrigger>
@@ -374,7 +378,8 @@ export default function AdminAgreementRecovery() {
                     <TableHead className="w-10">
                       <Checkbox
                         checked={
-                          visible.length > 0 && selected.length === visible.length
+                          visible.length > 0 &&
+                          selected.length === visible.length
                         }
                         onCheckedChange={toggleAll}
                         aria-label="Select all"
@@ -453,7 +458,10 @@ export default function AdminAgreementRecovery() {
         </Card>
       </div>
 
-      <AlertDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
+      <AlertDialog
+        open={!!confirm}
+        onOpenChange={(o) => !o && setConfirm(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{confirm?.title}</AlertDialogTitle>

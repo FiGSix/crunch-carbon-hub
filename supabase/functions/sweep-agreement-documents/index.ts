@@ -12,7 +12,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 const json = (body: unknown, status = 200) =>
@@ -22,7 +23,8 @@ const json = (body: unknown, status = 200) =>
   });
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS")
+    return new Response(null, { headers: corsHeaders });
 
   try {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -31,10 +33,13 @@ Deno.serve(async (req) => {
     });
 
     // ---- caller gate ------------------------------------------------------
-    const bearer = req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
+    const bearer =
+      req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
     let allowed = bearer === serviceKey;
     if (!allowed && bearer) {
-      const { data: { user } } = await admin.auth.getUser(bearer);
+      const {
+        data: { user },
+      } = await admin.auth.getUser(bearer);
       if (user) {
         const { data: isAdmin } = await admin.rpc("has_role", {
           _user_id: user.id,

@@ -56,10 +56,13 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const bearer = req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
+    const bearer =
+      req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
     if (!bearer) return json({ error: "Authentication required" }, 401);
 
-    const { data: { user } } = await admin.auth.getUser(bearer);
+    const {
+      data: { user },
+    } = await admin.auth.getUser(bearer);
     if (!user) return json({ error: "Authentication required" }, 401);
 
     const { data: isAdmin } = await admin.rpc("has_role", {
@@ -70,11 +73,16 @@ Deno.serve(async (req) => {
 
     const body = (await req.json().catch(() => ({}))) as Partial<Payload>;
     const action = body.action;
-    const itemIds = Array.isArray(body.itemIds) ? body.itemIds.slice(0, 100) : [];
+    const itemIds = Array.isArray(body.itemIds)
+      ? body.itemIds.slice(0, 100)
+      : [];
     const sendEmail = body.sendEmail !== false;
     const note = typeof body.note === "string" ? body.note.slice(0, 500) : null;
 
-    if (!action || !["fix_documents", "issue_link", "mark_handled"].includes(action)) {
+    if (
+      !action ||
+      !["fix_documents", "issue_link", "mark_handled"].includes(action)
+    ) {
       return json({ error: "Unknown action" }, 400);
     }
     if (itemIds.length === 0) {
@@ -100,20 +108,26 @@ Deno.serve(async (req) => {
     for (const item of items as RecoveryItem[]) {
       try {
         if (action === "mark_handled") {
-          await setState(admin, item, "handled", "mark_handled", user.id, {
+          await setState(
+            admin,
+            item,
+            "handled",
+            "mark_handled",
+            user.id,
+            {
+              note,
+            },
             note,
-          }, note);
+          );
           results.push({ itemId: item.id, ok: true, state: "handled" });
           continue;
         }
 
         if (action === "fix_documents") {
-          const { data: sweep, error: sweepError } = await admin.functions.invoke(
-            "sweep-agreement-documents",
-            {
+          const { data: sweep, error: sweepError } =
+            await admin.functions.invoke("sweep-agreement-documents", {
               body: { clientId: item.client_id, limit: 100, sendEmail },
-            },
-          );
+            });
           if (sweepError) throw new Error(sweepError.message);
 
           await setState(
@@ -122,7 +136,10 @@ Deno.serve(async (req) => {
             "fixed",
             sendEmail ? "fix_documents_emailed" : "fix_documents_silent",
             user.id,
-            { processed: sweep?.processed ?? 0, failures: sweep?.failures ?? [] },
+            {
+              processed: sweep?.processed ?? 0,
+              failures: sweep?.failures ?? [],
+            },
             note,
           );
           results.push({
@@ -209,7 +226,11 @@ Deno.serve(async (req) => {
           admin,
           item,
           emailed ? "link_sent" : skipReason ? "failed" : "not_started",
-          emailed ? "apology_email_sent" : sendEmail ? "apology_email_skipped" : "link_created",
+          emailed
+            ? "apology_email_sent"
+            : sendEmail
+              ? "apology_email_skipped"
+              : "link_created",
           user.id,
           { proposalId, link, skipReason },
           note,
@@ -225,9 +246,17 @@ Deno.serve(async (req) => {
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
         console.error(`[agreement-recovery-action] ${item.id}: ${message}`);
-        await setState(admin, item, "failed", `${action}_failed`, user.id, {
-          error: message,
-        }, note);
+        await setState(
+          admin,
+          item,
+          "failed",
+          `${action}_failed`,
+          user.id,
+          {
+            error: message,
+          },
+          note,
+        );
         results.push({ itemId: item.id, ok: false, error: message });
       }
     }
