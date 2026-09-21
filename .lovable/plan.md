@@ -6,32 +6,41 @@
 
 **The reason:** when someone signs, the platform copies that signature onto their other projects — but only onto projects still sitting in a pre-signature state (draft, sent, delivered, opened). Every project on this recovery list is already marked approved or signed, which is exactly the problem we are fixing. So the copy step skips them all. One client, one signature, and only one project gets fixed.
 
-**The two Justins have not actually signed.** Neither Justin Cackett (4 projects) nor Justin Driemeyer (Zenco Farming) has any new signature on record — no signature, no agreement, nothing recorded since their apology emails went out at 12:13. Whatever they saw, nothing was saved. This needs the signing attempt itself to be traced before assuming it worked.
+**The two Justins have not actually signed.** Neither Justin Cackett (4 projects) nor Justin Driemeyer (Zenco Farming) has any new signature on record — no signature, no agreement, nothing recorded since their apology emails went out at 12:13. Whatever they saw, nothing was saved.
 
-**Rebuild is working correctly.** It is reporting the truth: these clients still have projects without agreements. Nothing is broken about the button.
+**Rebuild is working correctly.** It is reporting the truth: these clients still have projects without agreements.
 
-## What to do
+## What to build
 
-**1. Make one signature cover all the client's projects again**
+**1. One signature covers every project, signed or not**
 
-Extend the copy step so it also covers projects already marked approved or signed that have no agreement on record — the exact backlog case. Projects that already hold a valid signed agreement are never touched, never overwritten, and history is never edited. This is the root fix: without it, every client on the list would have to sign once per project.
+Extend the copy step so a client's signature is applied to all of their projects that have no valid agreement — including those already marked approved or signed. Projects that already hold a valid signed agreement with a document are never touched.
 
-**2. Backfill Jared Groom**
+**2. Keep each project's original date**
 
-Once the copy step is corrected, apply it to the signatures already captured — starting with Jared's Green Point project, which then produces its document automatically and drops him off the list.
+Where a project already has an original signing date on record, the rebuilt agreement carries that date, so the paperwork matches when the client actually committed. Where there is no original date, the new signing date is used. The signature itself and the audit trail record the real date it was captured, so nothing is misrepresented — the document shows the effective date, the record shows both.
 
-**3. Find out what happened to the two Justins**
+**3. Rebuild and store the document for every project**
 
-Trace their signing attempts through the acceptance records and email activity before contacting them again. If their link failed for a technical reason, that has to be fixed first, otherwise a second email produces the same result. If they simply did not finish, the page should say "Link opened, not signed" rather than "Link sent".
+After the signature is applied, each affected project gets its cession document generated and stored against it, using the date rules above. Documents are produced for signed and unsigned projects alike, so every project ends with a complete, downloadable agreement.
 
-**4. Show real progress on the page**
+**4. Backfill the clients who already signed**
 
-Today a row stays on "Link sent" until every last project clears. Add a live count per row — "3 of 4 done" — and move the row to Signed automatically when the client's signature arrives, so it is obvious at a glance who acted and who did not.
+Apply the above to signatures already captured — Jared Groom first, which clears his remaining project immediately — then to every other client on the list who holds a signature.
+
+**5. Get Justin Cackett and the remaining clients signed**
+
+Trace the two Justins' signing attempts first, so a second email doesn't hit the same fault. Once each client signs, all of their projects are re-signed, dated and documented automatically by steps 1–3 — no per-project action.
+
+**6. Show real progress on the page**
+
+Each row shows how many of the client's projects are done ("3 of 4"), and moves to Signed on its own once the client's signature arrives and everything is rebuilt.
 
 ## Technical notes
 
-- `propagate_master_agreement()` filters siblings on `p.status IN ('draft','sent','delivered','opened','viewed','stale')`; recovery-group proposals are `approved`/`signed`, so the `INSERT ... SELECT` matches nothing. Widen the filter to include `approved`/`signed` while keeping the `NOT EXISTS (select 1 from proposal_agreements ...)` guard, which already prevents overwriting valid agreements. Same widening for `inherit_master_agreement_on_insert()` is not needed (insert-time path).
-- Backfill: for each client in `agreement_recovery_items` holding a live `client_cession_signatures` row, insert propagated `proposal_agreements` rows for their agreement-less proposals using the same column mapping as the trigger (`source: master_agreement_propagation`), then let the hourly `sweep-agreement-documents` job produce the PDFs.
-- Justin Cackett (`e269d2b7`) and Justin Driemeyer (`2491c839`) have no `client_cession_signatures` row at all — inspect `accept-proposal` logs and `client_access_audit` for their nominated proposals (`6a204368`, `46318574`) before re-sending.
-- Recovery page: recompute `state`/`resolved_at` per row inside `refresh_agreement_recovery()` from remaining affected proposals, and add a `remaining_count` so the table can show partial progress.
-- No change to signature validity, legal document versions, RLS, or existing agreements.
+- Root cause: `propagate_master_agreement()` filters siblings on `p.status IN ('draft','sent','delivered','opened','viewed','stale')`, so `approved`/`signed` backlog proposals match nothing. Widen the filter to include `approved` and `signed`, keeping the `NOT EXISTS (select 1 from proposal_agreements pa where pa.proposal_id = p.id)` guard so valid agreements are never overwritten. Also treat rows with `superseded_at is not null` as absent.
+- Effective date: propagated `proposal_agreements.signed_at` takes `coalesce(p.signed_at, NEW.signed_at)` per proposal rather than a single date for all; `metadata` records `actual_signature_captured_at` (the real capture time), `backdated: true/false` and `origin_agreement_id`, so the audit trail keeps both dates. The PDF renders the effective date.
+- Backfill migration: for each `agreement_recovery_items` client with a live `client_cession_signatures` row, insert propagated agreement rows for their agreement-less proposals using the same mapping, then generate documents via `sweep-agreement-documents` (already idempotent on `pdf_path is null`, capped batch, hourly cron in place).
+- Justin Cackett (`e269d2b7`, proposals `4f9162a4`, `8e0020e9`, `5f74ee13`, `6a204368`, plus `bae63da6` delivered) and Justin Driemeyer (`2491c839`, proposal `46318574`) have no `client_cession_signatures` row — inspect `accept-proposal` logs and `client_access_audit` for the nominated proposals before re-sending.
+- Recovery page: `refresh_agreement_recovery()` recomputes `state`/`resolved_at` per row from remaining affected proposals and returns a `remaining_count`/`total_count` pair for the progress column.
+- No change to existing valid agreements, signature validity, legal document versions, RLS, or calculations.
