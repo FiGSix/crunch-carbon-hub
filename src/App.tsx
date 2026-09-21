@@ -64,6 +64,7 @@ const ViewProposalPage = createOptimizedLazyComponent(() => import("./pages/View
 const ProposalAcceptance = createOptimizedLazyComponent(() => import("./pages/ProposalAcceptance/index"), "ProposalAcceptance");
 const ProposalDecline = createOptimizedLazyComponent(() => import("./pages/ProposalDecline"), "ProposalDecline");
 const AdminSignatures = createOptimizedLazyComponent(() => import("./pages/AdminSignatures"), "AdminSignatures");
+const AdminAgreementRecovery = createOptimizedLazyComponent(() => import("./pages/AdminAgreementRecovery"), "AdminAgreementRecovery");
 const DataDiagnostics = createOptimizedLazyComponent(() => import("./pages/admin/DataDiagnostics"), "DataDiagnostics");
 const EmailAutomation = createOptimizedLazyComponent(() => import("./pages/admin/EmailAutomation"), "EmailAutomation");
 const ProjectOnboardingList = createOptimizedLazyComponent(() => import("./pages/ProjectOnboardingList"), "ProjectOnboardingList");
