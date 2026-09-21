@@ -2971,6 +2971,8 @@ export type Database = {
           signed_at: string
           signed_by: string
           signed_pdf_url: string | null
+          superseded_at: string | null
+          superseded_by: string | null
           typed_name: string | null
           user_agent: string | null
           witness_1_ip_address: unknown
@@ -2999,6 +3001,8 @@ export type Database = {
           signed_at?: string
           signed_by: string
           signed_pdf_url?: string | null
+          superseded_at?: string | null
+          superseded_by?: string | null
           typed_name?: string | null
           user_agent?: string | null
           witness_1_ip_address?: unknown
@@ -3027,6 +3031,8 @@ export type Database = {
           signed_at?: string
           signed_by?: string
           signed_pdf_url?: string | null
+          superseded_at?: string | null
+          superseded_by?: string | null
           typed_name?: string | null
           user_agent?: string | null
           witness_1_ip_address?: unknown
@@ -3064,6 +3070,13 @@ export type Database = {
             columns: ["proposal_id"]
             isOneToOne: false
             referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proposal_agreements_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "proposal_agreements"
             referencedColumns: ["id"]
           },
         ]
@@ -3311,6 +3324,8 @@ export type Database = {
           platform_fee_override: boolean | null
           platform_fee_percentage: number | null
           project_info: Json
+          resign_requested_at: string | null
+          resign_required: boolean
           review_later_until: string | null
           signed_at: string | null
           source: string
@@ -3368,6 +3383,8 @@ export type Database = {
           platform_fee_override?: boolean | null
           platform_fee_percentage?: number | null
           project_info?: Json
+          resign_requested_at?: string | null
+          resign_required?: boolean
           review_later_until?: string | null
           signed_at?: string | null
           source?: string
@@ -3425,6 +3442,8 @@ export type Database = {
           platform_fee_override?: boolean | null
           platform_fee_percentage?: number | null
           project_info?: Json
+          resign_requested_at?: string | null
+          resign_required?: boolean
           review_later_until?: string | null
           signed_at?: string | null
           source?: string
