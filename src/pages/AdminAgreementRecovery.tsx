@@ -89,6 +89,7 @@ export default function AdminAgreementRecovery() {
   const runAction = useAgreementRecoveryAction();
 
   const [search, setSearch] = useState("");
+  const [alsoEmail, setAlsoEmail] = useState("");
   const [group, setGroup] = useState<"all" | "A" | "B" | "C">("all");
   const [selected, setSelected] = useState<string[]>([]);
   const [confirm, setConfirm] = useState<null | {
