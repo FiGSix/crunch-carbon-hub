@@ -388,6 +388,7 @@ export default function AdminAgreementRecovery() {
                     <TableHead>Client</TableHead>
                     <TableHead>Group</TableHead>
                     <TableHead className="text-right">Projects</TableHead>
+                    <TableHead className="text-right">Progress</TableHead>
                     <TableHead>What is missing</TableHead>
                     <TableHead>State</TableHead>
                     <TableHead>Last action</TableHead>

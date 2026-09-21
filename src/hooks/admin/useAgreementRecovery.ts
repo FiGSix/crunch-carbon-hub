@@ -23,6 +23,7 @@ export interface RecoveryItem {
   b_count: number;
   c_count: number;
   project_count: number;
+  total_count: number;
   proposal_ids: string[];
   state: RecoveryState;
   link_proposal_id: string | null;
