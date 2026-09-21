@@ -1,0 +1,2 @@
+REVOKE EXECUTE ON FUNCTION public.log_recovery_event_for_proposal(uuid, text, jsonb, text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.log_recovery_event_for_proposal(uuid, text, jsonb, text) TO service_role;

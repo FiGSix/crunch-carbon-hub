@@ -33,7 +33,12 @@ interface Payload {
   itemIds: string[];
   sendEmail?: boolean;
   note?: string;
+  // Optional extra addresses that should also receive the apology email
+  // (e.g. the colleague address that historically received the proposals).
+  alsoEmail?: string[];
 }
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface RecoveryItem {
   id: string;
@@ -78,6 +83,12 @@ Deno.serve(async (req) => {
       : [];
     const sendEmail = body.sendEmail !== false;
     const note = typeof body.note === "string" ? body.note.slice(0, 500) : null;
+    const alsoEmail = Array.isArray(body.alsoEmail)
+      ? body.alsoEmail
+          .filter((e) => typeof e === "string" && EMAIL_RE.test(e.trim()))
+          .map((e) => e.trim().toLowerCase())
+          .slice(0, 5)
+      : [];
 
     if (
       !action ||
@@ -160,36 +171,62 @@ Deno.serve(async (req) => {
           Date.now() + LINK_VALID_DAYS * 24 * 60 * 60 * 1000,
         ).toISOString();
 
+        const requestedAt = new Date().toISOString();
+
         const { error: tokenError } = await admin
           .from("proposals")
           .update({
             invitation_token: token,
             invitation_expires_at: expiresAt,
             resign_required: true,
-            resign_requested_at: new Date().toISOString(),
+            resign_requested_at: requestedAt,
           })
           .eq("id", proposalId);
         if (tokenError) throw new Error(tokenError.message);
+
+        // One signature must cover the client. Flag every outstanding project
+        // so no link of theirs is ever refused as "already signed".
+        const siblingIds = (item.proposal_ids ?? []).filter(
+          (id) => id !== proposalId,
+        );
+        if (siblingIds.length > 0) {
+          await admin
+            .from("proposals")
+            .update({
+              resign_required: true,
+              resign_requested_at: requestedAt,
+            })
+            .in("id", siblingIds);
+        }
 
         const link = `${siteUrl}/proposals/${proposalId}/accept?token=${token}`;
 
         let emailed = false;
         let skipReason: string | null = null;
+        const messageIds: string[] = [];
 
         if (sendEmail) {
-          const email = item.client_email?.trim();
-          if (!email) {
+          const primary = item.client_email?.trim().toLowerCase();
+          const recipients = [...new Set([primary, ...alsoEmail])].filter(
+            (e): e is string => !!e,
+          );
+
+          if (recipients.length === 0) {
             skipReason = "no email address on record";
+          } else if (!resend) {
+            skipReason = "email service not configured";
           } else {
-            const { data: suppressed } = await admin.rpc(
-              "is_client_email_suppressed",
-              { p_email: email },
-            );
-            if (suppressed) {
-              skipReason = "address is on the blocked list";
-            } else if (!resend) {
-              skipReason = "email service not configured";
-            } else {
+            for (const email of recipients) {
+              const { data: suppressed } = await admin.rpc(
+                "is_client_email_suppressed",
+                { p_email: email },
+              );
+              if (suppressed) {
+                if (email === primary)
+                  skipReason = "address is on the blocked list";
+                continue;
+              }
+
               const sendResult = await resend.emails.send({
                 from: "Crunch Carbon <noreply@crunchcarbon.com>",
                 to: [email],
@@ -208,7 +245,30 @@ Deno.serve(async (req) => {
               if ((sendResult as any)?.error) {
                 throw new Error(JSON.stringify((sendResult as any).error));
               }
+
+              const messageId = (sendResult as any)?.data?.id as
+                | string
+                | undefined;
+              if (messageId) {
+                messageIds.push(messageId);
+                // Registering the send makes delivery, opens and bounces flow
+                // back through the existing Resend webhook.
+                await admin.from("proposal_automation_log").insert({
+                  proposal_id: proposalId,
+                  automation_type: "agreement_recovery",
+                  trigger_event: "resign_request",
+                  email_type: "cession_resign_apology",
+                  email_message_id: messageId,
+                  details: { recipient: email, recovery_item_id: item.id },
+                  created_by: user.id,
+                });
+              }
               emailed = true;
+              if (email === primary) skipReason = null;
+            }
+
+            if (!emailed && !skipReason) {
+              skipReason = "no deliverable address";
             }
           }
         }
@@ -232,7 +292,14 @@ Deno.serve(async (req) => {
               ? "apology_email_skipped"
               : "link_created",
           user.id,
-          { proposalId, link, skipReason },
+          {
+            proposalId,
+            link,
+            skipReason,
+            messageIds,
+            alsoEmail,
+            flaggedProposals: (item.proposal_ids ?? []).length,
+          },
           note,
         );
 
