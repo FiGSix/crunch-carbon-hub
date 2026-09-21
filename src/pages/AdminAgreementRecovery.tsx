@@ -388,6 +388,7 @@ export default function AdminAgreementRecovery() {
                     <TableHead>Client</TableHead>
                     <TableHead>Group</TableHead>
                     <TableHead className="text-right">Projects</TableHead>
+                    <TableHead className="text-right">Progress</TableHead>
                     <TableHead>What is missing</TableHead>
                     <TableHead>State</TableHead>
                     <TableHead>Last action</TableHead>
@@ -417,6 +418,14 @@ export default function AdminAgreementRecovery() {
                       </TableCell>
                       <TableCell className="text-right">
                         {item.project_count}
+                      </TableCell>
+                      <TableCell className="text-right text-sm text-muted-foreground">
+                        {Math.max(
+                          (item.total_count || item.project_count) -
+                            item.project_count,
+                          0,
+                        )}{" "}
+                        of {item.total_count || item.project_count}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {item.group_code === "A"
