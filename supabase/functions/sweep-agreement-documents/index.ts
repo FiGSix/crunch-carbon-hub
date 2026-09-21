@@ -33,9 +33,14 @@ Deno.serve(async (req) => {
     });
 
     // ---- caller gate ------------------------------------------------------
+    // Accepted callers: the service role, the scheduled job (shared cron
+    // secret, since pg_cron has no access to the service role key), or an
+    // admin JWT.
+    const cronSecret = Deno.env.get("SWEEP_CRON_SECRET") ?? "";
     const bearer =
       req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
-    let allowed = bearer === serviceKey;
+    let allowed =
+      bearer === serviceKey || (cronSecret !== "" && bearer === cronSecret);
     if (!allowed && bearer) {
       const {
         data: { user },
