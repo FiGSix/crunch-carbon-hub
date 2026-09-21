@@ -33,7 +33,12 @@ interface Payload {
   itemIds: string[];
   sendEmail?: boolean;
   note?: string;
+  // Optional extra addresses that should also receive the apology email
+  // (e.g. the colleague address that historically received the proposals).
+  alsoEmail?: string[];
 }
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface RecoveryItem {
   id: string;
