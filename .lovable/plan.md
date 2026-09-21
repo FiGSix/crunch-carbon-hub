@@ -1,25 +1,23 @@
-# Getting missing Cession Agreements signed
+# Cession Agreement Recovery page (temporary)
 
 ## What the records actually show
 
-Three different situations are mixed together right now, and only one of them needs a client to sign again.
+Three situations are mixed together, and only two of them need a client to sign again.
 
 **Group A — 38 projects: signed, document never produced.**
-The client's signature is on record, but the cession document was never built or emailed. Nothing needs re-signing. We generate the document from the signature we already hold and send it.
+The client's signature is on record, but the cession document was never built or emailed. No re-signing needed — we rebuild the document from the signature we already hold.
 
 **Group B — 22 projects (13 clients): marked signed, no signature on record.**
-Mostly older records from 2024 (Matthew Ball 9, Peter du Plessis 8, plus single projects for Hilton Hunkin, Sue Riley, Craig Scott, Karel Rautenbach, Luqmaan Vallie). These carry no drawn signature, so a real signature is needed.
+Mostly older 2024 records (Matthew Ball 9, Peter du Plessis 8, plus single projects for Hilton Hunkin, Sue Riley, Craig Scott, Karel Rautenbach, Luqmaan Vallie). No drawn signature exists, so a real signature is needed.
 
 **Group C — 78 projects (21 clients): marked signed, no agreement at all.**
-Largest group. Biggest: Jonathan de Vrye (24), Marius van Rensburg (14), Dr Mohammed Essa (8), Grahame Cruickshanks (7), Justin Cackett (4). Only 2 of these clients hold a signature elsewhere on the platform. These need to sign.
+Biggest: Jonathan de Vrye (24), Marius van Rensburg (14), Dr Mohammed Essa (8), Grahame Cruickshanks (7), Justin Cackett (4). Only 2 of these clients hold a signature elsewhere. These need to sign.
 
-So the real list to contact is Groups B and C — about 34 clients covering 100 projects. And because one signature covers every project under that client, most of them sign once, not 30 times.
+Because one signature covers every project under a client, Groups B and C are roughly 34 clients — not 100 separate requests.
 
 ## On the wording to clients
 
-It is a genuine system fault — the agreement record was never completed on our side — so we do not need to invent anything. The honest version is also the strongest one: short, apologetic, our fault, one click to fix. I would not claim anything beyond that, because the email lands next to a legal document and the record has to stand up later.
-
-Proposed wording:
+It is a genuine system fault on our side, so nothing needs inventing. The honest version is also the strongest: short, apologetic, our fault, one click. I would not claim more than that, because this email sits next to a legal document and has to stand up later.
 
 > Dear [Name],
 >
@@ -31,20 +29,46 @@ Proposed wording:
 >
 > Nothing else about your project changes and no action is needed beyond this.
 
-## What I propose to do
+## The admin page
 
-1. **Fix Group A silently** — regenerate and email the 38 missing documents from the signatures already on record. No client contact needed.
-2. **Build the list** — an admin screen showing every client in Groups B and C: name, email, project count, what is missing, whether they have been contacted. You confirm or trim the list before anything goes out.
-3. **Issue fresh signing links** — one valid link per client, pointing at their main project, with a long expiry.
-4. **Send the apology email** — wording above, sent per client (not per project), on your go-ahead. Sent in small batches so we can watch delivery.
-5. **Track it** — the same screen shows sent / opened / signed, so you can chase the stragglers. Once a client signs, all their projects flip to signed with their own cession documents automatically.
-6. **Stop it recurring** — an hourly check that catches any signed project whose document was never produced and finishes it, so Group A can never build up silently again.
+A single temporary page, **Agreement Recovery**, admin only, listing every affected client across all three groups.
+
+Each row shows: client name, email, group (A / B / C), number of projects, what is missing, last action taken, current state (Not started / Fixed / Link sent / Opened / Signed / Bounced / Failed), and a date.
+
+Filters by group and state. Search by name or email. Select rows individually or as a whole group.
+
+Actions available per row and in bulk:
+
+1. **Fix silently, no email** — rebuild the missing documents from the signature on record. Group A only.
+2. **Fix silently and email the document** — same, plus send the client their cession document. Group A only.
+3. **Send fresh link with apology email** — issue a new signing link and send the wording above. Groups B and C.
+4. **Copy link only** — get the signing link without sending anything, for clients you'd rather phone.
+5. **Mark as handled** — for clients dealt with off-platform, with a note.
+
+Every action is logged against the row with who did it and when, so the page doubles as the record of the exercise.
+
+## Tracking and completion
+
+- Rows move to **Signed** automatically as signatures come in; a client who signs one project clears all their projects at once.
+- A header bar shows the counts: A 0/38, B 0/22, C 0/78, with a live remaining total.
+- Bounced addresses are flagged rather than retried, so you can chase them by phone.
+- When all three groups reach zero, the page shows a **Close and remove** action. Confirming it archives the record of the exercise and deletes the page and its menu entry — nothing permanent is left behind in the product.
+
+## Stopping Group A recurring
+
+An automatic hourly check finds any signed project whose cession document was never produced, builds it and emails it. This runs permanently, independent of the temporary page, so the backlog can never build up silently again.
 
 ## Technical notes
 
-- Group A: existing `sweep-agreement-documents` already handles `pdf_path is null` rows idempotently; run it in batches, then schedule it hourly via `pg_cron` with the service role.
-- Group B/C detection queries: agreements with `pdf_path is null` split on `signature_image_url is null`; and proposals in `approved`/`signed` with no `proposal_agreements` row. Persist the working list in a small `agreement_resign_campaign` table (client_id, reason, status, link_token, sent_at, signed_at) so progress survives page reloads and re-runs.
-- Re-signing must not fabricate history: Group B/C rows get a new signature and new `signed_at`; existing rows are superseded, never edited in place. Keep the original record for audit.
-- New links are issued via the existing invitation-token mechanism on one nominated proposal per client; propagation to siblings is already handled by `propagate_master_agreement()`.
-- Email goes through the existing Resend send path with the suppression-list filter, so previously bounced addresses are excluded and surfaced in the list for manual follow-up.
-- No changes to calculations, RLS, legal document versions, or existing valid signatures.
+- New table `agreement_recovery_items` (client_id, group A/B/C, proposal_ids[], state, link_token, last_action, last_action_by, last_action_at, note, resolved_at) plus `agreement_recovery_events` for the per-row audit trail. RLS: admin-only via `has_role(auth.uid(),'admin')`; explicit GRANTs to authenticated and service_role.
+- Population query, run once into the table and refreshable from a button:
+  - A: `proposal_agreements.pdf_path is null and signature_image_url is not null`
+  - B: `pdf_path is null and signature_image_url is null`
+  - C: proposals in `approved`/`signed` with no `proposal_agreements` row
+  all filtered on `proposals.deleted_at is null`, grouped by `client_reference_id`.
+- Group A fixes reuse `sweep-agreement-documents` (already idempotent, `pdf_path is null` filter, capped batch), with an `email: false` flag added for the silent variant.
+- Groups B/C: a new `issue-recovery-signing-link` edge function nominates one proposal per client, mints an invitation token with a long expiry, and sends through the existing Resend path with suppression-list filtering. Sibling projects are covered by the existing `propagate_master_agreement()` trigger on signing.
+- Re-signing never edits history: new signature and new `signed_at`; any prior row is superseded and kept for audit.
+- Recurrence guard: `pg_cron` hourly job posting to `sweep-agreement-documents` with the service role, alongside the existing `weekly-roundup-emails` job.
+- Teardown: the close action drops the page, route, sidebar entry and the two tables in a single migration, leaving a CSV export of the completed record.
+- No changes to calculations, RLS on proposals, legal document versions, or existing valid signatures.
