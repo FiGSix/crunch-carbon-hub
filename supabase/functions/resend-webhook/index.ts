@@ -117,6 +117,27 @@ serve(async (req) => {
 
     console.log('✅ Email event stored:', emailEvent.id);
 
+    // Mirror delivery/open/bounce onto the Agreement Recovery record when the
+    // project is part of that exercise, so "did the client get it?" is answerable.
+    if (['email.delivered', 'email.opened', 'email.clicked', 'email.bounced', 'email.complained'].includes(event.type)) {
+      const recoveryState =
+        event.type === 'email.bounced' || event.type === 'email.complained'
+          ? 'bounced'
+          : event.type === 'email.opened' || event.type === 'email.clicked'
+            ? 'opened'
+            : null;
+      await supabaseAdmin.rpc('log_recovery_event_for_proposal', {
+        p_proposal_id: proposalId,
+        p_action: `recovery_${event.type.replace('email.', 'email_')}`,
+        p_detail: {
+          recipient: event.data.to?.[0],
+          message_id: event.data.email_id,
+          bounce_reason: event.data.bounce?.reason ?? null,
+        },
+        p_state: recoveryState,
+      }).catch((e: any) => console.error('[recovery event] log failed:', e?.message));
+    }
+
     // Resend reports failures per recipient. A failure for the copied agent must
     // never change the client's proposal, and transient failures remain retryable.
     const shouldAffectProposal = primaryRecipientEvent && !retryableBounce;
