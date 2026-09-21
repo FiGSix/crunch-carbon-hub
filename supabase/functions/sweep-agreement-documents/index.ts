@@ -80,16 +80,18 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        const { data: proposal } = await admin
-          .from("proposals")
-          .select("client:clients!proposals_client_reference_id_fkey(email)")
-          .eq("id", row.proposal_id)
-          .maybeSingle();
-        const email = (proposal as any)?.client?.email;
-        if (email) {
-          await admin.functions.invoke("send-cession-agreement-email", {
-            body: { proposalId: row.proposal_id, clientEmail: email },
-          });
+        if (sendEmail) {
+          const { data: proposal } = await admin
+            .from("proposals")
+            .select("client:clients!proposals_client_reference_id_fkey(email)")
+            .eq("id", row.proposal_id)
+            .maybeSingle();
+          const email = (proposal as any)?.client?.email;
+          if (email) {
+            await admin.functions.invoke("send-cession-agreement-email", {
+              body: { proposalId: row.proposal_id, clientEmail: email },
+            });
+          }
         }
         processed++;
       } catch (e) {
