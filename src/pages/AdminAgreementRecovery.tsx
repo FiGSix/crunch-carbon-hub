@@ -154,8 +154,18 @@ export default function AdminAgreementRecovery() {
       description,
       run: () =>
         runAction.mutate(
-          { action, itemIds: selected, sendEmail },
-          { onSuccess: () => setSelected([]) },
+          {
+            action,
+            itemIds: selected,
+            sendEmail,
+            alsoEmail: alsoEmail.trim() ? [alsoEmail.trim()] : undefined,
+          },
+          {
+            onSuccess: () => {
+              setSelected([]);
+              setAlsoEmail("");
+            },
+          },
         ),
     });
 
