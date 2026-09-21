@@ -369,6 +369,7 @@ export type Database = {
           proposal_ids: string[]
           resolved_at: string | null
           state: string
+          total_count: number
           updated_at: string
         }
         Insert: {
@@ -392,6 +393,7 @@ export type Database = {
           proposal_ids?: string[]
           resolved_at?: string | null
           state?: string
+          total_count?: number
           updated_at?: string
         }
         Update: {
@@ -415,6 +417,7 @@ export type Database = {
           proposal_ids?: string[]
           resolved_at?: string | null
           state?: string
+          total_count?: number
           updated_at?: string
         }
         Relationships: [
