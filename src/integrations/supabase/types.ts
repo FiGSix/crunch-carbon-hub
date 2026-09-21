@@ -4793,6 +4793,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      log_recovery_event_for_proposal: {
+        Args: {
+          p_action: string
+          p_detail?: Json
+          p_proposal_id: string
+          p_state?: string
+        }
+        Returns: boolean
+      }
       log_referral_conversion: {
         Args: { p_user_id: string }
         Returns: undefined
