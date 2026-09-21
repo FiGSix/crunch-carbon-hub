@@ -645,6 +645,13 @@ serve(async (req) => {
         throw new Error("Failed to record agreement");
       }
       newAgreement = createdAgreement;
+
+      if (supersededAgreementId) {
+        await supabase
+          .from("proposal_agreements")
+          .update({ superseded_by: createdAgreement.id })
+          .eq("id", supersededAgreementId);
+      }
     }
 
     console.log(`✅ Agreement created with ID: ${newAgreement.id}`);
@@ -655,6 +662,7 @@ serve(async (req) => {
       .update({
         status: "approved",
         signed_at: new Date().toISOString(),
+        resign_required: false,
       })
       .eq("id", proposal.id);
 
