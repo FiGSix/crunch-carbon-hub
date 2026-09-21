@@ -89,6 +89,7 @@ export default function AdminAgreementRecovery() {
   const runAction = useAgreementRecoveryAction();
 
   const [search, setSearch] = useState("");
+  const [alsoEmail, setAlsoEmail] = useState("");
   const [group, setGroup] = useState<"all" | "A" | "B" | "C">("all");
   const [selected, setSelected] = useState<string[]>([]);
   const [confirm, setConfirm] = useState<null | {
@@ -153,8 +154,18 @@ export default function AdminAgreementRecovery() {
       description,
       run: () =>
         runAction.mutate(
-          { action, itemIds: selected, sendEmail },
-          { onSuccess: () => setSelected([]) },
+          {
+            action,
+            itemIds: selected,
+            sendEmail,
+            alsoEmail: alsoEmail.trim() ? [alsoEmail.trim()] : undefined,
+          },
+          {
+            onSuccess: () => {
+              setSelected([]);
+              setAlsoEmail("");
+            },
+          },
         ),
     });
 
@@ -279,6 +290,13 @@ export default function AdminAgreementRecovery() {
                 <span className="text-sm font-medium mr-2">
                   {selected.length} selected
                 </span>
+                <Input
+                  type="email"
+                  value={alsoEmail}
+                  onChange={(e) => setAlsoEmail(e.target.value)}
+                  placeholder="Also send a copy to (optional email)"
+                  className="h-9 w-[280px]"
+                />
                 <Button
                   size="sm"
                   variant="secondary"

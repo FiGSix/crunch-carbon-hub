@@ -79,6 +79,7 @@ export function useAgreementRecoveryAction() {
       itemIds: string[];
       sendEmail?: boolean;
       note?: string;
+      alsoEmail?: string[];
     }) => {
       const { data, error } = await supabase.functions.invoke(
         "agreement-recovery-action",
