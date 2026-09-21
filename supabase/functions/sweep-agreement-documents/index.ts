@@ -48,6 +48,8 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const clientId: string | undefined = body.clientId;
     const limit: number = Math.min(Number(body.limit) || 25, 100);
+    // Recovery runs can rebuild documents without notifying the client.
+    const sendEmail: boolean = body.sendEmail !== false;
 
     let query = admin
       .from("proposal_agreements")
