@@ -1,10 +1,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { isPrimaryRecipient, isRetryableBounce } from './bounce-classification.ts';
+import {
+  isPrimaryRecipient,
+  isRetryableBounce,
+} from "./bounce-classification.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, resend-signature',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, resend-signature",
 };
 
 interface ResendWebhookEvent {
@@ -36,65 +40,81 @@ serve(async (req) => {
   console.log("Timestamp:", new Date().toISOString());
   console.log("Method:", req.method);
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
     // Parse webhook payload
     const event: ResendWebhookEvent = await req.json();
-    console.log('📨 Received Resend webhook:', {
+    console.log("📨 Received Resend webhook:", {
       type: event.type,
       email_id: event.data.email_id,
-      to: event.data.to[0]
+      to: event.data.to[0],
     });
 
     // Phase 3: Update weekly_roundup CTA events if this email_id matches one we sent.
     // Best-effort, fire-and-forget — does not block proposal-event processing.
     await updateWeeklyRoundupCtaEvent(supabaseAdmin, event).catch((e) =>
-      console.error('[email_cta_events] update failed:', e?.message)
+      console.error("[email_cta_events] update failed:", e?.message),
     );
 
     // Extract proposal_id from email metadata
     const proposalTracking = await extractProposalTrackingFromEmail(
       supabaseAdmin,
       event.data.email_id,
-      event.data.to[0]
+      event.data.to[0],
     );
 
     // Broadcast bounces/complaints must be captured before the proposal early return,
     // otherwise the suppression list goes blind on the new sending subdomain.
-    if (event.type === 'email.bounced' || event.type === 'email.complained') {
-      const handled = await handleBroadcastReputationEvent(supabaseAdmin, event);
+    if (event.type === "email.bounced" || event.type === "email.complained") {
+      const handled = await handleBroadcastReputationEvent(
+        supabaseAdmin,
+        event,
+      );
       if (handled) {
-        return new Response(JSON.stringify({ received: true, broadcast: true, type: event.type }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        return new Response(
+          JSON.stringify({ received: true, broadcast: true, type: event.type }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
       }
     }
 
     if (!proposalTracking) {
-      console.warn('⚠️  Could not find proposal for email:', event.data.email_id);
-      return new Response(JSON.stringify({ received: true, warning: 'proposal_not_found' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      console.warn(
+        "⚠️  Could not find proposal for email:",
+        event.data.email_id,
+      );
+      return new Response(
+        JSON.stringify({ received: true, warning: "proposal_not_found" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const proposalId = proposalTracking.proposalId;
     const webhookRecipient = event.data.to?.[0];
-    const primaryRecipientEvent = isPrimaryRecipient(webhookRecipient, proposalTracking.primaryRecipient);
-    const retryableBounce = event.type === 'email.bounced' && isRetryableBounce(event.data.bounce);
+    const primaryRecipientEvent = isPrimaryRecipient(
+      webhookRecipient,
+      proposalTracking.primaryRecipient,
+    );
+    const retryableBounce =
+      event.type === "email.bounced" && isRetryableBounce(event.data.bounce);
 
-    console.log('✅ Found proposal:', proposalId);
+    console.log("✅ Found proposal:", proposalId);
 
     // Store email event
     const { data: emailEvent, error: eventError } = await supabaseAdmin
-      .from('email_events')
+      .from("email_events")
       .insert({
         proposal_id: proposalId,
         event_type: event.type,
@@ -105,44 +125,61 @@ serve(async (req) => {
         user_agent: event.data.click?.userAgent,
         click_url: event.data.click?.link,
         bounce_reason: event.data.bounce?.reason,
-        raw_payload: event
+        raw_payload: event,
       })
       .select()
       .single();
 
     if (eventError) {
-      console.error('❌ Failed to store email event:', eventError);
+      console.error("❌ Failed to store email event:", eventError);
       throw eventError;
     }
 
-    console.log('✅ Email event stored:', emailEvent.id);
+    console.log("✅ Email event stored:", emailEvent.id);
 
     // Mirror delivery/open/bounce onto the Agreement Recovery record when the
     // project is part of that exercise, so "did the client get it?" is answerable.
-    if (['email.delivered', 'email.opened', 'email.clicked', 'email.bounced', 'email.complained'].includes(event.type)) {
+    if (
+      [
+        "email.delivered",
+        "email.opened",
+        "email.clicked",
+        "email.bounced",
+        "email.complained",
+      ].includes(event.type)
+    ) {
       const recoveryState =
-        event.type === 'email.bounced' || event.type === 'email.complained'
-          ? 'bounced'
-          : event.type === 'email.opened' || event.type === 'email.clicked'
-            ? 'opened'
+        event.type === "email.bounced" || event.type === "email.complained"
+          ? "bounced"
+          : event.type === "email.opened" || event.type === "email.clicked"
+            ? "opened"
             : null;
-      await supabaseAdmin.rpc('log_recovery_event_for_proposal', {
-        p_proposal_id: proposalId,
-        p_action: `recovery_${event.type.replace('email.', 'email_')}`,
-        p_detail: {
-          recipient: event.data.to?.[0],
-          message_id: event.data.email_id,
-          bounce_reason: event.data.bounce?.reason ?? null,
-        },
-        p_state: recoveryState,
-      }).catch((e: any) => console.error('[recovery event] log failed:', e?.message));
+      await supabaseAdmin
+        .rpc("log_recovery_event_for_proposal", {
+          p_proposal_id: proposalId,
+          p_action: `recovery_${event.type.replace("email.", "email_")}`,
+          p_detail: {
+            recipient: event.data.to?.[0],
+            message_id: event.data.email_id,
+            bounce_reason: event.data.bounce?.reason ?? null,
+          },
+          p_state: recoveryState,
+        })
+        .catch((e: any) =>
+          console.error("[recovery event] log failed:", e?.message),
+        );
     }
 
     // Resend reports failures per recipient. A failure for the copied agent must
     // never change the client's proposal, and transient failures remain retryable.
     const shouldAffectProposal = primaryRecipientEvent && !retryableBounce;
     if (shouldAffectProposal) {
-      await updateProposalEngagement(supabaseAdmin, proposalId, event.type, event.created_at);
+      await updateProposalEngagement(
+        supabaseAdmin,
+        proposalId,
+        event.type,
+        event.created_at,
+      );
     }
 
     const statusUpdated = shouldAffectProposal
@@ -151,40 +188,35 @@ serve(async (req) => {
 
     // Mark event as processed
     await supabaseAdmin
-      .from('email_events')
-      .update({ 
+      .from("email_events")
+      .update({
         processed_at: new Date().toISOString(),
-        status_update_triggered: statusUpdated 
+        status_update_triggered: statusUpdated,
       })
-      .eq('id', emailEvent.id);
+      .eq("id", emailEvent.id);
 
-    console.log('✅ Webhook processed successfully');
+    console.log("✅ Webhook processed successfully");
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         proposal_id: proposalId,
         event_type: event.type,
-        status_updated: statusUpdated
+        status_updated: statusUpdated,
       }),
       {
         status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
-
   } catch (error: any) {
-    console.error('❌ Webhook processing error:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    console.error("❌ Webhook processing error:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
-
 
 /**
  * Broadcast bounce/complaint handling. Returns true when the event belonged to a
@@ -193,23 +225,23 @@ serve(async (req) => {
  */
 async function handleBroadcastReputationEvent(
   supabase: any,
-  event: ResendWebhookEvent
+  event: ResendWebhookEvent,
 ): Promise<boolean> {
   const messageId = event.data.email_id;
   if (!messageId) return false;
 
   const { data: recipient } = await supabase
-    .from('broadcast_recipients')
-    .select('id, email, campaign_id')
-    .eq('message_id', messageId)
+    .from("broadcast_recipients")
+    .select("id, email, campaign_id")
+    .eq("message_id", messageId)
     .maybeSingle();
 
   if (!recipient) return false;
 
-  const reason = event.type === 'email.complained' ? 'complaint' : 'bounce';
-  const email = (event.data.to?.[0] || recipient.email || '').toLowerCase();
+  const reason = event.type === "email.complained" ? "complaint" : "bounce";
+  const email = (event.data.to?.[0] || recipient.email || "").toLowerCase();
 
-  await supabase.from('email_events').insert({
+  await supabase.from("email_events").insert({
     proposal_id: null,
     broadcast_recipient_id: recipient.id,
     event_type: event.type,
@@ -219,31 +251,31 @@ async function handleBroadcastReputationEvent(
     occurred_at: event.created_at,
     bounce_reason: event.data.bounce?.reason,
     raw_payload: event,
-    processed_at: new Date().toISOString()
+    processed_at: new Date().toISOString(),
   });
 
   await supabase
-    .from('broadcast_recipients')
+    .from("broadcast_recipients")
     .update({
-      status: 'failed',
-      error: `${reason}: ${event.data.bounce?.reason ?? 'reported by Resend'}`
+      status: "failed",
+      error: `${reason}: ${event.data.bounce?.reason ?? "reported by Resend"}`,
     })
-    .eq('id', recipient.id);
+    .eq("id", recipient.id);
 
   // Expression unique index on (lower(email), reason) — check before inserting.
   const { data: existing } = await supabase
-    .from('client_email_suppressions')
-    .select('id')
-    .ilike('email', email)
-    .eq('reason', reason)
+    .from("client_email_suppressions")
+    .select("id")
+    .ilike("email", email)
+    .eq("reason", reason)
     .maybeSingle();
 
   if (!existing) {
-    await supabase.from('client_email_suppressions').insert({
+    await supabase.from("client_email_suppressions").insert({
       email,
       reason,
-      source: 'resend_webhook_broadcast',
-      notes: `broadcast campaign ${recipient.campaign_id}`
+      source: "resend_webhook_broadcast",
+      notes: `broadcast campaign ${recipient.campaign_id}`,
     });
   }
 
@@ -251,54 +283,62 @@ async function handleBroadcastReputationEvent(
   return true;
 }
 
-async function updateWeeklyRoundupCtaEvent(supabase: any, event: ResendWebhookEvent): Promise<void> {
+async function updateWeeklyRoundupCtaEvent(
+  supabase: any,
+  event: ResendWebhookEvent,
+): Promise<void> {
   const messageId = event.data.email_id;
   if (!messageId) return;
 
   // Only act if this message_id was logged by send-weekly-roundup
   const { data: existing } = await supabase
-    .from('email_cta_events')
-    .select('id')
-    .eq('message_id', messageId)
+    .from("email_cta_events")
+    .select("id")
+    .eq("message_id", messageId)
     .limit(1)
     .maybeSingle();
   if (!existing) return;
 
   const nowIso = event.created_at || new Date().toISOString();
   const update: Record<string, any> = {};
-  if (event.type === 'email.opened' || event.type === 'email.delivered') {
+  if (event.type === "email.opened" || event.type === "email.delivered") {
     update.opened_at = nowIso;
   }
-  if (event.type === 'email.clicked') {
+  if (event.type === "email.clicked") {
     update.clicked_at = nowIso;
     update.target_url = event.data.click?.link ?? null;
     update.user_agent = event.data.click?.userAgent ?? null;
   }
   if (Object.keys(update).length === 0) return;
 
-  await supabase.from('email_cta_events').update(update).eq('message_id', messageId);
-  console.log(`[email_cta_events] updated ${event.type} for message ${messageId}`);
+  await supabase
+    .from("email_cta_events")
+    .update(update)
+    .eq("message_id", messageId);
+  console.log(
+    `[email_cta_events] updated ${event.type} for message ${messageId}`,
+  );
 }
 
 async function extractProposalTrackingFromEmail(
   supabase: any,
   emailId: string,
-  recipientEmail: string
+  recipientEmail: string,
 ): Promise<{ proposalId: string; primaryRecipient: string } | null> {
   // ONLY match emails that were explicitly logged as proposal emails
   // This prevents agent invitations or other emails from being
   // incorrectly associated with proposals
   const { data: logEntry } = await supabase
-    .from('proposal_automation_log')
-    .select('proposal_id, details')
-    .eq('email_message_id', emailId)
+    .from("proposal_automation_log")
+    .select("proposal_id, details")
+    .eq("email_message_id", emailId)
     .single();
 
   if (logEntry) {
-    console.log('📋 Found proposal from automation log');
+    console.log("📋 Found proposal from automation log");
     const primaryRecipient = logEntry.details?.recipient;
     if (!primaryRecipient) {
-      console.warn('⚠️ Proposal email log has no primary recipient:', emailId);
+      console.warn("⚠️ Proposal email log has no primary recipient:", emailId);
       return null;
     }
     return { proposalId: logEntry.proposal_id, primaryRecipient };
@@ -306,7 +346,12 @@ async function extractProposalTrackingFromEmail(
 
   // DO NOT fallback to email matching - this causes agent invitations
   // and other unrelated emails to be incorrectly associated with proposals
-  console.log('⚠️ No proposal found in automation log for email:', emailId, 'to:', recipientEmail);
+  console.log(
+    "⚠️ No proposal found in automation log for email:",
+    emailId,
+    "to:",
+    recipientEmail,
+  );
   return null;
 }
 
@@ -314,46 +359,46 @@ async function updateProposalEngagement(
   supabase: any,
   proposalId: string,
   eventType: string,
-  eventTimestamp: string
+  eventTimestamp: string,
 ) {
-  const isEngagement = ['email.opened', 'email.clicked'].includes(eventType);
+  const isEngagement = ["email.opened", "email.clicked"].includes(eventType);
 
   if (isEngagement) {
-    console.log('📊 Incrementing engagement count');
-    await supabase.rpc('increment_proposal_engagement', {
+    console.log("📊 Incrementing engagement count");
+    await supabase.rpc("increment_proposal_engagement", {
       proposal_id: proposalId,
-      event_type: eventType
+      event_type: eventType,
     });
   }
 
   // Update last email event type and timestamp for all events
   await supabase
-    .from('proposals')
+    .from("proposals")
     .update({
       last_email_event_type: eventType,
-      last_email_sent_at: eventTimestamp
+      last_email_sent_at: eventTimestamp,
     })
-    .eq('id', proposalId);
+    .eq("id", proposalId);
 }
 
 async function processStatusUpdate(
   supabase: any,
   proposalId: string,
-  eventType: string
+  eventType: string,
 ): Promise<boolean> {
   const { data: proposal } = await supabase
-    .from('proposals')
-    .select('status, automation_paused')
-    .eq('id', proposalId)
+    .from("proposals")
+    .select("status, automation_paused")
+    .eq("id", proposalId)
     .single();
 
   if (!proposal) {
-    console.warn('⚠️  Proposal not found for status update');
+    console.warn("⚠️  Proposal not found for status update");
     return false;
   }
 
   if (proposal.automation_paused) {
-    console.log('⏸️  Automation paused for this proposal');
+    console.log("⏸️  Automation paused for this proposal");
     return false;
   }
 
@@ -361,48 +406,53 @@ async function processStatusUpdate(
 
   // Status transition rules based on email events
   switch (eventType) {
-    case 'email.delivered':
+    case "email.delivered":
       // Removed 'pending' - now uses draft/sent only for pre-delivery states
-      if (['sent', 'draft'].includes(proposal.status)) {
-        newStatus = 'delivered';
+      if (["sent", "draft"].includes(proposal.status)) {
+        newStatus = "delivered";
       }
       break;
-    case 'email.opened':
+    case "email.opened":
       // Removed 'pending' - progression from draft/sent/delivered to opened
-      if (['sent', 'delivered', 'draft'].includes(proposal.status)) {
-        newStatus = 'opened';
+      if (["sent", "delivered", "draft"].includes(proposal.status)) {
+        newStatus = "opened";
       }
       break;
-    case 'email.clicked':
+    case "email.clicked":
       // Removed 'pending' - full pre-view status chain
-      if (['sent', 'delivered', 'opened', 'draft'].includes(proposal.status)) {
-        newStatus = 'viewed'; // Clicking email link = viewing proposal
+      if (["sent", "delivered", "opened", "draft"].includes(proposal.status)) {
+        newStatus = "viewed"; // Clicking email link = viewing proposal
       }
       break;
-    case 'email.bounced':
+    case "email.bounced":
       // A bounce must never undo a completed project. Re-sign reminders are
       // sent against approved/signed projects, and marking those "bounced"
       // would corrupt their status.
-      newStatus = ['approved', 'signed', 'onboarding', 'audit_ready', 'completed'].includes(proposal.status)
+      newStatus = [
+        "approved",
+        "signed",
+        "onboarding",
+        "audit_ready",
+        "completed",
+      ].includes(proposal.status)
         ? null
-        : 'bounced';
-      
-      
+        : "bounced";
+
       // Create admin notification for manual follow-up
       const { data: bouncedProposal } = await supabase
-        .from('proposals')
-        .select('agent_id, title')
-        .eq('id', proposalId)
+        .from("proposals")
+        .select("agent_id, title")
+        .eq("id", proposalId)
         .single();
-      
+
       if (bouncedProposal) {
-        await supabase.from('notifications').insert({
+        await supabase.from("notifications").insert({
           user_id: bouncedProposal.agent_id,
-          type: 'error',
-          title: 'Email Bounced - Manual Follow-Up Required',
+          type: "error",
+          title: "Email Bounced - Manual Follow-Up Required",
           message: `Proposal "${bouncedProposal.title}" email bounced. Consider SMS/WhatsApp follow-up.`,
-          related_type: 'proposal',
-          related_id: proposalId
+          related_type: "proposal",
+          related_id: proposalId,
         });
       }
       break;
@@ -410,16 +460,16 @@ async function processStatusUpdate(
 
   if (newStatus && newStatus !== proposal.status) {
     console.log(`🔄 Updating status: ${proposal.status} → ${newStatus}`);
-    
-    const { error } = await supabase.rpc('update_proposal_status_with_log', {
+
+    const { error } = await supabase.rpc("update_proposal_status_with_log", {
       proposal_id: proposalId,
       new_status: newStatus,
       trigger_event: eventType,
-      is_automated: true
+      is_automated: true,
     });
 
     if (error) {
-      console.error('❌ Failed to update status:', error);
+      console.error("❌ Failed to update status:", error);
       return false;
     }
 
