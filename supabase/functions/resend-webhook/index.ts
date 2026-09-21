@@ -359,7 +359,13 @@ async function processStatusUpdate(
       }
       break;
     case 'email.bounced':
-      newStatus = 'bounced';
+      // A bounce must never undo a completed project. Re-sign reminders are
+      // sent against approved/signed projects, and marking those "bounced"
+      // would corrupt their status.
+      newStatus = ['approved', 'signed', 'onboarding', 'audit_ready', 'completed'].includes(proposal.status)
+        ? null
+        : 'bounced';
+      
       
       // Create admin notification for manual follow-up
       const { data: bouncedProposal } = await supabase
