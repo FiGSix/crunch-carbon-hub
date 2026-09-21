@@ -64,7 +64,12 @@ Deno.serve(async (req) => {
     let query = admin
       .from("proposal_agreements")
       .select("id, proposal_id, proposals!inner(client_reference_id)")
-      .not("client_cession_signature_id", "is", null)
+      // Any agreement that holds a signature but no document — whether the
+      // signature came through the master cession record or was captured
+      // directly on the agreement row.
+      .or(
+        "client_cession_signature_id.not.is.null,signature_image_url.not.is.null",
+      )
       .is("pdf_path", null)
       .order("created_at", { ascending: true })
       .limit(limit);
