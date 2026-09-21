@@ -292,7 +292,14 @@ Deno.serve(async (req) => {
               ? "apology_email_skipped"
               : "link_created",
           user.id,
-          { proposalId, link, skipReason },
+          {
+            proposalId,
+            link,
+            skipReason,
+            messageIds,
+            alsoEmail,
+            flaggedProposals: (item.proposal_ids ?? []).length,
+          },
           note,
         );
 
