@@ -519,6 +519,18 @@ function App() {
                       </PrivateRoute>
                     } 
                   />
+                  <Route
+                    path="/admin/agreement-recovery"
+                    element={
+                      <PrivateRoute allowedRoles={['admin']}>
+                        <PageErrorBoundary pageName="Agreement Recovery">
+                          <Suspense fallback={<PageLoader />}>
+                            <AdminAgreementRecovery />
+                          </Suspense>
+                        </PageErrorBoundary>
+                      </PrivateRoute>
+                    }
+                  />
                   <Route 
                     path="/admin/data-diagnostics" 
                     element={
