@@ -166,6 +166,9 @@ serve(async (req) => {
       (proposal.status === "approved" || proposal.status === "signed")
     ) {
       console.error("❌ Proposal already signed:", proposal.id);
+      await logSigningRefusal(supabase, proposal.id, "already_signed", {
+        status: proposal.status,
+      });
       return new Response(
         JSON.stringify({
           error: "This proposal has already been signed",
