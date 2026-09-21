@@ -312,6 +312,121 @@ export type Database = {
         }
         Relationships: []
       }
+      agreement_recovery_events: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          detail: Json
+          id: string
+          item_id: string
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          item_id: string
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          detail?: Json
+          id?: string
+          item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_recovery_events_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "agreement_recovery_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agreement_recovery_items: {
+        Row: {
+          a_count: number
+          b_count: number
+          c_count: number
+          client_email: string | null
+          client_id: string
+          client_name: string | null
+          created_at: string
+          group_code: string
+          id: string
+          last_action: string | null
+          last_action_at: string | null
+          last_action_by: string | null
+          link_expires_at: string | null
+          link_proposal_id: string | null
+          link_token: string | null
+          note: string | null
+          project_count: number
+          proposal_ids: string[]
+          resolved_at: string | null
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          a_count?: number
+          b_count?: number
+          c_count?: number
+          client_email?: string | null
+          client_id: string
+          client_name?: string | null
+          created_at?: string
+          group_code: string
+          id?: string
+          last_action?: string | null
+          last_action_at?: string | null
+          last_action_by?: string | null
+          link_expires_at?: string | null
+          link_proposal_id?: string | null
+          link_token?: string | null
+          note?: string | null
+          project_count?: number
+          proposal_ids?: string[]
+          resolved_at?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Update: {
+          a_count?: number
+          b_count?: number
+          c_count?: number
+          client_email?: string | null
+          client_id?: string
+          client_name?: string | null
+          created_at?: string
+          group_code?: string
+          id?: string
+          last_action?: string | null
+          last_action_at?: string | null
+          last_action_by?: string | null
+          link_expires_at?: string | null
+          link_proposal_id?: string | null
+          link_token?: string | null
+          note?: string | null
+          project_count?: number
+          proposal_ids?: string[]
+          resolved_at?: string | null
+          state?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_recovery_items_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       broadcast_campaigns: {
         Row: {
           attachments: Json
@@ -4704,6 +4819,15 @@ export type Database = {
           new_share: number
           old_share: number
           proposal_id: string
+        }[]
+      }
+      refresh_agreement_recovery: {
+        Args: never
+        Returns: {
+          a_total: number
+          b_total: number
+          c_total: number
+          total_clients: number
         }[]
       }
       request_company_link: { Args: { p_company_id: string }; Returns: string }
