@@ -144,10 +144,27 @@ serve(async (req) => {
     //    + cloning the agreement onto each sibling) is handled by the
     //    propagate_master_agreement() DB trigger on INSERT into proposal_agreements.
 
-    // 3. Validate proposal status for new signatures
-    console.log("🔍 Validating proposal status:", proposal.status);
+    // Recovery flag: projects whose agreement was never recorded correctly are
+    // explicitly re-opened for a fresh signature even though they read as signed.
+    let resignRequired = false;
+    {
+      const { data: resignRow } = await supabase
+        .from("proposals")
+        .select("resign_required")
+        .eq("id", proposal.id)
+        .maybeSingle();
+      resignRequired = Boolean(resignRow?.resign_required);
+    }
 
-    if (proposal.status === "approved" || proposal.status === "signed") {
+    // 3. Validate proposal status for new signatures
+    console.log("🔍 Validating proposal status:", proposal.status, {
+      resignRequired,
+    });
+
+    if (
+      !resignRequired &&
+      (proposal.status === "approved" || proposal.status === "signed")
+    ) {
       console.error("❌ Proposal already signed:", proposal.id);
       return new Response(
         JSON.stringify({
