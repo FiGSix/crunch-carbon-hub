@@ -290,6 +290,13 @@ export default function AdminAgreementRecovery() {
                 <span className="text-sm font-medium mr-2">
                   {selected.length} selected
                 </span>
+                <Input
+                  type="email"
+                  value={alsoEmail}
+                  onChange={(e) => setAlsoEmail(e.target.value)}
+                  placeholder="Also send a copy to (optional email)"
+                  className="h-9 w-[280px]"
+                />
                 <Button
                   size="sm"
                   variant="secondary"
