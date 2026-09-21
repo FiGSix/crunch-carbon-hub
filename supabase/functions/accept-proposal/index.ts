@@ -563,17 +563,34 @@ serve(async (req) => {
       }
     }
 
-    // Check for existing agreement to prevent duplicates from retries
+    // Check for existing agreement to prevent duplicates from retries.
+    // Superseded rows are history and never reused.
     const { data: existingAgreement } = await supabase
       .from("proposal_agreements")
-      .select("id")
+      .select("id, signature_image_url")
       .eq("proposal_id", proposal.id)
+      .is("superseded_at", null)
+      .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
+
+    // A recovery re-signature must produce a new record: the incomplete one is
+    // superseded (kept for audit), never edited in place.
+    let supersededAgreementId: string | null = null;
+    if (existingAgreement && resignRequired && !existingAgreement.signature_image_url) {
+      supersededAgreementId = existingAgreement.id;
+      await supabase
+        .from("proposal_agreements")
+        .update({ superseded_at: new Date().toISOString() })
+        .eq("id", existingAgreement.id);
+      console.log(
+        `♻️ Superseded incomplete agreement ${existingAgreement.id} for re-signature`,
+      );
+    }
 
     let newAgreement;
 
-    if (existingAgreement) {
+    if (existingAgreement && !supersededAgreementId) {
       console.log(
         `⚠️ Agreement already exists for proposal ${proposal.id}: ${existingAgreement.id}, reusing it`,
       );
