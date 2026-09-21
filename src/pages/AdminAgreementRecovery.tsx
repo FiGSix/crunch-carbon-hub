@@ -419,6 +419,14 @@ export default function AdminAgreementRecovery() {
                       <TableCell className="text-right">
                         {item.project_count}
                       </TableCell>
+                      <TableCell className="text-right text-sm text-muted-foreground">
+                        {Math.max(
+                          (item.total_count || item.project_count) -
+                            item.project_count,
+                          0,
+                        )}{" "}
+                        of {item.total_count || item.project_count}
+                      </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {item.group_code === "A"
                           ? "Document only"
