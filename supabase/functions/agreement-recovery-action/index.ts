@@ -83,6 +83,12 @@ Deno.serve(async (req) => {
       : [];
     const sendEmail = body.sendEmail !== false;
     const note = typeof body.note === "string" ? body.note.slice(0, 500) : null;
+    const alsoEmail = Array.isArray(body.alsoEmail)
+      ? body.alsoEmail
+          .filter((e) => typeof e === "string" && EMAIL_RE.test(e.trim()))
+          .map((e) => e.trim().toLowerCase())
+          .slice(0, 5)
+      : [];
 
     if (
       !action ||
