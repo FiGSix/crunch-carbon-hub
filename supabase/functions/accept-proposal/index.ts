@@ -323,6 +323,10 @@ serve(async (req) => {
       memberships: companyMemberships,
     });
     if (!signerAuthorization.allowed) {
+      await logSigningRefusal(supabase, proposal.id, "signer_not_authorized", {
+        reason: signerAuthorization.reason,
+        requiresAuthentication: signerAuthorization.requiresAuthentication,
+      });
       return new Response(
         JSON.stringify({
           error: signerAuthorization.reason,
