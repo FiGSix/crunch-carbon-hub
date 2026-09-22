@@ -144,10 +144,23 @@ export default function ProposalAcceptance() {
     } catch (err) {
       console.error("Error fetching proposal by token:", err);
 
-      const errorMessage = err instanceof Error ? err.message : String(err);
+      // Supabase RPC failures arrive as a plain PostgrestError object, not an
+      // Error instance — read its message rather than stringifying the object.
+      const rawMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === "object" && err !== null && "message" in err
+            ? String((err as { message: unknown }).message)
+            : String(err);
+
       const isExpiredError =
-        errorMessage.includes("expired") ||
-        errorMessage.includes("Invalid or expired");
+        rawMessage.includes("expired") ||
+        rawMessage.includes("Invalid or expired") ||
+        rawMessage.includes("not found");
+
+      const errorMessage = isExpiredError
+        ? "This signing link has expired or is no longer valid. Ask Crunch Carbon to send you a new one and you can sign in under a minute."
+        : rawMessage || "We could not open this proposal. Please try again.";
 
       // Check if user is authenticated admin or agent - can fallback to RLS access
       if (isExpiredError && id) {
@@ -459,13 +472,22 @@ export default function ProposalAcceptance() {
   );
 
   if (error) {
+    const isLinkProblem =
+      error.includes("expired") || error.includes("no longer valid");
     return (
       <div className="container max-w-4xl mx-auto px-4 py-12">
         <div className="bg-destructive/10 border border-destructive rounded-lg p-6 text-center">
           <h2 className="text-xl font-semibold text-destructive mb-2">
-            Error Loading Proposal
+            {isLinkProblem
+              ? "This signing link is no longer valid"
+              : "We could not open this proposal"}
           </h2>
           <p className="text-muted-foreground">{error}</p>
+          <Button asChild variant="outline" className="mt-4">
+            <a href="mailto:shaun@crunchcarbon.com?subject=New%20Cession%20Agreement%20signing%20link">
+              Request a new link
+            </a>
+          </Button>
         </div>
       </div>
     );

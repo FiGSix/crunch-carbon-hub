@@ -317,11 +317,23 @@ serve(async (req) => {
       companyMemberships = memberships ?? [];
     }
 
+    // The proposal was resolved from this token and its expiry was validated
+    // above, so a present token here is a valid, unexpired invitation link.
     const signerAuthorization = authorizeCompanySigner({
       companyId: clientCompanyId,
       authenticatedUserId,
       memberships: companyMemberships,
+      holdsValidInvitationToken: !!token,
     });
+    if (
+      signerAuthorization.allowed &&
+      signerAuthorization.authorisedVia === "invitation_token"
+    ) {
+      await logRecoveryEvent(supabase, proposal.id, "allowed_via_token", {
+        note: "Signed through the emailed invitation link without signing in.",
+        client_company_id: clientCompanyId,
+      });
+    }
     if (!signerAuthorization.allowed) {
       await logSigningRefusal(supabase, proposal.id, "signer_not_authorized", {
         reason: signerAuthorization.reason,
@@ -546,6 +558,7 @@ serve(async (req) => {
             signed_at: witnessTimestamp,
             metadata: {
               signed_via: token ? "acceptance_link" : "authenticated_user",
+              authorised_via: signerAuthorization.authorisedVia ?? null,
               signing_location: "South Africa",
               signatory_name: resolvedSignatory || null,
               signatory_email: authenticatedProfileEmail,
@@ -632,6 +645,7 @@ serve(async (req) => {
           witness_method: "automatic_system",
           metadata: {
             signed_via: token ? "acceptance_link" : "authenticated_user",
+            authorised_via: signerAuthorization.authorisedVia ?? null,
             token_used: token ? token.substring(0, 8) + "..." : null,
             proposal_id_used: proposalId || null,
             timestamp: new Date().toISOString(),
@@ -906,20 +920,34 @@ serve(async (req) => {
  * Records a refused signing attempt against the Agreement Recovery record, when
  * the project belongs to that exercise. Best-effort: never blocks the response.
  */
+async function logRecoveryEvent(
+  supabase: any,
+  proposalId: string,
+  action: string,
+  detail: Record<string, unknown>,
+) {
+  try {
+    await supabase.rpc("log_recovery_event_for_proposal", {
+      p_proposal_id: proposalId,
+      p_action: action,
+      p_detail: { ...detail, occurred_at: new Date().toISOString() },
+      p_state: null,
+    });
+  } catch (e) {
+    console.error("[logRecoveryEvent] failed:", (e as Error)?.message);
+  }
+}
+
 async function logSigningRefusal(
   supabase: any,
   proposalId: string,
   reason: string,
   detail: Record<string, unknown>,
 ) {
-  try {
-    await supabase.rpc("log_recovery_event_for_proposal", {
-      p_proposal_id: proposalId,
-      p_action: `signing_refused_${reason}`,
-      p_detail: { ...detail, occurred_at: new Date().toISOString() },
-      p_state: null,
-    });
-  } catch (e) {
-    console.error("[logSigningRefusal] failed:", (e as Error)?.message);
-  }
+  await logRecoveryEvent(
+    supabase,
+    proposalId,
+    `signing_refused_${reason}`,
+    detail,
+  );
 }
