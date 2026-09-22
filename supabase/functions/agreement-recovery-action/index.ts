@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       if (!user) return json({ error: "Authentication required" }, 401);
 
       const { data: isAdmin } = await admin.rpc("has_role", {
-        _user_id: user.id,
+        _user_id: actorId,
         _role: "admin",
       });
       if (!isAdmin) return json({ error: "Administrators only" }, 403);
@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
             item,
             "handled",
             "mark_handled",
-            user.id,
+            actorId,
             {
               note,
             },
@@ -152,7 +152,7 @@ Deno.serve(async (req) => {
             item,
             "fixed",
             sendEmail ? "fix_documents_emailed" : "fix_documents_silent",
-            user.id,
+            actorId,
             {
               processed: sweep?.processed ?? 0,
               failures: sweep?.failures ?? [],
@@ -266,7 +266,7 @@ Deno.serve(async (req) => {
                   email_type: "cession_resign_apology",
                   email_message_id: messageId,
                   details: { recipient: email, recovery_item_id: item.id },
-                  created_by: user.id,
+                  created_by: actorId,
                 });
               }
               emailed = true;
@@ -297,7 +297,7 @@ Deno.serve(async (req) => {
             : sendEmail
               ? "apology_email_skipped"
               : "link_created",
-          user.id,
+          actorId,
           {
             proposalId,
             link,
@@ -324,7 +324,7 @@ Deno.serve(async (req) => {
           item,
           "failed",
           `${action}_failed`,
-          user.id,
+          actorId,
           {
             error: message,
           },
@@ -364,7 +364,7 @@ async function setState(
   item: RecoveryItem,
   state: string,
   actionLabel: string,
-  actorId: string,
+  actorId: string | null,
   detail: Record<string, unknown>,
   note: string | null,
 ) {
