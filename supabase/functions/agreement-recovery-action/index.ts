@@ -68,7 +68,8 @@ Deno.serve(async (req) => {
     // The service-role key is accepted as a system caller (used by ops tasks
     // where no admin browser session exists). Everyone else must be an admin.
     let actorId: string | null = null;
-    if (bearer !== serviceKey) {
+    const cronSecret = Deno.env.get("SWEEP_CRON_SECRET") ?? "__none__";
+    if (bearer !== serviceKey && bearer !== cronSecret) {
       const {
         data: { user },
       } = await admin.auth.getUser(bearer);
