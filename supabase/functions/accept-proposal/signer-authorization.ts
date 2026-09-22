@@ -19,40 +19,70 @@ export interface SignerAuthorizationInput {
 export interface SignerAuthorizationResult {
   allowed: boolean;
   requiresAuthentication: boolean;
-  authorisedVia?: 'invitation_token' | 'company_member' | 'unmanaged';
+  authorisedVia?: "invitation_token" | "company_member" | "unmanaged";
   reason?: string;
 }
 
-export function authorizeCompanySigner({ companyId, authenticatedUserId, memberships, holdsValidInvitationToken = false }: SignerAuthorizationInput): SignerAuthorizationResult {
-  if (!companyId) return { allowed: true, requiresAuthentication: false, authorisedVia: 'unmanaged' };
+export function authorizeCompanySigner({
+  companyId,
+  authenticatedUserId,
+  memberships,
+  holdsValidInvitationToken = false,
+}: SignerAuthorizationInput): SignerAuthorizationResult {
+  if (!companyId)
+    return {
+      allowed: true,
+      requiresAuthentication: false,
+      authorisedVia: "unmanaged",
+    };
 
-  const activeMemberships = memberships.filter((membership) => membership.status === 'active');
+  const activeMemberships = memberships.filter(
+    (membership) => membership.status === "active",
+  );
   if (!authenticatedUserId) {
     if (activeMemberships.length === 0) {
-      return { allowed: true, requiresAuthentication: false, authorisedVia: 'unmanaged' };
+      return {
+        allowed: true,
+        requiresAuthentication: false,
+        authorisedVia: "unmanaged",
+      };
     }
     if (holdsValidInvitationToken) {
-      return { allowed: true, requiresAuthentication: false, authorisedVia: 'invitation_token' };
+      return {
+        allowed: true,
+        requiresAuthentication: false,
+        authorisedVia: "invitation_token",
+      };
     }
     return {
       allowed: false,
       requiresAuthentication: true,
-      reason: 'Please sign in with an authorised company account to sign this agreement.',
+      reason:
+        "Please sign in with an authorised company account to sign this agreement.",
     };
   }
 
-  const signerMembership = activeMemberships.find((membership) => membership.user_id === authenticatedUserId);
+  const signerMembership = activeMemberships.find(
+    (membership) => membership.user_id === authenticatedUserId,
+  );
   if (!signerMembership?.can_sign_agreements) {
     return {
       allowed: false,
       requiresAuthentication: false,
-      reason: 'Your company account is not authorised to sign agreements.',
+      reason: "Your company account is not authorised to sign agreements.",
     };
   }
 
-  return { allowed: true, requiresAuthentication: false, authorisedVia: 'company_member' };
+  return {
+    allowed: true,
+    requiresAuthentication: false,
+    authorisedVia: "company_member",
+  };
 }
 
-export function resolveStoredSignatoryName(authenticatedProfileName: string | null, callerSuppliedName: string): string {
+export function resolveStoredSignatoryName(
+  authenticatedProfileName: string | null,
+  callerSuppliedName: string,
+): string {
   return authenticatedProfileName?.trim() || callerSuppliedName.trim();
 }
