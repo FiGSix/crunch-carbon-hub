@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       if (!user) return json({ error: "Authentication required" }, 401);
 
       const { data: isAdmin } = await admin.rpc("has_role", {
-        _user_id: actorId,
+        _user_id: user.id,
         _role: "admin",
       });
       if (!isAdmin) return json({ error: "Administrators only" }, 403);
