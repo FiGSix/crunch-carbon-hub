@@ -325,8 +325,11 @@ serve(async (req) => {
       memberships: companyMemberships,
       holdsValidInvitationToken: !!token,
     });
-    if (signerAuthorization.allowed && signerAuthorization.authorisedVia === "invitation_token") {
-      await logSigningRefusal(supabase, proposal.id, "allowed_via_token", {
+    if (
+      signerAuthorization.allowed &&
+      signerAuthorization.authorisedVia === "invitation_token"
+    ) {
+      await logRecoveryEvent(supabase, proposal.id, "allowed_via_token", {
         note: "Signed through the emailed invitation link without signing in.",
         client_company_id: clientCompanyId,
       });
