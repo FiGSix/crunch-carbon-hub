@@ -558,6 +558,7 @@ serve(async (req) => {
             signed_at: witnessTimestamp,
             metadata: {
               signed_via: token ? "acceptance_link" : "authenticated_user",
+              authorised_via: signerAuthorization.authorisedVia ?? null,
               signing_location: "South Africa",
               signatory_name: resolvedSignatory || null,
               signatory_email: authenticatedProfileEmail,
@@ -644,6 +645,7 @@ serve(async (req) => {
           witness_method: "automatic_system",
           metadata: {
             signed_via: token ? "acceptance_link" : "authenticated_user",
+            authorised_via: signerAuthorization.authorisedVia ?? null,
             token_used: token ? token.substring(0, 8) + "..." : null,
             proposal_id_used: proposalId || null,
             timestamp: new Date().toISOString(),
