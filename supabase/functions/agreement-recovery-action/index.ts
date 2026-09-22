@@ -65,16 +65,23 @@ Deno.serve(async (req) => {
       req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
     if (!bearer) return json({ error: "Authentication required" }, 401);
 
-    const {
-      data: { user },
-    } = await admin.auth.getUser(bearer);
-    if (!user) return json({ error: "Authentication required" }, 401);
+    // The service-role key is accepted as a system caller (used by ops tasks
+    // where no admin browser session exists). Everyone else must be an admin.
+    let actorId: string | null = null;
+    const cronSecret = Deno.env.get("SWEEP_CRON_SECRET") ?? "__none__";
+    if (bearer !== serviceKey && bearer !== cronSecret) {
+      const {
+        data: { user },
+      } = await admin.auth.getUser(bearer);
+      if (!user) return json({ error: "Authentication required" }, 401);
 
-    const { data: isAdmin } = await admin.rpc("has_role", {
-      _user_id: user.id,
-      _role: "admin",
-    });
-    if (!isAdmin) return json({ error: "Administrators only" }, 403);
+      const { data: isAdmin } = await admin.rpc("has_role", {
+        _user_id: user.id,
+        _role: "admin",
+      });
+      if (!isAdmin) return json({ error: "Administrators only" }, 403);
+      actorId = user.id;
+    }
 
     const body = (await req.json().catch(() => ({}))) as Partial<Payload>;
     const action = body.action;
@@ -124,7 +131,7 @@ Deno.serve(async (req) => {
             item,
             "handled",
             "mark_handled",
-            user.id,
+            actorId,
             {
               note,
             },
@@ -146,7 +153,7 @@ Deno.serve(async (req) => {
             item,
             "fixed",
             sendEmail ? "fix_documents_emailed" : "fix_documents_silent",
-            user.id,
+            actorId,
             {
               processed: sweep?.processed ?? 0,
               failures: sweep?.failures ?? [],
@@ -260,7 +267,7 @@ Deno.serve(async (req) => {
                   email_type: "cession_resign_apology",
                   email_message_id: messageId,
                   details: { recipient: email, recovery_item_id: item.id },
-                  created_by: user.id,
+                  created_by: actorId,
                 });
               }
               emailed = true;
@@ -291,7 +298,7 @@ Deno.serve(async (req) => {
             : sendEmail
               ? "apology_email_skipped"
               : "link_created",
-          user.id,
+          actorId,
           {
             proposalId,
             link,
@@ -318,7 +325,7 @@ Deno.serve(async (req) => {
           item,
           "failed",
           `${action}_failed`,
-          user.id,
+          actorId,
           {
             error: message,
           },
@@ -358,7 +365,7 @@ async function setState(
   item: RecoveryItem,
   state: string,
   actionLabel: string,
-  actorId: string,
+  actorId: string | null,
   detail: Record<string, unknown>,
   note: string | null,
 ) {
