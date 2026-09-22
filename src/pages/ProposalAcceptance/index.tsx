@@ -144,10 +144,23 @@ export default function ProposalAcceptance() {
     } catch (err) {
       console.error("Error fetching proposal by token:", err);
 
-      const errorMessage = err instanceof Error ? err.message : String(err);
+      // Supabase RPC failures arrive as a plain PostgrestError object, not an
+      // Error instance — read its message rather than stringifying the object.
+      const rawMessage =
+        err instanceof Error
+          ? err.message
+          : typeof err === "object" && err !== null && "message" in err
+            ? String((err as { message: unknown }).message)
+            : String(err);
+
       const isExpiredError =
-        errorMessage.includes("expired") ||
-        errorMessage.includes("Invalid or expired");
+        rawMessage.includes("expired") ||
+        rawMessage.includes("Invalid or expired") ||
+        rawMessage.includes("not found");
+
+      const errorMessage = isExpiredError
+        ? "This signing link has expired or is no longer valid. Ask Crunch Carbon to send you a new one and you can sign in under a minute."
+        : rawMessage || "We could not open this proposal. Please try again.";
 
       // Check if user is authenticated admin or agent - can fallback to RLS access
       if (isExpiredError && id) {
