@@ -472,13 +472,22 @@ export default function ProposalAcceptance() {
   );
 
   if (error) {
+    const isLinkProblem =
+      error.includes("expired") || error.includes("no longer valid");
     return (
       <div className="container max-w-4xl mx-auto px-4 py-12">
         <div className="bg-destructive/10 border border-destructive rounded-lg p-6 text-center">
           <h2 className="text-xl font-semibold text-destructive mb-2">
-            Error Loading Proposal
+            {isLinkProblem
+              ? "This signing link is no longer valid"
+              : "We could not open this proposal"}
           </h2>
           <p className="text-muted-foreground">{error}</p>
+          <Button asChild variant="outline" className="mt-4">
+            <a href="mailto:shaun@crunchcarbon.com?subject=New%20Cession%20Agreement%20signing%20link">
+              Request a new link
+            </a>
+          </Button>
         </div>
       </div>
     );
