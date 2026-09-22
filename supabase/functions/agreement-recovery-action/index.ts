@@ -65,16 +65,22 @@ Deno.serve(async (req) => {
       req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
     if (!bearer) return json({ error: "Authentication required" }, 401);
 
-    const {
-      data: { user },
-    } = await admin.auth.getUser(bearer);
-    if (!user) return json({ error: "Authentication required" }, 401);
+    // The service-role key is accepted as a system caller (used by ops tasks
+    // where no admin browser session exists). Everyone else must be an admin.
+    let actorId: string | null = null;
+    if (bearer !== serviceKey) {
+      const {
+        data: { user },
+      } = await admin.auth.getUser(bearer);
+      if (!user) return json({ error: "Authentication required" }, 401);
 
-    const { data: isAdmin } = await admin.rpc("has_role", {
-      _user_id: user.id,
-      _role: "admin",
-    });
-    if (!isAdmin) return json({ error: "Administrators only" }, 403);
+      const { data: isAdmin } = await admin.rpc("has_role", {
+        _user_id: user.id,
+        _role: "admin",
+      });
+      if (!isAdmin) return json({ error: "Administrators only" }, 403);
+      actorId = user.id;
+    }
 
     const body = (await req.json().catch(() => ({}))) as Partial<Payload>;
     const action = body.action;
