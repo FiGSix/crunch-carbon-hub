@@ -915,20 +915,34 @@ serve(async (req) => {
  * Records a refused signing attempt against the Agreement Recovery record, when
  * the project belongs to that exercise. Best-effort: never blocks the response.
  */
+async function logRecoveryEvent(
+  supabase: any,
+  proposalId: string,
+  action: string,
+  detail: Record<string, unknown>,
+) {
+  try {
+    await supabase.rpc("log_recovery_event_for_proposal", {
+      p_proposal_id: proposalId,
+      p_action: action,
+      p_detail: { ...detail, occurred_at: new Date().toISOString() },
+      p_state: null,
+    });
+  } catch (e) {
+    console.error("[logRecoveryEvent] failed:", (e as Error)?.message);
+  }
+}
+
 async function logSigningRefusal(
   supabase: any,
   proposalId: string,
   reason: string,
   detail: Record<string, unknown>,
 ) {
-  try {
-    await supabase.rpc("log_recovery_event_for_proposal", {
-      p_proposal_id: proposalId,
-      p_action: `signing_refused_${reason}`,
-      p_detail: { ...detail, occurred_at: new Date().toISOString() },
-      p_state: null,
-    });
-  } catch (e) {
-    console.error("[logSigningRefusal] failed:", (e as Error)?.message);
-  }
+  await logRecoveryEvent(
+    supabase,
+    proposalId,
+    `signing_refused_${reason}`,
+    detail,
+  );
 }
