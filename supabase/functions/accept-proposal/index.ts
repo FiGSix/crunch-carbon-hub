@@ -317,11 +317,20 @@ serve(async (req) => {
       companyMemberships = memberships ?? [];
     }
 
+    // The proposal was resolved from this token and its expiry was validated
+    // above, so a present token here is a valid, unexpired invitation link.
     const signerAuthorization = authorizeCompanySigner({
       companyId: clientCompanyId,
       authenticatedUserId,
       memberships: companyMemberships,
+      holdsValidInvitationToken: !!token,
     });
+    if (signerAuthorization.allowed && signerAuthorization.authorisedVia === "invitation_token") {
+      await logSigningRefusal(supabase, proposal.id, "allowed_via_token", {
+        note: "Signed through the emailed invitation link without signing in.",
+        client_company_id: clientCompanyId,
+      });
+    }
     if (!signerAuthorization.allowed) {
       await logSigningRefusal(supabase, proposal.id, "signer_not_authorized", {
         reason: signerAuthorization.reason,
