@@ -16,10 +16,32 @@ Deno.test('member with signing disabled cannot sign', () => {
   assertEquals(result.requiresAuthentication, false);
 });
 
-Deno.test('managed company cannot be signed through an anonymous token', () => {
+Deno.test('managed company cannot be signed anonymously without the invitation link', () => {
   const result = authorizeCompanySigner({ companyId: 'rhino', authenticatedUserId: null, memberships });
   assertEquals(result.allowed, false);
   assertEquals(result.requiresAuthentication, true);
+});
+
+Deno.test('holder of the emailed invitation link may sign without signing in', () => {
+  const result = authorizeCompanySigner({
+    companyId: 'rhino',
+    authenticatedUserId: null,
+    memberships,
+    holdsValidInvitationToken: true,
+  });
+  assertEquals(result.allowed, true);
+  assertEquals(result.requiresAuthentication, false);
+  assertEquals(result.authorisedVia, 'invitation_token');
+});
+
+Deno.test('signed-in member without signing rights is still refused even with a link', () => {
+  const result = authorizeCompanySigner({
+    companyId: 'rhino',
+    authenticatedUserId: 'juan',
+    memberships,
+    holdsValidInvitationToken: true,
+  });
+  assertEquals(result.allowed, false);
 });
 
 Deno.test('unmanaged recipient can continue to use direct token signing', () => {
