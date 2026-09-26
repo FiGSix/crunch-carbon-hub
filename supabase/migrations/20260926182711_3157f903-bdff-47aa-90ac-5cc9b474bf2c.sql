@@ -1,0 +1,2 @@
+CREATE POLICY "Signed-in users can view vintage audit status" ON public.vintage_audit_status FOR SELECT TO authenticated USING (auth.uid() IS NOT NULL);
+CREATE POLICY "Signed-in users can view vintage progress notes" ON public.vintage_progress_notes FOR SELECT TO authenticated USING (auth.uid() IS NOT NULL);
