@@ -17,7 +17,7 @@ export default function VintageInsights() {
         title="Vintage & revenue"
         description="Which audit each project is in, and the revenue your portfolio is projected to earn."
       />
-      <AuditOverviewCard projects={projects} />
+      <AuditOverviewCard projects={projects} isAdmin={userRole === "admin"} />
       <RevenueYearlyBreakdown />
       <ProjectsAuditTable projects={projects} isLoading={isLoading} isAdmin={userRole === "admin"} />
     </DashboardLayout>

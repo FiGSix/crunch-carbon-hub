@@ -6,7 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
-import { AUDIT_TAGS, useSetProjectAuditTag, type AuditProject, type AuditTag } from "@/hooks/audit/useProjectAudits";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { AUDIT_TAGS, firstAudit, useSetProjectAuditTags, type AuditProject, type AuditTag } from "@/hooks/audit/useProjectAudits";
 
 const NONE = "none";
 
@@ -22,27 +25,44 @@ export function ProjectsAuditTable({
   const [audit, setAudit] = useState("all");
   const [readiness, setReadiness] = useState("all");
   const [search, setSearch] = useState("");
-  const setTag = useSetProjectAuditTag();
+  const setTags = useSetProjectAuditTags();
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
     return projects
-      .filter((p) => (audit === "all" ? true : audit === NONE ? !p.auditTag : p.auditTag === audit))
+      .filter((p) =>
+        audit === "all"
+          ? true
+          : audit === NONE
+            ? p.auditTags.length === 0
+            : audit.startsWith("new:")
+              ? firstAudit(p) === audit.slice(4)
+              : p.auditTags.includes(audit as AuditTag),
+      )
       .filter((p) => (readiness === "all" ? true : readiness === "ready" ? p.auditReady : !p.auditReady))
       .filter((p) => !q || p.projectName.toLowerCase().includes(q) || p.clientName.toLowerCase().includes(q))
       .sort((a, b) => a.projectName.localeCompare(b.projectName));
   }, [projects, audit, readiness, search]);
 
-  const onTag = (p: AuditProject, value: string) => {
-    const tag = value === NONE ? null : (value as AuditTag);
-    setTag.mutate(
-      { onboardingId: p.onboardingId, tag },
+  const onToggle = (p: AuditProject, tag: AuditTag, on: boolean) => {
+    const tags = on ? [...p.auditTags, tag] : p.auditTags.filter((t) => t !== tag);
+    setTags.mutate(
+      { onboardingId: p.onboardingId, tags },
       {
-        onSuccess: () => toast.success(`${p.projectName}: ${tag ?? "removed from audit"}`),
-        onError: (e: any) => toast.error(e?.message || "Could not update the audit"),
+        onSuccess: () => toast.success(`${p.projectName}: ${on ? "added to" : "removed from"} ${tag}`),
+        onError: (e: any) => toast.error(e?.message || "Could not update the audits"),
       },
     );
   };
+
+  const tagBadges = (p: AuditProject) =>
+    p.auditTags.length ? (
+      <div className="flex flex-wrap gap-1">
+        {p.auditTags.map((t) => <Badge key={t} variant="secondary">{t}</Badge>)}
+      </div>
+    ) : (
+      <span className="text-sm text-muted-foreground">Not in an audit</span>
+    );
 
   return (
     <Card className="mb-6">
@@ -61,6 +81,8 @@ export function ProjectsAuditTable({
             <SelectContent>
               <SelectItem value="all">All audits</SelectItem>
               {AUDIT_TAGS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              <SelectItem value="new:Audit 2">New in Audit 2</SelectItem>
+              <SelectItem value="new:Audit 3">New in Audit 3</SelectItem>
               <SelectItem value={NONE}>Not in an audit</SelectItem>
             </SelectContent>
           </Select>
@@ -103,23 +125,28 @@ export function ProjectsAuditTable({
                     </TableCell>
                     <TableCell>
                       {isAdmin ? (
-                        <Select
-                          value={p.auditTag ?? NONE}
-                          onValueChange={(v) => onTag(p, v)}
-                          disabled={!p.auditReady || setTag.isPending}
-                        >
-                          <SelectTrigger className="h-8 w-[150px]" title={p.auditReady ? undefined : "Only Audit Ready projects can join an audit"}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value={NONE}>Not in an audit</SelectItem>
-                            {AUDIT_TAGS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      ) : p.auditTag ? (
-                        <Badge variant="secondary">{p.auditTag}</Badge>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="ghost" className="h-auto min-h-8 justify-start px-2 py-1" disabled={setTags.isPending}>
+                              {tagBadges(p)}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-56 space-y-2" align="start">
+                            {AUDIT_TAGS.map((t) => {
+                              const checked = p.auditTags.includes(t);
+                              const blocked = !checked && !p.auditReady;
+                              return (
+                                <label key={t} className="flex items-center gap-2 text-sm">
+                                  <Checkbox checked={checked} disabled={blocked || setTags.isPending} onCheckedChange={(v) => onToggle(p, t, v === true)} />
+                                  {t}
+                                </label>
+                              );
+                            })}
+                            {!p.auditReady && <p className="text-xs text-muted-foreground">Only Audit Ready projects can be added to an audit.</p>}
+                          </PopoverContent>
+                        </Popover>
                       ) : (
-                        <span className="text-sm text-muted-foreground">Not in an audit</span>
+                        tagBadges(p)
                       )}
                     </TableCell>
                   </TableRow>
