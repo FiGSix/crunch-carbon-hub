@@ -268,7 +268,7 @@ const Contact = () => {
               {/* Contact Info */}
               <div className="lg:col-span-2">
                 <div className="bg-crunch-black/5 backdrop-blur-sm rounded-xl p-8 h-full">
-                  <h3 className="text-2xl font-bold mb-6 text-crunch-black">Contact Information</h3>
+                  <h2 className="text-2xl font-bold mb-6 text-crunch-black">Contact Information</h2>
                   
                   <div className="space-y-8">
                     <div className="flex items-start space-x-4">

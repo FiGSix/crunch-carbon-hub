@@ -15,8 +15,8 @@ export const HeroSection = () => {
           </span>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-crunch-black leading-tight tracking-tight mb-6">
-            Your solar.{" "}
-            <span className="text-crunch-yellow drop-shadow-sm">A little more possibility.</span>
+            Solar Carbon Credit Calculator:{" "}
+            <span className="text-crunch-yellow drop-shadow-sm">See What Your Solar Could Earn</span>
           </h1>
 
           <p className="text-lg md:text-xl text-crunch-black/80 mb-8">
