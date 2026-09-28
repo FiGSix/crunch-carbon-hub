@@ -52,6 +52,9 @@ const AboutHero = () => {
           
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-crunch-black leading-tight tracking-tight mb-6">
             About <span className="text-crunch-yellow drop-shadow-sm">Crunch Carbon</span>
+            <span className="block text-xl md:text-2xl font-medium text-crunch-black/70 mt-3">
+              Verified Solar Carbon Credits for South African Homes &amp; Businesses
+            </span>
           </h1>
           
           <p className="text-xl text-crunch-black/80 mb-10">

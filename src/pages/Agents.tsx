@@ -58,6 +58,9 @@ const Agents = () => {
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-crunch-black leading-tight tracking-tight">
                   <span className="text-crunch-black">Partner With </span> 
                   <span className="text-crunch-yellow drop-shadow-sm">Crunch Carbon</span>
+                  <span className="block text-xl md:text-2xl font-medium text-crunch-black/70 mt-3">
+                    Earn Commissions From Verified Solar Carbon Credits
+                  </span>
                 </h1>
                 
                 <p className="text-xl font-bold text-crunch-black max-w-xl">
