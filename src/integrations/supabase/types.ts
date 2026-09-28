@@ -2847,7 +2847,7 @@ export type Database = {
           audit_ready: boolean
           audit_ready_marked_at: string | null
           audit_ready_marked_by: string | null
-          audit_tag: string | null
+          audit_tags: string[]
           created_at: string
           data_access_verified: boolean
           data_access_verified_at: string | null
@@ -2874,7 +2874,7 @@ export type Database = {
           audit_ready?: boolean
           audit_ready_marked_at?: string | null
           audit_ready_marked_by?: string | null
-          audit_tag?: string | null
+          audit_tags?: string[]
           created_at?: string
           data_access_verified?: boolean
           data_access_verified_at?: string | null
@@ -2901,7 +2901,7 @@ export type Database = {
           audit_ready?: boolean
           audit_ready_marked_at?: string | null
           audit_ready_marked_by?: string | null
-          audit_tag?: string | null
+          audit_tags?: string[]
           created_at?: string
           data_access_verified?: boolean
           data_access_verified_at?: string | null
@@ -4231,6 +4231,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      carry_forward_audit: {
+        Args: { p_from: string; p_to: string }
+        Returns: number
+      }
       check_proposal_duplicates: {
         Args: {
           p_address: string
@@ -4982,8 +4986,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      set_project_audit_tag: {
-        Args: { p_audit_tag: string; p_onboarding_id: string }
+      set_project_audit_tags: {
+        Args: { p_onboarding_id: string; p_tags: string[] }
         Returns: undefined
       }
       set_request_invitation_token:
