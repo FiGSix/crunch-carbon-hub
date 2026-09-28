@@ -1,6 +1,19 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AUDIT_TAGS, type AuditProject } from "@/hooks/audit/useProjectAudits";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { AUDIT_TAGS, firstAudit, useCarryForwardAudit, type AuditProject } from "@/hooks/audit/useProjectAudits";
 
 const CYCLES: Record<string, { status: string; note: string; variant: "secondary" | "outline" | "default" }> = {
   "Audit 1": { status: "Completed", note: "Verified and closed", variant: "secondary" },
@@ -10,21 +23,29 @@ const CYCLES: Record<string, { status: string; note: string; variant: "secondary
 
 const fmtMwp = (kwp: number) => `${(kwp / 1000).toLocaleString("en-ZA", { maximumFractionDigits: 2 })} MWp`;
 
-export function AuditOverviewCard({ projects }: { projects: AuditProject[] }) {
-  const unassignedReady = projects.filter((p) => p.auditReady && !p.auditTag);
-  const notReady = projects.filter((p) => !p.auditReady);
+export function AuditOverviewCard({ projects, isAdmin = false }: { projects: AuditProject[]; isAdmin?: boolean }) {
+  const carry = useCarryForwardAudit();
+  const unassignedReady = projects.filter((p) => p.auditReady && p.auditTags.length === 0);
+  const notReady = projects.filter((p) => !p.auditReady && p.auditTags.length === 0);
 
   return (
     <Card className="mb-6">
       <CardHeader>
         <CardTitle className="text-lg">Audit rounds</CardTitle>
-        <CardDescription>Which of your projects are in each carbon credit audit.</CardDescription>
+        <CardDescription>
+          Audits are cumulative: projects usually carry forward from one audit into the next.
+        </CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {AUDIT_TAGS.map((tag) => {
-          const inTag = projects.filter((p) => p.auditTag === tag);
+        {AUDIT_TAGS.map((tag, i) => {
+          const inTag = projects.filter((p) => p.auditTags.includes(tag));
+          const newHere = inTag.filter((p) => firstAudit(p) === tag).length;
           const kwp = inTag.reduce((s, p) => s + p.sizeKwp, 0);
           const c = CYCLES[tag];
+          const prev = i > 0 ? AUDIT_TAGS[i - 1] : null;
+          const toCarry = prev
+            ? projects.filter((p) => p.auditReady && p.auditTags.includes(prev) && !p.auditTags.includes(tag)).length
+            : 0;
           return (
             <div key={tag} className="rounded-lg border p-4 space-y-2">
               <div className="flex items-center justify-between">
@@ -33,7 +54,44 @@ export function AuditOverviewCard({ projects }: { projects: AuditProject[] }) {
               </div>
               <p className="text-xs text-muted-foreground">{c.note}</p>
               <p className="text-2xl font-bold tabular-nums">{inTag.length}</p>
-              <p className="text-xs text-muted-foreground">projects · {fmtMwp(kwp)}</p>
+              <p className="text-xs text-muted-foreground">
+                projects · {fmtMwp(kwp)}
+                {prev && ` · ${newHere} new`}
+              </p>
+              {isAdmin && prev && toCarry > 0 && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="w-full" disabled={carry.isPending}>
+                      Carry forward from {prev}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Add {toCarry} projects to {tag}?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Every Audit Ready project in {prev} that isn't in {tag} yet will be added to {tag}. You can still
+                        remove individual projects afterwards.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() =>
+                          carry.mutate(
+                            { from: prev, to: tag },
+                            {
+                              onSuccess: (n) => toast.success(`${n} projects added to ${tag}`),
+                              onError: (e: any) => toast.error(e?.message || "Could not carry forward"),
+                            },
+                          )
+                        }
+                      >
+                        Add to {tag}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
           );
         })}
