@@ -11,7 +11,7 @@ export interface AuditProject {
   clientName: string;
   sizeKwp: number;
   auditReady: boolean;
-  auditTag: AuditTag | null;
+  auditTags: AuditTag[];
 }
 
 const KEY = ["portfolio-audit-projects"];
@@ -25,7 +25,7 @@ export function usePortfolioAuditProjects() {
     queryFn: async (): Promise<AuditProject[]> => {
       const { data, error } = await (supabase.from("project_onboarding") as any)
         .select(
-          `id, audit_ready, audit_tag,
+          `id, audit_ready, audit_tags,
            proposals!inner(title, system_size_kwp, deleted_at, archived_at,
              clients:client_reference_id(first_name, last_name, company_name))`,
         )
@@ -42,23 +42,40 @@ export function usePortfolioAuditProjects() {
           clientName: c?.company_name || person || "—",
           sizeKwp: Number(p?.system_size_kwp) || 0,
           auditReady: r.audit_ready === true,
-          auditTag: r.audit_tag ?? null,
+          auditTags: ((r.audit_tags || []) as AuditTag[]).slice().sort(),
         };
       });
     },
   });
 }
 
+/** First audit a project joined, or null. */
+export const firstAudit = (p: AuditProject): AuditTag | null =>
+  AUDIT_TAGS.find((t) => p.auditTags.includes(t)) ?? null;
+
 /** Admin-only: the server re-checks the admin role and audit readiness. */
-export function useSetProjectAuditTag() {
+export function useSetProjectAuditTags() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ onboardingId, tag }: { onboardingId: string; tag: AuditTag | null }) => {
-      const { error } = await (supabase.rpc as any)("set_project_audit_tag", {
+    mutationFn: async ({ onboardingId, tags }: { onboardingId: string; tags: AuditTag[] }) => {
+      const { error } = await (supabase.rpc as any)("set_project_audit_tags", {
         p_onboarding_id: onboardingId,
-        p_audit_tag: tag ?? "",
+        p_tags: tags,
       });
       if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+/** Admin-only: add every Audit Ready project in `from` to `to`. Returns count added. */
+export function useCarryForwardAudit() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ from, to }: { from: AuditTag; to: AuditTag }): Promise<number> => {
+      const { data, error } = await (supabase.rpc as any)("carry_forward_audit", { p_from: from, p_to: to });
+      if (error) throw error;
+      return Number(data) || 0;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
