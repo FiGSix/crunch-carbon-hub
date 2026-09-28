@@ -4188,10 +4188,7 @@ export type Database = {
         Args: { p_super_partner_id: string }
         Returns: number
       }
-      archive_proposal: {
-        Args: { proposal_id: string; user_id: string }
-        Returns: boolean
-      }
+      archive_proposal: { Args: { proposal_id: string }; Returns: boolean }
       auth_user_id: { Args: never; Returns: string }
       auth_user_role: { Args: never; Returns: string }
       backfill_super_partner_commissions: {
@@ -4278,10 +4275,7 @@ export type Database = {
         Args: { p_decision: string; p_reason: string; p_review_id: string }
         Returns: undefined
       }
-      delete_proposal: {
-        Args: { proposal_id: string; user_id: string }
-        Returns: boolean
-      }
+      delete_proposal: { Args: { proposal_id: string }; Returns: boolean }
       email_domain_of: { Args: { email_addr: string }; Returns: string }
       ensure_agent_has_company: {
         Args: { p_agent_id: string }

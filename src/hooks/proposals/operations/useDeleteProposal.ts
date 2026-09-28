@@ -42,11 +42,9 @@ export function useDeleteProposal(setLoadingState: (operation: 'delete', isLoadi
       
       const proposal = proposals[0];
       
+      // Server identifies the caller from the session; userId is only used for notifications
       const { data, error } = await supabase
-        .rpc('delete_proposal', { 
-          proposal_id: proposalId, 
-          user_id: userId 
-        });
+        .rpc('delete_proposal', { proposal_id: proposalId });
       
       if (error) throw error;
       
