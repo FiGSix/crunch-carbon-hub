@@ -1,34 +1,25 @@
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { VintageProgressDisplayCard } from "@/components/dashboard/VintageProgressDisplayCard";
-import { VintageBlendPipelineCard } from "@/components/dashboard/VintageBlendPipelineCard";
-import { VintageRevenueBreakdown } from "@/components/dashboard/sections/VintageRevenueBreakdown";
-import { VintageCountdown } from "@/components/dashboard/sections/VintageCountdown";
 import { RevenueYearlyBreakdown } from "@/components/dashboard/sections/RevenueYearlyBreakdown";
+import { AuditOverviewCard } from "@/components/audit/AuditOverviewCard";
+import { ProjectsAuditTable } from "@/components/audit/ProjectsAuditTable";
+import { usePortfolioAuditProjects } from "@/hooks/audit/useProjectAudits";
 import { useAuth } from "@/contexts/auth";
 
-/**
- * Vintage and revenue detail — moved off the dashboard home so the home screen
- * stays a decision screen. Same components, same data, one level deeper.
- */
+/** Audit rounds, projected revenue and per-project audit membership for the viewer's portfolio. */
 export default function VintageInsights() {
   const { userRole } = useAuth();
+  const { data: projects = [], isLoading } = usePortfolioAuditProjects();
 
   return (
     <DashboardLayout>
       <DashboardHeader
         title="Vintage & revenue"
-        description="Vintage progress, blend pipeline and estimated revenue for your portfolio."
+        description="Which audit each project is in, and the revenue your portfolio is projected to earn."
       />
-      {userRole === 'admin' && <RevenueYearlyBreakdown />}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <VintageProgressDisplayCard />
-        <VintageBlendPipelineCard />
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <VintageRevenueBreakdown />
-        <VintageCountdown />
-      </div>
+      <AuditOverviewCard projects={projects} />
+      <RevenueYearlyBreakdown />
+      <ProjectsAuditTable projects={projects} isLoading={isLoading} isAdmin={userRole === "admin"} />
     </DashboardLayout>
   );
 }

@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/auth";
 import { useAdminRevenueYearlyTable, type RevenueScope, type YearlyRevenueRow } from "@/hooks/dashboard/useAdminRevenueYearlyTable";
 
 const formatCurrency = (value: number) =>
@@ -26,7 +27,21 @@ const SCOPE_OPTIONS: { value: RevenueScope; label: string }[] = [
   { value: "all", label: "Pipeline + Signed + Audit Ready" },
 ];
 
-function DataRow({ row }: { row: YearlyRevenueRow }) {
+type SplitKey = "client" | "partner" | "superPartner" | "crunch";
+const SPLIT_LABELS: Record<SplitKey, string> = {
+  client: "Client",
+  partner: "Partner",
+  superPartner: "Super Partner",
+  crunch: "Crunch Carbon",
+};
+function splitsForRole(role: string | null | undefined): SplitKey[] {
+  if (role === "admin") return ["client", "partner", "superPartner", "crunch"];
+  if (role === "super_partner") return ["client", "partner", "superPartner"];
+  if (role === "agent") return ["client", "partner"];
+  return ["client"];
+}
+
+function DataRow({ row, splits }: { row: YearlyRevenueRow; splits: SplitKey[] }) {
   const isBlend = row.year === "blend";
   return (
     <TableRow className={cn(row.estimated && "text-muted-foreground")}>
@@ -52,25 +67,23 @@ function DataRow({ row }: { row: YearlyRevenueRow }) {
       <TableCell className="text-right tabular-nums">R{formatNumber(row.price)}</TableCell>
       <TableCell className="text-right tabular-nums">{formatNumber(row.tonnes)}</TableCell>
       <TableCell className="text-right tabular-nums">{formatCurrency(row.total)}</TableCell>
-      <TableCell className="text-right tabular-nums">{formatCurrency(row.client)}</TableCell>
-      <TableCell className="text-right tabular-nums">{formatCurrency(row.partner)}</TableCell>
-      <TableCell className="text-right tabular-nums">{formatCurrency(row.superPartner)}</TableCell>
-      <TableCell className="text-right tabular-nums">{formatCurrency(row.crunch)}</TableCell>
+      {splits.map((k) => (
+        <TableCell key={k} className="text-right tabular-nums">{formatCurrency(row[k])}</TableCell>
+      ))}
     </TableRow>
   );
 }
 
-function TotalRow({ row, muted }: { row: YearlyRevenueRow; muted?: boolean }) {
+function TotalRow({ row, muted, splits }: { row: YearlyRevenueRow; muted?: boolean; splits: SplitKey[] }) {
   return (
     <TableRow className={cn("font-semibold bg-muted/50", muted && "text-muted-foreground")}>
       <TableCell>{row.label}</TableCell>
       <TableCell />
       <TableCell className="text-right tabular-nums">{formatNumber(row.tonnes)}</TableCell>
       <TableCell className="text-right tabular-nums">{formatCurrency(row.total)}</TableCell>
-      <TableCell className="text-right tabular-nums">{formatCurrency(row.client)}</TableCell>
-      <TableCell className="text-right tabular-nums">{formatCurrency(row.partner)}</TableCell>
-      <TableCell className="text-right tabular-nums">{formatCurrency(row.superPartner)}</TableCell>
-      <TableCell className="text-right tabular-nums">{formatCurrency(row.crunch)}</TableCell>
+      {splits.map((k) => (
+        <TableCell key={k} className="text-right tabular-nums">{formatCurrency(row[k])}</TableCell>
+      ))}
     </TableRow>
   );
 }
@@ -78,6 +91,8 @@ function TotalRow({ row, muted }: { row: YearlyRevenueRow; muted?: boolean }) {
 export function RevenueYearlyBreakdown() {
   const [scope, setScope] = useState<RevenueScope>("audit_ready");
   const { data, isLoading } = useAdminRevenueYearlyTable(scope);
+  const { userRole } = useAuth();
+  const splits = splitsForRole(userRole);
 
   const currentRows = data?.rows.filter((r) => !r.estimated) ?? [];
   const estimatedRows = data?.rows.filter((r) => r.estimated) ?? [];
@@ -127,22 +142,21 @@ export function RevenueYearlyBreakdown() {
                   <TableHead className="text-right">SA price (R/t)</TableHead>
                   <TableHead className="text-right">CO₂ (tonnes)</TableHead>
                   <TableHead className="text-right">Total revenue</TableHead>
-                  <TableHead className="text-right">Client</TableHead>
-                  <TableHead className="text-right">Partner</TableHead>
-                  <TableHead className="text-right">Super Partner</TableHead>
-                  <TableHead className="text-right">Crunch Carbon</TableHead>
+                  {splits.map((k) => (
+                    <TableHead key={k} className="text-right">{SPLIT_LABELS[k]}</TableHead>
+                  ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {currentRows.map((row) => (
-                  <DataRow key={row.year} row={row} />
+                  <DataRow key={row.year} row={row} splits={splits} />
                 ))}
-                <TotalRow row={data.subtotalCurrent} />
+                <TotalRow row={data.subtotalCurrent} splits={splits} />
                 {estimatedRows.map((row) => (
-                  <DataRow key={row.year} row={row} />
+                  <DataRow key={row.year} row={row} splits={splits} />
                 ))}
-                <TotalRow row={data.subtotalEstimated} muted />
-                <TotalRow row={data.grandTotal} />
+                <TotalRow row={data.subtotalEstimated} muted splits={splits} />
+                <TotalRow row={data.grandTotal} splits={splits} />
               </TableBody>
             </Table>
           </div>
