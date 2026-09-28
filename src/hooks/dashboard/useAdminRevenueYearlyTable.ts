@@ -102,7 +102,7 @@ export function useAdminRevenueYearlyTable(scope: RevenueScope) {
   const { user, userRole } = useAuth();
 
   return useQuery({
-    queryKey: queryKeys.dashboard.adminRevenueYearlyTable(scope),
+    queryKey: [...queryKeys.dashboard.adminRevenueYearlyTable(scope), user?.id, userRole],
     queryFn: async (): Promise<AdminRevenueYearlyTable> => {
       const emptyTable: AdminRevenueYearlyTable = {
         rows: [],
@@ -113,7 +113,8 @@ export function useAdminRevenueYearlyTable(scope: RevenueScope) {
         specialRateProjects: 0,
       };
 
-      if (!user?.id || userRole !== 'admin') return emptyTable;
+      // Row-level access rules scope proposals to what this viewer may see.
+      if (!user?.id) return emptyTable;
 
       const revenueLogger = logger.withContext({
         component: 'useAdminRevenueYearlyTable',
