@@ -2847,6 +2847,7 @@ export type Database = {
           audit_ready: boolean
           audit_ready_marked_at: string | null
           audit_ready_marked_by: string | null
+          audit_tag: string | null
           created_at: string
           data_access_verified: boolean
           data_access_verified_at: string | null
@@ -2873,6 +2874,7 @@ export type Database = {
           audit_ready?: boolean
           audit_ready_marked_at?: string | null
           audit_ready_marked_by?: string | null
+          audit_tag?: string | null
           created_at?: string
           data_access_verified?: boolean
           data_access_verified_at?: string | null
@@ -2899,6 +2901,7 @@ export type Database = {
           audit_ready?: boolean
           audit_ready_marked_at?: string | null
           audit_ready_marked_by?: string | null
+          audit_tag?: string | null
           created_at?: string
           data_access_verified?: boolean
           data_access_verified_at?: string | null
@@ -4978,6 +4981,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      set_project_audit_tag: {
+        Args: { p_audit_tag: string; p_onboarding_id: string }
+        Returns: undefined
       }
       set_request_invitation_token:
         | {
