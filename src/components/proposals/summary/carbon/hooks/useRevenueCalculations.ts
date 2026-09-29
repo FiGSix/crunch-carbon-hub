@@ -50,8 +50,8 @@ export function useRevenueCalculations({
   const cacheKey = useMemo(() => {
     const portfolioSize = portfolioData?.totalKWp || systemSizeKWp;
     const phaseKey = phases ? phases.map(p => `${p.sizeKWp}-${p.commissionDate}`).join('_') : 'no-phases';
-    return `revenue_${systemSizeKWp}_${commissionDate || 'no-date'}_${portfolioSize}_${proposalId || 'no-id'}_${isMultiPhase ? 'multi' : 'single'}_${phaseKey}_${clientShareOverride || 'no-override'}_${kwhSignature || 'kwp'}`;
-  }, [systemSizeKWp, commissionDate, portfolioData?.totalKWp, proposalId, phases, isMultiPhase, clientShareOverride, kwhSignature]);
+    return `revenue_${systemSizeKWp}_${commissionDate || 'no-date'}_${portfolioSize}_${proposalId || 'no-id'}_${isMultiPhase ? 'multi' : 'single'}_${phaseKey}_${clientShareOverride || 'no-override'}_${kwhSignature || 'kwp'}_${auditKey || 'no-audit'}`;
+  }, [systemSizeKWp, commissionDate, portfolioData?.totalKWp, proposalId, phases, isMultiPhase, clientShareOverride, kwhSignature, auditKey]);
 
   const [calculationResult, setCalculationResult] = useState<any>(null);
 
