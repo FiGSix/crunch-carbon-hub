@@ -77,10 +77,14 @@ serve(async (req) => {
     const auth = req.headers.get("Authorization");
     if (!auth) return json({ error: "No authorization header" }, 401);
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { data: { user } } = await admin.auth.getUser(auth.replace("Bearer ", ""));
-    if (!user) return json({ error: "Invalid token" }, 401);
-    const { data: role } = await admin.rpc("get_primary_role", { _user_id: user.id });
-    if (role !== "admin") return json({ error: "Admin access required" }, 403);
+    const bearer = auth.replace("Bearer ", "");
+    // System callers (service role) are trusted for the sample preview.
+    if (bearer !== Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
+      const { data: { user } } = await admin.auth.getUser(bearer);
+      if (!user) return json({ error: "Invalid token" }, 401);
+      const { data: role } = await admin.rpc("get_primary_role", { _user_id: user.id });
+      if (role !== "admin") return json({ error: "Admin access required" }, 403);
+    }
 
     const parsed = Body.safeParse(await req.json());
     if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
