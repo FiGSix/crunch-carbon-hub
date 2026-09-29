@@ -1263,9 +1263,8 @@ Do good. Get rewarded. Join Crunch Carbon.`;
   // Calculate revenue table data using real Crunch Carbon constants
   const systemSizeKWp = anyProposal.system_size_kwp || 500;
   const clientSharePercentage = anyProposal.client_share_percentage || 60;
-  
-  // Official Crunch Carbon calculation constants (matching frontend exactly)
-  const ANNUAL_GENERATION_FACTOR = 1642.50; // kWh per kWp per year
+
+
 
   // Extract commission date (used for the eligible-period note)
   const commissionDateStr = anyProposal.project_info?.commission_date || 
