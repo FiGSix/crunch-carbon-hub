@@ -39,40 +39,31 @@ export function getCrunchCommissionPercentage(
 }
 
 /**
- * Calculate revenue by year using pre-fetched carbon prices (synchronous, optimized)
+ * Calculate revenue by year using pre-fetched carbon prices (synchronous, optimized).
+ *
+ * Generation only counts from the eligible start date: the later of the
+ * commissioning date and the start of the project's audit round. Projects with
+ * no Audit 1 / Audit 2 tag (every new proposal) start on 1 July 2026.
  */
 export function calculateRevenueByYearSync(
   carbonCreditsPerYear: number,
   clientSharePercentage: number,
   carbonPrices: Record<string, number>,
-  commissionDate?: string | Date
+  commissionDate?: string | Date,
+  auditTags?: readonly string[] | null
 ): Record<string, number> {
   const revenue: Record<string, number> = {};
-  const commissionDateTime = commissionDate ? new Date(commissionDate) : null;
-  
+  const eligibleStart = getEligibleStartDate(commissionDate, auditTags);
+
   Object.entries(carbonPrices).forEach(([year, price]) => {
     const yearNum = parseInt(year);
-    
-    // Skip years before commissioning date
-    if (commissionDateTime && yearNum < commissionDateTime.getFullYear()) {
-      return;
-    }
-    
-    let yearCredits = carbonCreditsPerYear;
-    
-    // Pro-rate for commission year if date is provided
-    if (commissionDateTime && yearNum === commissionDateTime.getFullYear()) {
-      const yearStart = new Date(yearNum, 0, 1);
-      const yearEnd = new Date(yearNum, 11, 31);
-      const remainingDays = Math.max(0, Math.floor((yearEnd.getTime() - commissionDateTime.getTime()) / (1000 * 60 * 60 * 24)) + 1);
-      const totalDaysInYear = Math.floor((yearEnd.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      
-      yearCredits = carbonCreditsPerYear * (remainingDays / totalDaysInYear);
-    }
-    
+    const fraction = eligibleFractionOfYear(yearNum, eligibleStart);
+    if (fraction <= 0) return;
+
+    const yearCredits = carbonCreditsPerYear * fraction;
     revenue[year] = Math.round(yearCredits * price * (clientSharePercentage / 100));
   });
-  
+
   return revenue;
 }
 
@@ -82,28 +73,42 @@ export function calculateRevenueByYearSync(
 export async function calculateRevenueByYear(
   carbonCreditsPerYear: number,
   clientSharePercentage: number,
-  commissionDate?: string | Date
+  commissionDate?: string | Date,
+  auditTags?: readonly string[] | null
 ): Promise<Record<string, number>> {
   const carbonPrices = await dynamicCarbonPricingService.getCarbonPrices();
-  return calculateRevenueByYearSync(carbonCreditsPerYear, clientSharePercentage, carbonPrices, commissionDate);
+  return calculateRevenueByYearSync(
+    carbonCreditsPerYear,
+    clientSharePercentage,
+    carbonPrices,
+    commissionDate,
+    auditTags
+  );
 }
 
 /**
- * kWh-mode: revenue per year derived directly from user-supplied annual kWh
- * (no yield factor, no pro-rating — values are taken as entered).
+ * kWh-mode: revenue per year derived directly from user-supplied annual kWh.
+ * (no yield factor, no commission pro-rating — values are taken as entered).
+ * Years outside the project's audit eligibility window are still excluded, and
+ * the opening part-year is scaled to the eligible portion.
  */
 export function calculateRevenueByYearFromKwhSync(
   annualKwhByYear: Record<string, number>,
   emissionFactor: number,
   clientSharePercentage: number,
-  carbonPrices: Record<string, number>
+  carbonPrices: Record<string, number>,
+  auditTags?: readonly string[] | null
 ): { revenueByYear: Record<string, number>; creditsByYear: Record<string, number> } {
   const revenueByYear: Record<string, number> = {};
   const creditsByYear: Record<string, number> = {};
+  const eligibleStart = getAuditPeriodStart(auditTags);
+
   Object.entries(carbonPrices).forEach(([year, price]) => {
     const kwh = Number(annualKwhByYear[year]) || 0;
     if (kwh <= 0) return;
-    const credits = (kwh / 1000) * emissionFactor;
+    const fraction = eligibleFractionOfYear(parseInt(year), eligibleStart);
+    if (fraction <= 0) return;
+    const credits = ((kwh * fraction) / 1000) * emissionFactor;
     creditsByYear[year] = credits;
     revenueByYear[year] = Math.round(credits * price * (clientSharePercentage / 100));
   });
