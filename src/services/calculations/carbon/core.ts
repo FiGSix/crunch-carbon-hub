@@ -151,7 +151,8 @@ async function calculateMultiPhaseComplete(
       phaseCarbonCredits,
       clientSharePercentage,
       carbonPrices,
-      phase.commissionDate
+      phase.commissionDate,
+      specs.auditTags
     );
 
     // Aggregate revenue by year as we go
