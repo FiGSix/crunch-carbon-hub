@@ -91,12 +91,13 @@ export function useRevenueCalculations({
     };
 
     calculateRevenues();
-  }, [cacheKey, systemSizeKWp, commissionDate, portfolioData]);
+  }, [cacheKey, systemSizeKWp, commissionDate, portfolioData, auditKey]);
 
   return {
     calculationResult,
     clientSpecificRevenue,
     loading,
-    systemSizeKWp
+    systemSizeKWp,
+    auditTags
   };
 }
