@@ -10,6 +10,7 @@ import {
 } from "./carbon/carbonCalculations";
 import { usePortfolioData } from "./carbon/hooks/usePortfolioData";
 import { useRevenueCalculations } from "./carbon/hooks/useRevenueCalculations";
+import { getEligibleStartDate, formatEligibleStart } from "@/services/calculations/carbon/auditPeriods";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useRef } from "react";
 
