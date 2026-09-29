@@ -2,6 +2,8 @@
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { lazy as lazyPortfolio } from "react";
+const PortfolioDemo = lazyPortfolio(() => import("./pages/PortfolioDemo"));
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/auth";
 import { AuthNavigationHandler } from "@/components/auth/AuthNavigationHandler";
@@ -280,6 +282,9 @@ function App() {
                   } />
                   
                   
+                  <Route path="/portfolio/demo" element={
+                    <Suspense fallback={<PageLoader />}><PortfolioDemo /></Suspense>
+                  } />
                   {/* Proposal viewing - accessible with token */}
                   <Route path="/proposals/:id" element={
                     <PageErrorBoundary pageName="View Proposal">
