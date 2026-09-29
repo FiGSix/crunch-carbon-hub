@@ -78,7 +78,8 @@ export async function calculateComplete(
   const revenueByYear = await calculateRevenueByYear(
     carbonCreditsPerYear,
     clientSharePercentage,
-    specs.commissionDate
+    specs.commissionDate,
+    specs.auditTags
   );
 
   const currentYear = new Date().getFullYear().toString();
