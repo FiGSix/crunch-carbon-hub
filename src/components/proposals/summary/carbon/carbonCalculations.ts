@@ -1,41 +1,65 @@
-
 import { UnifiedCarbonService } from '@/services/calculations/carbon';
+import {
+  getEligibleStartDate,
+  eligibleFractionOfYear,
+} from '@/services/calculations/carbon/auditPeriods';
 
-export function calculateYearlyEnergy(systemSizeKWp: number, year: number, commissionDate?: string, yieldFactor?: number): number {
+const EMISSION_FACTOR = 1.0334; // tCO₂e per MWh
+
+/**
+ * Energy claimable in a calendar year.
+ * Counts only from the eligible start date: the later of the commissioning
+ * date and the start of the project's audit round (1 July 2026 when the
+ * project is not tagged into Audit 1 or Audit 2).
+ */
+export function calculateYearlyEnergy(
+  systemSizeKWp: number,
+  year: number,
+  commissionDate?: string,
+  yieldFactor?: number,
+  auditTags?: readonly string[] | null
+): number {
   const annualEnergy = UnifiedCarbonService.calculateAnnualEnergy(systemSizeKWp, yieldFactor);
-  
-  // Return 0 for years before commissioning
-  if (commissionDate && year < new Date(commissionDate).getFullYear()) {
-    return 0;
-  }
-  
-  // Pro-rate for commission year if needed
-  if (commissionDate && year === new Date(commissionDate).getFullYear()) {
-    const commissionDateTime = new Date(commissionDate);
-    const yearStart = new Date(year, 0, 1);
-    const yearEnd = new Date(year, 11, 31);
-    const remainingDays = Math.max(0, Math.floor((yearEnd.getTime() - commissionDateTime.getTime()) / (1000 * 60 * 60 * 24)) + 1);
-    const totalDaysInYear = Math.floor((yearEnd.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-    return annualEnergy * (remainingDays / totalDaysInYear);
-  }
-  
-  return annualEnergy;
+  const eligibleStart = getEligibleStartDate(commissionDate, auditTags);
+  return annualEnergy * eligibleFractionOfYear(year, eligibleStart);
 }
 
-export function calculateYearlyCarbonCredits(systemSizeKWp: number, year: number, commissionDate?: string, yieldFactor?: number): number {
-  const yearlyEnergy = calculateYearlyEnergy(systemSizeKWp, year, commissionDate, yieldFactor);
-  return (yearlyEnergy / 1000) * 1.0334; // Convert to MWh and apply Crunch Carbon's emission factor
+export function calculateYearlyCarbonCredits(
+  systemSizeKWp: number,
+  year: number,
+  commissionDate?: string,
+  yieldFactor?: number,
+  auditTags?: readonly string[] | null
+): number {
+  const yearlyEnergy = calculateYearlyEnergy(systemSizeKWp, year, commissionDate, yieldFactor, auditTags);
+  return (yearlyEnergy / 1000) * EMISSION_FACTOR;
 }
 
-export function calculateTotalMWhGenerated(systemSizeKWp: number, revenue: Record<string, number>, commissionDate?: string): number {
+export function calculateTotalMWhGenerated(
+  systemSizeKWp: number,
+  revenue: Record<string, number>,
+  commissionDate?: string,
+  auditTags?: readonly string[] | null
+): number {
   return Object.keys(revenue).reduce((total, year) => {
-    return total + (calculateYearlyEnergy(systemSizeKWp, parseInt(year), commissionDate) / 1000);
+    return (
+      total +
+      calculateYearlyEnergy(systemSizeKWp, parseInt(year), commissionDate, undefined, auditTags) / 1000
+    );
   }, 0);
 }
 
-export function calculateTotalCarbonCredits(systemSizeKWp: number, revenue: Record<string, number>, commissionDate?: string): number {
+export function calculateTotalCarbonCredits(
+  systemSizeKWp: number,
+  revenue: Record<string, number>,
+  commissionDate?: string,
+  auditTags?: readonly string[] | null
+): number {
   return Object.keys(revenue).reduce((total, year) => {
-    return total + calculateYearlyCarbonCredits(systemSizeKWp, parseInt(year), commissionDate);
+    return (
+      total +
+      calculateYearlyCarbonCredits(systemSizeKWp, parseInt(year), commissionDate, undefined, auditTags)
+    );
   }, 0);
 }
 
@@ -44,22 +68,24 @@ export function calculateTotalCarbonCredits(systemSizeKWp: number, revenue: Reco
  */
 export function aggregateYearlyMWhFromPhases(
   phases: Array<{ sizeKWp: number; commissionDate: string }>,
-  years: string[]
+  years: string[],
+  auditTags?: readonly string[] | null
 ): Record<string, number> {
   const aggregated: Record<string, number> = {};
-  
-  years.forEach(year => {
+
+  years.forEach((year) => {
     aggregated[year] = phases.reduce((sum, phase) => {
-      const yearNum = parseInt(year);
       const yearlyEnergy = calculateYearlyEnergy(
         phase.sizeKWp,
-        yearNum,
-        phase.commissionDate
+        parseInt(year),
+        phase.commissionDate,
+        undefined,
+        auditTags
       );
-      return sum + (yearlyEnergy / 1000); // Convert to MWh
+      return sum + yearlyEnergy / 1000;
     }, 0);
   });
-  
+
   return aggregated;
 }
 
@@ -68,21 +94,23 @@ export function aggregateYearlyMWhFromPhases(
  */
 export function aggregateYearlyCarbonCreditsFromPhases(
   phases: Array<{ sizeKWp: number; commissionDate: string }>,
-  years: string[]
+  years: string[],
+  auditTags?: readonly string[] | null
 ): Record<string, number> {
   const aggregated: Record<string, number> = {};
-  
-  years.forEach(year => {
+
+  years.forEach((year) => {
     aggregated[year] = phases.reduce((sum, phase) => {
-      const yearNum = parseInt(year);
       const yearlyCredits = calculateYearlyCarbonCredits(
         phase.sizeKWp,
-        yearNum,
-        phase.commissionDate
+        parseInt(year),
+        phase.commissionDate,
+        undefined,
+        auditTags
       );
       return sum + yearlyCredits;
     }, 0);
   });
-  
+
   return aggregated;
 }
