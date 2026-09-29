@@ -72,8 +72,8 @@ export function useRevenueCalculations({
 
         const overrideValue = clientShareOverride != null ? clientShareOverride : undefined;
         const specs = phases && phases.length > 0
-          ? { sizeKwp: systemSizeKWp, phases, clientShareOverride: overrideValue }
-          : { sizeKwp: systemSizeKWp, commissionDate, clientShareOverride: overrideValue, annualKwhByYear };
+          ? { sizeKwp: systemSizeKWp, phases, clientShareOverride: overrideValue, auditTags }
+          : { sizeKwp: systemSizeKWp, commissionDate, clientShareOverride: overrideValue, annualKwhByYear, auditTags };
 
         const result = await UnifiedCarbonService.calculateComplete(specs, portfolioSize);
 
