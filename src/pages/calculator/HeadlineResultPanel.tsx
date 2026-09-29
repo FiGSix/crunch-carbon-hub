@@ -308,7 +308,8 @@ export const HeadlineResultPanel = ({ estimate, onEdit }: HeadlineResultPanelPro
         </p>
         <p className="text-sm text-crunch-black/50 mt-2 max-w-lg mx-auto">
           Based on {province} solar yield and a {clientSharePercentage}% client share tier.
-          First-year revenue is pro-rated from {commissionDate.toLocaleDateString("en-ZA")}.
+          Carbon credits can be claimed from {formatEligibleStart(getEligibleStartDate(commissionDate))} onwards,
+          so the first year is pro-rated from that date.
         </p>
       </div>
 
