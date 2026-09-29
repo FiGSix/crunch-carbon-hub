@@ -10,6 +10,7 @@ import {
 } from "./carbon/carbonCalculations";
 import { usePortfolioData } from "./carbon/hooks/usePortfolioData";
 import { useRevenueCalculations } from "./carbon/hooks/useRevenueCalculations";
+import { getEligibleStartDate, formatEligibleStart } from "@/services/calculations/carbon/auditPeriods";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useRef } from "react";
 
@@ -36,7 +37,8 @@ export function CarbonCreditSection({ systemSize, commissionDate, selectedClient
     calculationResult,
     clientSpecificRevenue, 
     loading: revenueLoading, 
-    systemSizeKWp: formSystemSizeKWp
+    systemSizeKWp: formSystemSizeKWp,
+    auditTags
   } = useRevenueCalculations({
     systemSize,
     commissionDate,
@@ -102,14 +104,14 @@ export function CarbonCreditSection({ systemSize, commissionDate, selectedClient
   const totalMWhGenerated = isKwhMode && preCalculatedYearlyMWh
     ? Object.values(preCalculatedYearlyMWh).reduce((s, v) => s + v, 0)
     : calculatedIsMultiPhase && calculatedPhases.length > 0
-      ? Object.values(aggregateYearlyMWhFromPhases(calculatedPhases, Object.keys(displayRevenue))).reduce((sum, val) => sum + val, 0)
-      : calculateTotalMWhGenerated(systemSizeKWp, displayRevenue, commissionDate);
+      ? Object.values(aggregateYearlyMWhFromPhases(calculatedPhases, Object.keys(displayRevenue), auditTags)).reduce((sum, val) => sum + val, 0)
+      : calculateTotalMWhGenerated(systemSizeKWp, displayRevenue, commissionDate, auditTags);
 
   const totalCarbonCredits = isKwhMode && preCalculatedYearlyCredits
     ? Object.values(preCalculatedYearlyCredits).reduce((s, v) => s + v, 0)
     : calculatedIsMultiPhase && calculatedPhases.length > 0
-      ? Object.values(aggregateYearlyCarbonCreditsFromPhases(calculatedPhases, Object.keys(displayRevenue))).reduce((sum, val) => sum + val, 0)
-      : calculateTotalCarbonCredits(systemSizeKWp, displayRevenue, commissionDate);
+      ? Object.values(aggregateYearlyCarbonCreditsFromPhases(calculatedPhases, Object.keys(displayRevenue), auditTags)).reduce((sum, val) => sum + val, 0)
+      : calculateTotalCarbonCredits(systemSizeKWp, displayRevenue, commissionDate, auditTags);
   
   const totalClientSpecificRevenue = Object.values(clientSpecificRevenue).reduce((sum: number, val: number) => sum + val, 0);
 
@@ -219,11 +221,16 @@ export function CarbonCreditSection({ systemSize, commissionDate, selectedClient
         preCalculatedYearlyCredits={preCalculatedYearlyCredits}
         preCalculatedYearlyRevenue={preCalculatedYearlyRevenue}
         isKwhMode={isKwhMode}
+        auditTags={auditTags}
       />
       
+      <p className="text-xs text-carbon-gray-500 mt-2">
+        * Eligible generation starts {formatEligibleStart(getEligibleStartDate(commissionDate, auditTags))}
+        {auditTags.length > 0 ? ` (${auditTags.join(' · ')})` : ' (not in Audit 1 or Audit 2)'}
+      </p>
       {commissionDate && !isKwhMode && (
         <p className="text-xs text-carbon-gray-500 mt-2">
-          * Values for commissioning year are pro-rated based on the commission date
+          * Values for the first eligible year are pro-rated from that date
         </p>
       )}
       {isKwhMode && (

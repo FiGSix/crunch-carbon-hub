@@ -14,6 +14,12 @@ export interface SystemSpecs {
    * For multi-phase, populate `phases[].annualKwhByYear` instead.
    */
   annualKwhByYear?: AnnualKwhByYear;
+  /**
+   * Audit rounds this project belongs to ('Audit 1' | 'Audit 2' | 'Audit 3').
+   * Determines the earliest claimable generation date. Untagged projects
+   * (all new proposals) start on 1 July 2026.
+   */
+  auditTags?: readonly string[] | null;
 }
 
 export interface PhaseRevenue {

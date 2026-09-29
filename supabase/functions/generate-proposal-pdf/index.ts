@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4"
 import { getMinimumVintageYear } from "../_shared/vintageConfig.ts"
+import { getProposalAuditTags, getEligibleStartDate, eligibleFractionOfYear, formatEligibleStart } from "../_shared/auditPeriods.ts"
 
 // Create Supabase admin client with service role key
 const supabaseUrl = Deno.env.get("SUPABASE_URL") || "https://uyjryuopuqgmsvayiccl.supabase.co"
@@ -305,28 +306,24 @@ async function generatePdfContent(proposal: ProposalData): Promise<Uint8Array> {
         annualKwhByYear: _projectInfo.annualKwhByYear || {},
       }];
 
+  // Audit eligibility: generation only counts from the start of the audit round
+  // the project belongs to. Untagged projects (every new proposal) start 1 July 2026.
+  const auditTags = await getProposalAuditTags(supabaseAdmin, anyProposal.id);
+
   const phaseKwhForYear = (phase: NormalisedPhase, year: number): number => {
+    const eligibleStart = getEligibleStartDate(phase.commissionDate, auditTags);
+    const fraction = eligibleFractionOfYear(year, eligibleStart);
+    if (fraction <= 0) return 0;
+
     if (_generationMode === 'kwh') {
-      return Number(phase.annualKwhByYear?.[String(year)]) || 0;
+      return (Number(phase.annualKwhByYear?.[String(year)]) || 0) * fraction;
     }
-    const annual = phase.sizeKWp * PDF_ANNUAL_GEN_FACTOR;
-    const cd = phase.commissionDate ? new Date(phase.commissionDate) : null;
-    if (cd && year < cd.getFullYear()) return 0;
-    if (cd && year === cd.getFullYear()) {
-      const yearStart = new Date(year, 0, 1);
-      const yearEnd = new Date(year, 11, 31);
-      const remainingDays = Math.max(
-        0,
-        Math.floor((yearEnd.getTime() - cd.getTime()) / (1000 * 60 * 60 * 24)) + 1,
-      );
-      const totalDays = Math.floor((yearEnd.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      return annual * (remainingDays / totalDays);
-    }
-    return annual;
+    return phase.sizeKWp * PDF_ANNUAL_GEN_FACTOR * fraction;
   };
 
   const totalKwhForYear = (year: number): number =>
     normalisedPhases.reduce((s, p) => s + phaseKwhForYear(p, year), 0);
+
 
   const phaseTotalKwh = (phase: NormalisedPhase): number =>
     Object.values(phase.annualKwhByYear || {}).reduce(
@@ -1266,47 +1263,20 @@ Do good. Get rewarded. Join Crunch Carbon.`;
   // Calculate revenue table data using real Crunch Carbon constants
   const systemSizeKWp = anyProposal.system_size_kwp || 500;
   const clientSharePercentage = anyProposal.client_share_percentage || 60;
-  
-  // Official Crunch Carbon calculation constants (matching frontend exactly)
-  const ANNUAL_GENERATION_FACTOR = 1642.50; // kWh per kWp per year
-  const EMISSION_FACTOR = 1.0334; // tCO₂e per MWh
-  
-  // Extract commission date for pro-rating
+
+
+
+  // Extract commission date (used for the eligible-period note)
   const commissionDateStr = anyProposal.project_info?.commission_date || 
                             anyProposal.content?.projectInfo?.commissionDate || null;
-  const commissionDate = commissionDateStr ? new Date(commissionDateStr) : null;
-  
+
+  // Earliest claimable generation date for this project.
+  const proposalEligibleStart = getEligibleStartDate(commissionDateStr, auditTags);
+
   // Get minimum vintage year from configuration
   const currentYear = await getMinimumVintageYear(supabaseAdmin);
-  
-  // Calculate yearly energy with pro-rating for commission year (matching frontend logic)
-  const calculateYearlyEnergy = (systemKWp: number, actualYear: number): number => {
-    const annualEnergy = systemKWp * ANNUAL_GENERATION_FACTOR;
-    
-    // Return 0 for years before commissioning
-    if (commissionDate && actualYear < commissionDate.getFullYear()) {
-      return 0;
-    }
-    
-    // Pro-rate only for the ACTUAL commission year (not artificially moved forward)
-    if (commissionDate && actualYear === commissionDate.getFullYear()) {
-      const yearStart = new Date(actualYear, 0, 1);
-      const yearEnd = new Date(actualYear, 11, 31);
-      const remainingDays = Math.max(0, Math.floor((yearEnd.getTime() - commissionDate.getTime()) / (1000 * 60 * 60 * 24)) + 1);
-      const totalDaysInYear = Math.floor((yearEnd.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      return annualEnergy * (remainingDays / totalDaysInYear);
-    }
-    
-    // Full year for years after commission year
-    return annualEnergy;
-  };
-  
-  // Calculate yearly carbon credits
-  const calculateYearlyCarbonCredits = (yearlyEnergyKWh: number): number => {
-    return (yearlyEnergyKWh / 1000) * EMISSION_FACTOR;
-  };
 
-  // Build table data for 7 years using real calculations
+  // Build table data using real calculations
   interface RevenueRow {
     year: number;
     mwhGenerated: number;
@@ -1320,11 +1290,14 @@ Do good. Get rewarded. Join Crunch Carbon.`;
   let totalTCO2 = 0;
   let totalRevenue = 0;
   
-  // Build table using available carbon price years (filtered to current/future only)
+  // Build table using available carbon price years, from the first eligible year
+  // (an Audit 1 / Audit 2 project keeps its historical years).
+  const firstYear = Math.min(currentYear, proposalEligibleStart.getFullYear());
   const availableYears = Object.keys(carbonPrices)
     .map(y => parseInt(y))
-    .filter(y => y >= currentYear)
+    .filter(y => y >= firstYear)
     .sort((a, b) => a - b);
+
 
   for (const actualYear of availableYears) {
     // Use real calculation functions
@@ -1605,8 +1578,19 @@ Do good. Get rewarded. Join Crunch Carbon.`;
     color: crunchCharcoal 
   });
 
-  // Disclaimer text below table
+  // Eligible generation period note
   y = currentRowY - mm(8);
+  const auditNoteText = auditTags.length > 0
+    ? `Eligible generation for this project runs from ${formatEligibleStart(proposalEligibleStart)} (${auditTags.join(' \u00B7 ')}).`
+    : `Eligible generation for this project starts ${formatEligibleStart(proposalEligibleStart)}. Generation before this date falls outside the audit rounds this project is registered for.`;
+  const auditNoteLines = wrapText(auditNoteText, page4.getSize().width - p4x * 2, 9, bold);
+  for (const line of auditNoteLines) {
+    page4.drawText(line, { x: p4x, y, size: 9, font: bold, color: crunchCharcoal });
+    y -= mm(4);
+  }
+
+  // Disclaimer text below table
+  y -= mm(3);
   const disclaimerText = '*Note that the above numbers are assumptions & indicative. The Client Price shown is the market carbon price multiplied by your client share percentage. Final costs will be based on data as provided from the various systems as installed and validated via our auditing partners. While we aim to maintain the carbon pricing rates as per the schedule we cannot be held liable for any changes due to regulatory shifts, or legal requirements beyond our control which may necessitate adjustments. This document is strictly confidential and intended solely for the recipient. The validity of the information contained herein expires seven (7) working days from the date of submission. Unauthorised sharing, distribution, or reproduction of this document constitutes a breach of confidentiality and may render the document null and void.';
   const disclaimerLines = wrapText(disclaimerText, page4.getSize().width - p4x * 2, 8, font);
   for (const line of disclaimerLines) {

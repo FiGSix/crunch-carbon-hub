@@ -26,6 +26,7 @@ interface CarbonCreditTableWrapperProps {
   preCalculatedYearlyCredits?: Record<string, number>;
   preCalculatedYearlyRevenue?: Record<string, number>;
   isKwhMode?: boolean;
+  auditTags?: readonly string[] | null;
 }
 
 export function CarbonCreditTableWrapper({
@@ -42,7 +43,8 @@ export function CarbonCreditTableWrapper({
   preCalculatedYearlyMWh,
   preCalculatedYearlyCredits,
   preCalculatedYearlyRevenue,
-  isKwhMode
+  isKwhMode,
+  auditTags
 }: CarbonCreditTableWrapperProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -74,7 +76,9 @@ export function CarbonCreditTableWrapper({
       const yearlyEnergy = calculateYearlyEnergy(
         phase.sizeKWp,
         parseInt(year),
-        phase.commissionDate
+        phase.commissionDate,
+        undefined,
+        auditTags
       );
       return sum + (yearlyEnergy / 1000); // Convert to MWh
     }, 0);
@@ -87,7 +91,9 @@ export function CarbonCreditTableWrapper({
       const yearlyCredits = calculateYearlyCarbonCredits(
         phase.sizeKWp,
         parseInt(year),
-        phase.commissionDate
+        phase.commissionDate,
+        undefined,
+        auditTags
       );
       return sum + yearlyCredits;
     }, 0);
@@ -176,8 +182,8 @@ export function CarbonCreditTableWrapper({
           totalMWhGenerated={totalMWhGenerated}
           totalCarbonCredits={totalCarbonCredits}
           totalClientSpecificRevenue={totalClientSpecificRevenue}
-          preCalculatedYearlyMWh={preCalculatedYearlyMWh ?? aggregateYearlyMWhFromPhases(phases, Object.keys(consolidatedRevenue))}
-          preCalculatedYearlyCredits={preCalculatedYearlyCredits ?? aggregateYearlyCarbonCreditsFromPhases(phases, Object.keys(consolidatedRevenue))}
+          preCalculatedYearlyMWh={preCalculatedYearlyMWh ?? aggregateYearlyMWhFromPhases(phases, Object.keys(consolidatedRevenue), auditTags)}
+          preCalculatedYearlyCredits={preCalculatedYearlyCredits ?? aggregateYearlyCarbonCreditsFromPhases(phases, Object.keys(consolidatedRevenue), auditTags)}
           preCalculatedYearlyRevenue={preCalculatedYearlyRevenue}
           isPhaseTable={false}
           clientShareOverride={clientShareOverride}

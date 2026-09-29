@@ -78,7 +78,8 @@ export async function calculateComplete(
   const revenueByYear = await calculateRevenueByYear(
     carbonCreditsPerYear,
     clientSharePercentage,
-    specs.commissionDate
+    specs.commissionDate,
+    specs.auditTags
   );
 
   const currentYear = new Date().getFullYear().toString();
@@ -150,7 +151,8 @@ async function calculateMultiPhaseComplete(
       phaseCarbonCredits,
       clientSharePercentage,
       carbonPrices,
-      phase.commissionDate
+      phase.commissionDate,
+      specs.auditTags
     );
 
     // Aggregate revenue by year as we go
@@ -232,7 +234,8 @@ async function calculateFromAnnualKwh(
         phaseKwh,
         DEFAULT_CARBON_FACTOR,
         clientSharePercentage,
-        carbonPrices
+        carbonPrices,
+        specs.auditTags
       );
       aggregatedRevenueByYear = sumByYear(aggregatedRevenueByYear, revenueByYear);
       const phaseKwhValues = Object.values(phaseKwh).map((v) => Number(v) || 0);
@@ -254,7 +257,8 @@ async function calculateFromAnnualKwh(
       aggregatedKwhByYear,
       DEFAULT_CARBON_FACTOR,
       clientSharePercentage,
-      carbonPrices
+      carbonPrices,
+      specs.auditTags
     );
     aggregatedRevenueByYear = revenueByYear;
   }

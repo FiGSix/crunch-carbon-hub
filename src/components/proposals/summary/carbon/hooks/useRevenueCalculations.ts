@@ -5,6 +5,7 @@ import { PortfolioData } from '@/services/proposals/portfolioService';
 import { dataCache } from '@/lib/cache/UnifiedCache';
 import { devLogger } from '@/lib/performance/ConsoleReplacementUtility';
 import { ProjectPhase, AnnualKwhByYear } from '@/types/proposals';
+import { useProposalAuditTags } from '@/hooks/audit/useProposalAuditTags';
 
 interface UseRevenueCalculationsProps {
   systemSize: string;
@@ -30,6 +31,8 @@ export function useRevenueCalculations({
 }: UseRevenueCalculationsProps) {
   const [clientSpecificRevenue, setClientSpecificRevenue] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const auditTags = useProposalAuditTags(proposalId);
+  const auditKey = auditTags.join(',');
 
   const systemSizeKWp = useMemo(() =>
     UnifiedCarbonService.normalizeToKWp(systemSize),
@@ -47,8 +50,8 @@ export function useRevenueCalculations({
   const cacheKey = useMemo(() => {
     const portfolioSize = portfolioData?.totalKWp || systemSizeKWp;
     const phaseKey = phases ? phases.map(p => `${p.sizeKWp}-${p.commissionDate}`).join('_') : 'no-phases';
-    return `revenue_${systemSizeKWp}_${commissionDate || 'no-date'}_${portfolioSize}_${proposalId || 'no-id'}_${isMultiPhase ? 'multi' : 'single'}_${phaseKey}_${clientShareOverride || 'no-override'}_${kwhSignature || 'kwp'}`;
-  }, [systemSizeKWp, commissionDate, portfolioData?.totalKWp, proposalId, phases, isMultiPhase, clientShareOverride, kwhSignature]);
+    return `revenue_${systemSizeKWp}_${commissionDate || 'no-date'}_${portfolioSize}_${proposalId || 'no-id'}_${isMultiPhase ? 'multi' : 'single'}_${phaseKey}_${clientShareOverride || 'no-override'}_${kwhSignature || 'kwp'}_${auditKey || 'no-audit'}`;
+  }, [systemSizeKWp, commissionDate, portfolioData?.totalKWp, proposalId, phases, isMultiPhase, clientShareOverride, kwhSignature, auditKey]);
 
   const [calculationResult, setCalculationResult] = useState<any>(null);
 
@@ -69,8 +72,8 @@ export function useRevenueCalculations({
 
         const overrideValue = clientShareOverride != null ? clientShareOverride : undefined;
         const specs = phases && phases.length > 0
-          ? { sizeKwp: systemSizeKWp, phases, clientShareOverride: overrideValue }
-          : { sizeKwp: systemSizeKWp, commissionDate, clientShareOverride: overrideValue, annualKwhByYear };
+          ? { sizeKwp: systemSizeKWp, phases, clientShareOverride: overrideValue, auditTags }
+          : { sizeKwp: systemSizeKWp, commissionDate, clientShareOverride: overrideValue, annualKwhByYear, auditTags };
 
         const result = await UnifiedCarbonService.calculateComplete(specs, portfolioSize);
 
@@ -88,12 +91,13 @@ export function useRevenueCalculations({
     };
 
     calculateRevenues();
-  }, [cacheKey, systemSizeKWp, commissionDate, portfolioData]);
+  }, [cacheKey, systemSizeKWp, commissionDate, portfolioData, auditKey]);
 
   return {
     calculationResult,
     clientSpecificRevenue,
     loading,
-    systemSizeKWp
+    systemSizeKWp,
+    auditTags
   };
 }

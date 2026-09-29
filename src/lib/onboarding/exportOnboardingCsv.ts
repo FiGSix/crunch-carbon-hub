@@ -401,7 +401,13 @@ async function buildRevenueLookup(rows: AnyRecord[]) {
     const commissionDate =
       p.content?.projectInfo?.commissionDate || f(r)?.commissioning_date || undefined;
 
-    const client = calculateRevenueByYearSync(credits, clientPct, prices, commissionDate);
+    const client = calculateRevenueByYearSync(
+      credits,
+      clientPct,
+      prices,
+      commissionDate,
+      (r.audit_tags as string[] | null) ?? null
+    );
     const agent: Record<string, number> = {};
     const platform: Record<string, number> = {};
     const total: Record<string, number> = {};
