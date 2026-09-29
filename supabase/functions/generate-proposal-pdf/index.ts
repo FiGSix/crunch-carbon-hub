@@ -305,28 +305,24 @@ async function generatePdfContent(proposal: ProposalData): Promise<Uint8Array> {
         annualKwhByYear: _projectInfo.annualKwhByYear || {},
       }];
 
+  // Audit eligibility: generation only counts from the start of the audit round
+  // the project belongs to. Untagged projects (every new proposal) start 1 July 2026.
+  const auditTags = await getProposalAuditTags(supabaseAdmin, anyProposal.id);
+
   const phaseKwhForYear = (phase: NormalisedPhase, year: number): number => {
+    const eligibleStart = getEligibleStartDate(phase.commissionDate, auditTags);
+    const fraction = eligibleFractionOfYear(year, eligibleStart);
+    if (fraction <= 0) return 0;
+
     if (_generationMode === 'kwh') {
-      return Number(phase.annualKwhByYear?.[String(year)]) || 0;
+      return (Number(phase.annualKwhByYear?.[String(year)]) || 0) * fraction;
     }
-    const annual = phase.sizeKWp * PDF_ANNUAL_GEN_FACTOR;
-    const cd = phase.commissionDate ? new Date(phase.commissionDate) : null;
-    if (cd && year < cd.getFullYear()) return 0;
-    if (cd && year === cd.getFullYear()) {
-      const yearStart = new Date(year, 0, 1);
-      const yearEnd = new Date(year, 11, 31);
-      const remainingDays = Math.max(
-        0,
-        Math.floor((yearEnd.getTime() - cd.getTime()) / (1000 * 60 * 60 * 24)) + 1,
-      );
-      const totalDays = Math.floor((yearEnd.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      return annual * (remainingDays / totalDays);
-    }
-    return annual;
+    return phase.sizeKWp * PDF_ANNUAL_GEN_FACTOR * fraction;
   };
 
   const totalKwhForYear = (year: number): number =>
     normalisedPhases.reduce((s, p) => s + phaseKwhForYear(p, year), 0);
+
 
   const phaseTotalKwh = (phase: NormalisedPhase): number =>
     Object.values(phase.annualKwhByYear || {}).reduce(
