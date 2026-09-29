@@ -1266,44 +1266,18 @@ Do good. Get rewarded. Join Crunch Carbon.`;
   
   // Official Crunch Carbon calculation constants (matching frontend exactly)
   const ANNUAL_GENERATION_FACTOR = 1642.50; // kWh per kWp per year
-  const EMISSION_FACTOR = 1.0334; // tCO₂e per MWh
-  
-  // Extract commission date for pro-rating
+
+  // Extract commission date (used for the eligible-period note)
   const commissionDateStr = anyProposal.project_info?.commission_date || 
                             anyProposal.content?.projectInfo?.commissionDate || null;
-  const commissionDate = commissionDateStr ? new Date(commissionDateStr) : null;
-  
+
+  // Earliest claimable generation date for this project.
+  const proposalEligibleStart = getEligibleStartDate(commissionDateStr, auditTags);
+
   // Get minimum vintage year from configuration
   const currentYear = await getMinimumVintageYear(supabaseAdmin);
-  
-  // Calculate yearly energy with pro-rating for commission year (matching frontend logic)
-  const calculateYearlyEnergy = (systemKWp: number, actualYear: number): number => {
-    const annualEnergy = systemKWp * ANNUAL_GENERATION_FACTOR;
-    
-    // Return 0 for years before commissioning
-    if (commissionDate && actualYear < commissionDate.getFullYear()) {
-      return 0;
-    }
-    
-    // Pro-rate only for the ACTUAL commission year (not artificially moved forward)
-    if (commissionDate && actualYear === commissionDate.getFullYear()) {
-      const yearStart = new Date(actualYear, 0, 1);
-      const yearEnd = new Date(actualYear, 11, 31);
-      const remainingDays = Math.max(0, Math.floor((yearEnd.getTime() - commissionDate.getTime()) / (1000 * 60 * 60 * 24)) + 1);
-      const totalDaysInYear = Math.floor((yearEnd.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-      return annualEnergy * (remainingDays / totalDaysInYear);
-    }
-    
-    // Full year for years after commission year
-    return annualEnergy;
-  };
-  
-  // Calculate yearly carbon credits
-  const calculateYearlyCarbonCredits = (yearlyEnergyKWh: number): number => {
-    return (yearlyEnergyKWh / 1000) * EMISSION_FACTOR;
-  };
 
-  // Build table data for 7 years using real calculations
+  // Build table data using real calculations
   interface RevenueRow {
     year: number;
     mwhGenerated: number;
@@ -1317,11 +1291,14 @@ Do good. Get rewarded. Join Crunch Carbon.`;
   let totalTCO2 = 0;
   let totalRevenue = 0;
   
-  // Build table using available carbon price years (filtered to current/future only)
+  // Build table using available carbon price years, from the first eligible year
+  // (an Audit 1 / Audit 2 project keeps its historical years).
+  const firstYear = Math.min(currentYear, proposalEligibleStart.getFullYear());
   const availableYears = Object.keys(carbonPrices)
     .map(y => parseInt(y))
-    .filter(y => y >= currentYear)
+    .filter(y => y >= firstYear)
     .sort((a, b) => a - b);
+
 
   for (const actualYear of availableYears) {
     // Use real calculation functions
