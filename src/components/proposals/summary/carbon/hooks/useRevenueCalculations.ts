@@ -31,6 +31,8 @@ export function useRevenueCalculations({
 }: UseRevenueCalculationsProps) {
   const [clientSpecificRevenue, setClientSpecificRevenue] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const auditTags = useProposalAuditTags(proposalId);
+  const auditKey = auditTags.join(',');
 
   const systemSizeKWp = useMemo(() =>
     UnifiedCarbonService.normalizeToKWp(systemSize),
