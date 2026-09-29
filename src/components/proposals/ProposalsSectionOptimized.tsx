@@ -10,6 +10,7 @@ import { EngagementDashboard } from "@/components/proposals/engagement/Engagemen
 import { AdvancedProposalFilters, applyAdvancedFilters } from "@/components/proposals/filters/AdvancedProposalFilters";
 import { BulkSelectionBar } from "@/components/proposals/bulk/BulkSelectionBar";
 import { ConfirmMoveToOnboardingDialog } from "@/components/proposals/bulk/ConfirmMoveToOnboardingDialog";
+import { SendPortfolioInvitationDialog } from "@/components/proposals/bulk/SendPortfolioInvitationDialog";
 import { ExportProposalsButton } from "@/components/proposals/ExportProposalsButton";
 
 import { useProposals } from "@/hooks/useProposals";
@@ -44,6 +45,9 @@ export function ProposalsSectionOptimized() {
   const isAdmin = userRole === 'admin';
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [showPortfolioDialog, setShowPortfolioDialog] = useState(false);
+  // Partners select their own proposals to send as one portfolio.
+  const canSelect = isAdmin || userRole === 'agent' || userRole === 'super_partner';
 
   // Drop selections that are no longer visible after filtering/refresh
   useEffect(() => {
@@ -212,17 +216,18 @@ export function ProposalsSectionOptimized() {
           
           {!loading && filteredProposals.length > 0 && (
             <>
-              {isAdmin && (
+              {canSelect && (
                 <BulkSelectionBar
                   selectedCount={selectedIds.size}
-                  onMove={() => setShowMoveDialog(true)}
+                  onMove={isAdmin ? () => setShowMoveDialog(true) : undefined}
+                  onSendPortfolio={() => setShowPortfolioDialog(true)}
                   onClear={() => setSelectedIds(new Set())}
                 />
               )}
               <ProposalList 
                 proposals={filteredProposals} 
                 onProposalUpdate={handleProposalUpdate}
-                selectable={isAdmin}
+                selectable={canSelect}
                 selectedIds={selectedIds}
                 onToggleSelect={handleToggleSelect}
                 onToggleSelectAll={handleToggleSelectAll}
@@ -239,6 +244,18 @@ export function ProposalsSectionOptimized() {
           )}
         </CardContent>
       </Card>
+
+      {canSelect && (
+        <SendPortfolioInvitationDialog
+          open={showPortfolioDialog}
+          onOpenChange={setShowPortfolioDialog}
+          proposals={selectedProposals}
+          onSuccess={() => {
+            setSelectedIds(new Set());
+            handleProposalUpdate();
+          }}
+        />
+      )}
 
       {isAdmin && (
         <ConfirmMoveToOnboardingDialog
