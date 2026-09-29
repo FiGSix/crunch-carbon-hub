@@ -138,7 +138,7 @@ serve(async (req) => {
     const bad = rows.filter((r) => r.signed_at || r.deleted_at || r.archived_at || !SIGNABLE.includes(r.status));
     if (bad.length) return json({ error: `${bad.length} selected proposal(s) are already signed, archived or not sendable` }, 400);
 
-    const { data: client } = await admin.from("clients").select("name, email, company_name").eq("id", rows[0].client_reference_id).maybeSingle();
+    const { data: client } = await admin.from("clients").select("first_name, last_name, email, company_name").eq("id", rows[0].client_reference_id).maybeSingle();
     const firstInfo = (rows[0].content as any)?.clientInfo || {};
     const to = String(client?.email || firstInfo.email || "").trim().toLowerCase();
     if (!to) return json({ error: "The client has no email address" }, 400);
@@ -176,8 +176,8 @@ serve(async (req) => {
         income: typeof total === "number" && years > 0 ? total / years : 0,
       };
     });
-    const name = String(client?.name || firstInfo.name || "there").split(" ")[0];
-    const company = client?.company_name || firstInfo.companyName || client?.name || "your company";
+    const name = String(client?.first_name || firstInfo.name || "there").split(" ")[0];
+    const company = client?.company_name || firstInfo.companyName || [client?.first_name, client?.last_name].filter(Boolean).join(" ") || "your company";
     const email = renderPortfolioEmail({
       name, company, sites,
       link: `${site}/proposals/${lead.id}/accept?token=${lead.invitation_token}&portfolio=${rows.length}`,
