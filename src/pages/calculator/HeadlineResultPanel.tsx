@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Zap, Leaf, Flame, TreePine, Info, Pencil, Sparkles, Sun, Circle, Star } from "lucide-react";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
+import { getEligibleStartDate, formatEligibleStart } from "@/services/calculations/carbon/auditPeriods";
 
 interface HeadlineResultPanelProps {
   estimate: {
