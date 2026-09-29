@@ -220,11 +220,16 @@ export function CarbonCreditSection({ systemSize, commissionDate, selectedClient
         preCalculatedYearlyCredits={preCalculatedYearlyCredits}
         preCalculatedYearlyRevenue={preCalculatedYearlyRevenue}
         isKwhMode={isKwhMode}
+        auditTags={auditTags}
       />
       
+      <p className="text-xs text-carbon-gray-500 mt-2">
+        * Eligible generation starts {formatEligibleStart(getEligibleStartDate(commissionDate, auditTags))}
+        {auditTags.length > 0 ? ` (${auditTags.join(' · ')})` : ' (not in Audit 1 or Audit 2)'}
+      </p>
       {commissionDate && !isKwhMode && (
         <p className="text-xs text-carbon-gray-500 mt-2">
-          * Values for commissioning year are pro-rated based on the commission date
+          * Values for the first eligible year are pro-rated from that date
         </p>
       )}
       {isKwhMode && (
