@@ -79,7 +79,7 @@ serve(async (req) => {
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const bearer = auth.replace("Bearer ", "");
     // System callers (service role) are trusted for the sample preview.
-    if (bearer !== Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
+    if (bearer !== Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") && bearer !== (Deno.env.get("SWEEP_CRON_SECRET") ?? "__none__")) {
       const { data: { user } } = await admin.auth.getUser(bearer);
       if (!user) return json({ error: "Invalid token" }, 401);
       const { data: role } = await admin.rpc("get_primary_role", { _user_id: user.id });
