@@ -1,5 +1,6 @@
 import { dynamicCarbonPricingService } from '@/lib/calculations/carbon/dynamicPricing';
 import { AGENT_COMMISSION_LOW, AGENT_COMMISSION_HIGH } from './constants';
+import { getEligibleStartDate, getAuditPeriodStart, eligibleFractionOfYear } from './auditPeriods';
 
 /**
  * Get client share percentage based on portfolio size
