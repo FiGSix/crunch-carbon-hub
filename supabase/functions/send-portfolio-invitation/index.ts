@@ -71,6 +71,13 @@ function renderPortfolioEmail(p: { name: string; company: string; sites: { name:
   };
 }
 
+const LiveBody = z.object({
+  proposalIds: z.array(z.string().uuid()).min(2).max(500),
+  ccEmails: z.array(z.string().trim().email().max(255)).max(10).optional(),
+});
+
+const SIGNABLE = ["draft", "sent", "delivered", "opened", "viewed", "stale"];
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
@@ -78,36 +85,132 @@ serve(async (req) => {
     if (!auth) return json({ error: "No authorization header" }, 401);
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const bearer = auth.replace("Bearer ", "");
-    // System callers (service role) are trusted for the sample preview.
-    if (bearer !== Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") && bearer !== (Deno.env.get("SWEEP_CRON_SECRET") ?? "__none__")) {
+    const isSystem = bearer === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    let userId: string | null = null;
+    let role: string | null = isSystem ? "admin" : null;
+    if (!isSystem) {
       const { data: { user } } = await admin.auth.getUser(bearer);
       if (!user) return json({ error: "Invalid token" }, 401);
-      const { data: role } = await admin.rpc("get_primary_role", { _user_id: user.id });
-      if (role !== "admin") return json({ error: "Admin access required" }, 403);
+      userId = user.id;
+      const { data: r } = await admin.rpc("get_primary_role", { _user_id: user.id });
+      role = r as string;
     }
 
-    const parsed = Body.safeParse(await req.json());
-    if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
-
+    const raw = await req.json();
     const key = Deno.env.get("RESEND_API_KEY");
     if (!key) return json({ error: "RESEND_API_KEY not configured" }, 500);
-    const site = "https://crunchcarbon.com";
-    const email = renderPortfolioEmail({
-      name: "Shaun",
-      company: "Sample Property Group (Pty) Ltd",
-      sites: SAMPLE_SITES.map(([name, address, kwp]) => ({ name, address, kwp, income: kwp * SAMPLE_RATE })),
-      link: `${site}/portfolio/demo`,
-      declineLink: `${site}/portfolio/demo`,
-      test: true,
+    const resend = new Resend(key);
+    const site = Deno.env.get("SITE_URL") || "https://crunchcarbon.com";
+
+    // ---- Sample preview (admin only) ----
+    if (raw?.sample === true) {
+      if (role !== "admin") return json({ error: "Admin access required" }, 403);
+      const parsed = Body.safeParse(raw);
+      if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
+      const email = renderPortfolioEmail({
+        name: "Shaun",
+        company: "Sample Property Group (Pty) Ltd",
+        sites: SAMPLE_SITES.map(([name, address, kwp]) => ({ name, address, kwp, income: kwp * SAMPLE_RATE })),
+        link: `${site}/portfolio/demo`,
+        declineLink: `${site}/portfolio/demo`,
+        test: true,
+      });
+      const res = await resend.emails.send({ from: "Crunch Carbon <proposals@crunchcarbon.com>", to: [parsed.data.to], subject: email.subject, html: email.html });
+      if (res.error) return json({ error: "Email provider rejected the send", details: res.error }, 502);
+      return json({ success: true, messageId: res.data?.id });
+    }
+
+    // ---- Live portfolio send (admin, or partner who owns every proposal) ----
+    if (role !== "admin" && role !== "agent" && role !== "super_partner") return json({ error: "Not allowed" }, 403);
+    const parsed = LiveBody.safeParse(raw);
+    if (!parsed.success) return json({ error: parsed.error.flatten().fieldErrors }, 400);
+    const ids = [...new Set(parsed.data.proposalIds)];
+
+    const { data: rows, error } = await admin
+      .from("proposals")
+      .select("id, title, status, signed_at, agent_id, client_reference_id, system_size_kwp, invitation_token, invitation_expires_at, content, deleted_at, archived_at")
+      .in("id", ids);
+    if (error) throw error;
+    if (!rows || rows.length !== ids.length) return json({ error: "Some proposals could not be found" }, 404);
+    if (role !== "admin" && rows.some((r) => r.agent_id !== userId)) return json({ error: "You can only send your own proposals" }, 403);
+    const clientIds = new Set(rows.map((r) => r.client_reference_id));
+    if (clientIds.size !== 1 || !rows[0].client_reference_id) return json({ error: "All selected proposals must belong to the same client" }, 400);
+    const bad = rows.filter((r) => r.signed_at || r.deleted_at || r.archived_at || !SIGNABLE.includes(r.status));
+    if (bad.length) return json({ error: `${bad.length} selected proposal(s) are already signed, archived or not sendable` }, 400);
+
+    const { data: client } = await admin.from("clients").select("name, email, company_name").eq("id", rows[0].client_reference_id).maybeSingle();
+    const firstInfo = (rows[0].content as any)?.clientInfo || {};
+    const to = String(client?.email || firstInfo.email || "").trim().toLowerCase();
+    if (!to) return json({ error: "The client has no email address" }, 400);
+    const { data: suppressed } = await admin.rpc("is_client_email_suppressed", { p_email: to });
+    if (suppressed) return json({ error: "The client's email address is on the blocked list (it bounced before)" }, 400);
+    const cc: string[] = [];
+    for (const e of parsed.data.ccEmails ?? []) {
+      const l = e.toLowerCase();
+      if (l === to || cc.includes(l)) continue;
+      const { data: s } = await admin.rpc("is_client_email_suppressed", { p_email: l });
+      if (!s) cc.push(l);
+    }
+
+    // Every proposal gets a valid signing link; signing any one covers all (propagate_master_agreement).
+    const expires = new Date(Date.now() + 60 * 86400000).toISOString();
+    for (const r of rows) {
+      const valid = r.invitation_token && r.invitation_expires_at && new Date(r.invitation_expires_at) > new Date();
+      if (!valid) {
+        r.invitation_token = crypto.randomUUID();
+        const { error: e } = await admin.from("proposals").update({ invitation_token: r.invitation_token, invitation_expires_at: expires }).eq("id", r.id);
+        if (e) throw e;
+      }
+    }
+    const sorted = [...rows].sort((a, b) => (b.system_size_kwp ?? 0) - (a.system_size_kwp ?? 0));
+    const lead = sorted[0];
+    const sites = sorted.map((r) => {
+      const c: any = r.content || {};
+      const byYear: Record<string, number> = c.clientSpecificRevenue || {};
+      const years = Object.values(byYear).filter((v) => typeof v === "number" && v > 0).length;
+      const total = c?.financials?.totalClientRevenue;
+      return {
+        name: c?.projectInfo?.name || r.title || "Site",
+        address: c?.projectInfo?.address || "",
+        kwp: Math.round(r.system_size_kwp ?? 0),
+        income: typeof total === "number" && years > 0 ? total / years : 0,
+      };
     });
-    const res = await new Resend(key).emails.send({
+    const name = String(client?.name || firstInfo.name || "there").split(" ")[0];
+    const company = client?.company_name || firstInfo.companyName || client?.name || "your company";
+    const email = renderPortfolioEmail({
+      name, company, sites,
+      link: `${site}/proposals/${lead.id}/accept?token=${lead.invitation_token}&portfolio=${rows.length}`,
+      declineLink: `${site}/proposals/${lead.id}/decline?token=${lead.invitation_token}`,
+      test: false,
+    });
+
+    let agentEmail: string | undefined;
+    if (lead.agent_id) {
+      const { data: ap } = await admin.from("profiles").select("email").eq("id", lead.agent_id).maybeSingle();
+      agentEmail = ap?.email || undefined;
+    }
+    const res = await resend.emails.send({
       from: "Crunch Carbon <proposals@crunchcarbon.com>",
-      to: [parsed.data.to],
+      to: [to],
+      cc: cc.length ? cc : undefined,
+      bcc: agentEmail && agentEmail !== to ? [agentEmail] : undefined,
       subject: email.subject,
       html: email.html,
     });
     if (res.error) return json({ error: "Email provider rejected the send", details: res.error }, 502);
-    return json({ success: true, messageId: res.data?.id });
+
+    const now = new Date().toISOString();
+    await admin.from("proposals").update({ status: "sent", last_email_event_type: "email.sent", last_email_sent_at: now }).in("id", ids).eq("status", "draft");
+    await admin.from("proposal_automation_log").insert(rows.map((r) => ({
+      proposal_id: r.id,
+      automation_type: "email_sent",
+      email_type: "portfolio_invite",
+      email_message_id: r.id === lead.id ? res.data?.id : null,
+      details: { recipient: to, cc: cc.length ? cc : undefined, portfolio_size: rows.length, lead_proposal_id: lead.id, sent_by: userId },
+    })));
+
+    return json({ success: true, messageId: res.data?.id, recipient: to, sites: rows.length });
   } catch (e) {
     console.error("[send-portfolio-invitation]", e);
     return json({ error: (e as Error).message }, 500);
