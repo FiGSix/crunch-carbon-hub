@@ -234,7 +234,8 @@ async function calculateFromAnnualKwh(
         phaseKwh,
         DEFAULT_CARBON_FACTOR,
         clientSharePercentage,
-        carbonPrices
+        carbonPrices,
+        specs.auditTags
       );
       aggregatedRevenueByYear = sumByYear(aggregatedRevenueByYear, revenueByYear);
       const phaseKwhValues = Object.values(phaseKwh).map((v) => Number(v) || 0);
