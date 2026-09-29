@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { AuditTag } from '@/services/calculations/carbon/auditPeriods';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type { AuditTag } from "@/services/calculations/carbon/auditPeriods";
 
 /**
  * Audit rounds a proposal's onboarding project belongs to.
@@ -10,14 +10,14 @@ import type { AuditTag } from '@/services/calculations/carbon/auditPeriods';
  */
 export function useProposalAuditTags(proposalId?: string | null) {
   const { data } = useQuery({
-    queryKey: ['proposal-audit-tags', proposalId],
+    queryKey: ["proposal-audit-tags", proposalId],
     enabled: !!proposalId,
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<AuditTag[]> => {
       const { data, error } = await supabase
-        .from('project_onboarding')
-        .select('audit_tags')
-        .eq('proposal_id', proposalId!)
+        .from("project_onboarding")
+        .select("audit_tags")
+        .eq("proposal_id", proposalId!)
         .maybeSingle();
 
       if (error) throw error;

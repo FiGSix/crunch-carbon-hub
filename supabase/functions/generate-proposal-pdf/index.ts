@@ -1578,8 +1578,19 @@ Do good. Get rewarded. Join Crunch Carbon.`;
     color: crunchCharcoal 
   });
 
-  // Disclaimer text below table
+  // Eligible generation period note
   y = currentRowY - mm(8);
+  const auditNoteText = auditTags.length > 0
+    ? `Eligible generation for this project runs from ${formatEligibleStart(proposalEligibleStart)} (${auditTags.join(' \u00B7 ')}).`
+    : `Eligible generation for this project starts ${formatEligibleStart(proposalEligibleStart)}. Generation before this date falls outside the audit rounds this project is registered for.`;
+  const auditNoteLines = wrapText(auditNoteText, page4.getSize().width - p4x * 2, 9, bold);
+  for (const line of auditNoteLines) {
+    page4.drawText(line, { x: p4x, y, size: 9, font: bold, color: crunchCharcoal });
+    y -= mm(4);
+  }
+
+  // Disclaimer text below table
+  y -= mm(3);
   const disclaimerText = '*Note that the above numbers are assumptions & indicative. The Client Price shown is the market carbon price multiplied by your client share percentage. Final costs will be based on data as provided from the various systems as installed and validated via our auditing partners. While we aim to maintain the carbon pricing rates as per the schedule we cannot be held liable for any changes due to regulatory shifts, or legal requirements beyond our control which may necessitate adjustments. This document is strictly confidential and intended solely for the recipient. The validity of the information contained herein expires seven (7) working days from the date of submission. Unauthorised sharing, distribution, or reproduction of this document constitutes a breach of confidentiality and may render the document null and void.';
   const disclaimerLines = wrapText(disclaimerText, page4.getSize().width - p4x * 2, 8, font);
   for (const line of disclaimerLines) {
