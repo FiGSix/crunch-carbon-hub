@@ -36,7 +36,8 @@ export function CarbonCreditSection({ systemSize, commissionDate, selectedClient
     calculationResult,
     clientSpecificRevenue, 
     loading: revenueLoading, 
-    systemSizeKWp: formSystemSizeKWp
+    systemSizeKWp: formSystemSizeKWp,
+    auditTags
   } = useRevenueCalculations({
     systemSize,
     commissionDate,
