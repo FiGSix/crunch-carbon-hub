@@ -5,6 +5,7 @@ import { PortfolioData } from '@/services/proposals/portfolioService';
 import { dataCache } from '@/lib/cache/UnifiedCache';
 import { devLogger } from '@/lib/performance/ConsoleReplacementUtility';
 import { ProjectPhase, AnnualKwhByYear } from '@/types/proposals';
+import { useProposalAuditTags } from '@/hooks/audit/useProposalAuditTags';
 
 interface UseRevenueCalculationsProps {
   systemSize: string;
