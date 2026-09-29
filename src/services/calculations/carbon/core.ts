@@ -257,7 +257,8 @@ async function calculateFromAnnualKwh(
       aggregatedKwhByYear,
       DEFAULT_CARBON_FACTOR,
       clientSharePercentage,
-      carbonPrices
+      carbonPrices,
+      specs.auditTags
     );
     aggregatedRevenueByYear = revenueByYear;
   }
