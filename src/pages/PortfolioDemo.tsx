@@ -55,7 +55,7 @@ export default function PortfolioDemo() {
               {Array.from({ length: 12 }).map((_, i) => <p key={i} className="mb-3">Clause {i + 1}. The agreement text appears here exactly as on the normal signing page. Scroll to the end to unlock signing.</p>)}
             </div>
             <Button className="w-full" size="lg" disabled>
-              Sign once for all {SITES.length} projects (disabled in preview)
+              Signing disabled in preview
             </Button>
           </CardContent>
         </Card>
