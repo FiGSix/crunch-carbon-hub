@@ -22,7 +22,7 @@ import {
   parseEdgeFunctionError,
   parseEdgeFunctionErrorResponse,
 } from "@/lib/errors/edgeFunctionErrors";
-import { AlertTriangle, PenLine } from "lucide-react";
+import { AlertTriangle, Layers3, PenLine, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function ProposalAcceptance() {
@@ -30,6 +30,14 @@ export default function ProposalAcceptance() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get("token");
+  const rawPortfolioCount = Number(searchParams.get("portfolio"));
+  const rawPortfolioKwp = Number(searchParams.get("portfolioKwp"));
+  const portfolioCount = Number.isInteger(rawPortfolioCount) && rawPortfolioCount >= 2 && rawPortfolioCount <= 500
+    ? rawPortfolioCount
+    : null;
+  const portfolioKwp = Number.isFinite(rawPortfolioKwp) && rawPortfolioKwp > 0 && rawPortfolioKwp <= 100_000_000
+    ? rawPortfolioKwp
+    : null;
   const { toast } = useToast();
 
   const [proposal, setProposal] = useState<ProposalData | null>(null);
@@ -595,11 +603,40 @@ export default function ProposalAcceptance() {
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const portfolioCapacity = portfolioKwp === null
+    ? null
+    : portfolioKwp >= 1000
+      ? `${(portfolioKwp / 1000).toFixed(1)} MWp`
+      : `${Math.round(portfolioKwp).toLocaleString("en-ZA")} kWp`;
+
   return (
     <>
       {tokenExpired && <ExpiredTokenBanner />}
       <div className="container max-w-4xl mx-auto px-4 py-8 md:py-12 pb-24 md:pb-12">
         <div className="space-y-8">
+          {portfolioCount !== null && portfolioCapacity !== null && (
+            <section className="rounded-lg border border-primary/30 bg-primary/5 p-5 md:p-6" aria-label="Portfolio summary">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-3">
+                  <Layers3 className="h-5 w-5 shrink-0 text-primary" />
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Projects</p>
+                    <p className="text-xl font-bold">{portfolioCount}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Zap className="h-5 w-5 shrink-0 text-primary" />
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Portfolio size</p>
+                    <p className="text-xl font-bold">{portfolioCapacity}</p>
+                  </div>
+                </div>
+              </div>
+              <p className="mt-4 text-sm text-muted-foreground">
+                One signature covers this portfolio. Each project-specific Cession Agreement will include its own proposal details.
+              </p>
+            </section>
+          )}
           <ThirtySecondSummary
             proposal={proposal}
             clientName={getClientName()}
