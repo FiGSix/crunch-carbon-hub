@@ -72,7 +72,7 @@ serve(async (req) => {
     if (!auth) return json({ error: "No authorization header" }, 401);
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const bearer = auth.replace("Bearer ", "");
-    const isSystem = bearer === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || bearer === Deno.env.get("SWEEP_CRON_SECRET");
+    const isSystem = bearer === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     let userId: string | null = null;
     let role: string | null = isSystem ? "admin" : null;
     if (!isSystem) {
