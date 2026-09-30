@@ -48,7 +48,7 @@ export function SendPortfolioInvitationDialog({ open, onOpenChange, proposals, o
       toast({ title: "Portfolio not sent", description: String(msg || "Unknown error"), variant: "destructive" });
       return;
     }
-    toast({ title: "Portfolio invitation sent", description: `One email to ${(data as any).recipient} covering ${proposals.length} sites.` });
+    toast({ title: "Portfolio invitation sent", description: `One email to ${(data as any).recipient} covering ${proposals.length} projects.` });
     onSuccess();
     onOpenChange(false);
   };
@@ -59,7 +59,7 @@ export function SendPortfolioInvitationDialog({ open, onOpenChange, proposals, o
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Mail className="h-5 w-5 text-primary" />Send portfolio invitation</DialogTitle>
           <DialogDescription>
-            The client gets one email listing every site and signs one Cession Agreement that covers them all.
+            The client gets one email with the project count and total portfolio size, then signs once for the full portfolio.
           </DialogDescription>
         </DialogHeader>
         {blocker ? (
@@ -69,7 +69,7 @@ export function SendPortfolioInvitationDialog({ open, onOpenChange, proposals, o
         ) : (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3 text-center">
-              <div className="rounded-md border p-3"><div className="text-xs text-muted-foreground">Sites</div><div className="text-xl font-bold">{proposals.length}</div></div>
+              <div className="rounded-md border p-3"><div className="text-xs text-muted-foreground">Projects</div><div className="text-xl font-bold">{proposals.length}</div></div>
               <div className="rounded-md border p-3"><div className="text-xs text-muted-foreground">Total size</div><div className="text-xl font-bold">{Math.round(totalKwp).toLocaleString("en-ZA")} kWp</div></div>
             </div>
             <ScrollArea className="max-h-56 rounded-md border">
