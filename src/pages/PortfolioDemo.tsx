@@ -28,7 +28,7 @@ export default function PortfolioDemo() {
   return (
     <main className="min-h-screen bg-background">
       <div className="bg-accent text-accent-foreground text-center text-sm py-2 px-4">
-        <strong>Design preview – sample data.</strong> Sites and figures are made up; signing is disabled.
+        <strong>Design preview – sample data.</strong> The project count and portfolio size are made up; signing is disabled.
       </div>
       <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         <header className="space-y-2">
