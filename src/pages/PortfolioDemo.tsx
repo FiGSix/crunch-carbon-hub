@@ -4,25 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { FileSignature, Layers3, Zap } from "lucide-react";
 
 /** Read-only design preview of the portfolio signing page. Sample data only — nothing is saved. */
-const SITES: [string, string, number][] = [
-  ["Northgate Mall", "Johannesburg, Gauteng", 8000],
-  ["Riverside Mall Phase 2", "Vanderbijlpark, Gauteng", 3500],
-  ["Eastern Cape Plaza", "Mthatha, Eastern Cape", 2200],
-  ["Springfield Centre", "Springs, Gauteng", 1800],
-  ["Harbour Walk", "Gqeberha, Eastern Cape", 1600],
-  ["Limpopo Crossing", "Thohoyandou, Limpopo", 1400],
-  ["Highveld Mall Phase 2", "Middelburg, Mpumalanga", 1300],
-  ["Limpopo Crossing Phase 2", "Thohoyandou, Limpopo", 1300],
-  ["Limpopo Retail Park", "Thohoyandou, Limpopo", 1152],
-  ["Border Mall Phase 2", "Musina, Limpopo", 835],
-  ["The Village Square", "Pretoria, Gauteng", 318],
-  ["Parkside Centre", "Durban, KwaZulu-Natal", 300],
-];
+const SAMPLE_PROJECT_COUNT = 12;
+const SAMPLE_TOTAL_KWP = 23_705;
+
 export default function PortfolioDemo() {
-  const totalKwp = SITES.reduce((s, x) => s + x[2], 0);
   const tiles = [
-    { icon: Layers3, label: "Projects", value: String(SITES.length) },
-    { icon: Zap, label: "Portfolio size", value: `${(totalKwp / 1000).toFixed(1)} MWp` },
+    { icon: Layers3, label: "Projects", value: String(SAMPLE_PROJECT_COUNT) },
+    { icon: Zap, label: "Portfolio size", value: `${(SAMPLE_TOTAL_KWP / 1000).toFixed(1)} MWp` },
   ];
 
   return (
@@ -51,7 +39,7 @@ export default function PortfolioDemo() {
           <CardHeader><CardTitle className="flex items-center gap-2"><FileSignature className="h-5 w-5" />Cession Agreement</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="h-48 overflow-y-auto rounded-md border border-border p-4 text-sm text-muted-foreground">
-              <p className="mb-3">This signature covers all {SITES.length} projects in the {`${(totalKwp / 1000).toFixed(1)} MWp`} portfolio. Each project-specific Cession Agreement will include its own proposal details. (Sample text for layout review.)</p>
+              <p className="mb-3">This signature covers all {SAMPLE_PROJECT_COUNT} projects in the {`${(SAMPLE_TOTAL_KWP / 1000).toFixed(1)} MWp`} portfolio. Each project-specific Cession Agreement will include its own proposal details. (Sample text for layout review.)</p>
               {Array.from({ length: 12 }).map((_, i) => <p key={i} className="mb-3">Clause {i + 1}. The agreement text appears here exactly as on the normal signing page. Scroll to the end to unlock signing.</p>)}
             </div>
             <Button className="w-full" size="lg" disabled>

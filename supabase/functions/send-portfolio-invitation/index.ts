@@ -13,20 +13,8 @@ const corsHeaders = {
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-export const SAMPLE_SITES = [
-  ["Northgate Mall", "Johannesburg, Gauteng", 8000],
-  ["Riverside Mall Phase 2", "Vanderbijlpark, Gauteng", 3500],
-  ["Eastern Cape Plaza", "Mthatha, Eastern Cape", 2200],
-  ["Springfield Centre", "Springs, Gauteng", 1800],
-  ["Harbour Walk", "Gqeberha, Eastern Cape", 1600],
-  ["Limpopo Crossing", "Thohoyandou, Limpopo", 1400],
-  ["Highveld Mall Phase 2", "Middelburg, Mpumalanga", 1300],
-  ["Limpopo Crossing Phase 2", "Thohoyandou, Limpopo", 1300],
-  ["Limpopo Retail Park", "Thohoyandou, Limpopo", 1152],
-  ["Border Mall Phase 2", "Musina, Limpopo", 835],
-  ["The Village Square", "Pretoria, Gauteng", 318],
-  ["Parkside Centre", "Durban, KwaZulu-Natal", 300],
-] as const;
+const SAMPLE_PROJECT_COUNT = 12;
+const SAMPLE_TOTAL_KWP = 23_705;
 const Body = z.object({ sample: z.literal(true), to: z.string().email().max(255) });
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] ?? c));
@@ -97,8 +85,8 @@ serve(async (req) => {
       const email = renderPortfolioEmail({
         name: "Shaun",
         company: "Sample Property Group (Pty) Ltd",
-        projectCount: SAMPLE_SITES.length,
-        totalKwp: SAMPLE_SITES.reduce((sum, site) => sum + site[2], 0),
+        projectCount: SAMPLE_PROJECT_COUNT,
+        totalKwp: SAMPLE_TOTAL_KWP,
         link: `${site}/portfolio/demo`,
         declineLink: `${site}/portfolio/demo`,
         test: true,
