@@ -59,8 +59,8 @@ export function ProjectInfoStep({
     if (name === 'commissionDate' && value) {
       const validation = validateCommissionDate(value);
       if (!validation.isValid) {
-        setDateValidationError(validation.error || 'Invalid date');
-        if (validation.error?.includes('date constraints')) {
+        setDateValidationError(validation.beforeCutoff ? 'Commissioned before 1 July 2026 — not eligible for new onboarding.' : (validation.error || 'Invalid date'));
+        if (validation.beforeCutoff) {
           setShowDateRejectionDialog(true);
         }
       } else {

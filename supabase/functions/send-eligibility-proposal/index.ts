@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "npm:resend@2.0.0";
+import { isBeforeNewProjectCutoff, VERRA_CUTOFF_CODE, VERRA_CUTOFF_NOTICE } from "../_shared/commissionCutoff.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -72,6 +73,12 @@ const handler = async (req: Request): Promise<Response> => {
     const commissioningDate = new Date(requestData.commissioningDate);
     if (commissioningDate < minDate) {
       throw new Error("Commissioning date must be on or after September 15, 2022");
+    }
+    if (isBeforeNewProjectCutoff(requestData.commissioningDate)) {
+      return new Response(
+        JSON.stringify({ error: VERRA_CUTOFF_NOTICE, code: VERRA_CUTOFF_CODE }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Calculate estimated carbon credits (simplified formula)

@@ -1,4 +1,3 @@
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -9,6 +8,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AlertTriangle } from "lucide-react";
+import { VERRA_CUTOFF_NOTICE, VERRA_CUTOFF_TITLE } from "@/utils/dateValidation";
 
 interface DateRejectionDialogProps {
   open: boolean;
@@ -18,20 +18,18 @@ interface DateRejectionDialogProps {
 export function DateRejectionDialog({ open, onClose }: DateRejectionDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onClose}>
-      <AlertDialogContent className="sm:max-w-md">
+      <AlertDialogContent className="sm:max-w-lg">
         <AlertDialogHeader>
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            <AlertDialogTitle>Project Not Eligible</AlertDialogTitle>
+            <AlertDialogTitle>{VERRA_CUTOFF_TITLE}</AlertDialogTitle>
           </div>
-          <AlertDialogDescription className="text-base">
-            This project does not qualify due to date constraints. Please contact the support team.
+          <AlertDialogDescription className="text-sm leading-relaxed">
+            {VERRA_CUTOFF_NOTICE.replace(/^Important eligibility update:\s*/, "")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogAction onClick={onClose}>
-            Understood
-          </AlertDialogAction>
+          <AlertDialogAction onClick={onClose}>Understood</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

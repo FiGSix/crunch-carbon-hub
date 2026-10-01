@@ -490,7 +490,7 @@ export default function PartnerReferralLandingPage() {
                   <li>The solar system must be located in South Africa.</li>
                   <li>Not registered with another Greenhouse Gas Emissions program.</li>
                   <li>Has a valid Certificate of Compliance (CoC) issued by a Registered Electrician (i.e. legally installed).</li>
-                  <li>Switched on or commissioned after 15 September 2022.</li>
+                  <li>Switched on or commissioned on or after 1 July 2026.</li>
                   <li>I am the legal owner of the solar system or green attributes.</li>
                   <li>Not funded by or through South African Government Funded Initiative.</li>
                 </ul>

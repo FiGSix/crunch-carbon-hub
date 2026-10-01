@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { isBeforeNewProjectCutoff, VERRA_CUTOFF_CODE, VERRA_CUTOFF_NOTICE } from "../_shared/commissionCutoff.ts";
 import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
@@ -125,6 +126,9 @@ serve(async (req: Request) => {
       parsedCommissioningDate > maximumCommissioningDate
     ) {
       return jsonResponse({ error: "Commissioning date must be between 15 September 2022 and 31 December 2030.", code: "INVALID_COMMISSIONING_DATE" }, 400);
+    }
+    if (isBeforeNewProjectCutoff(String(commissioningDate))) {
+      return jsonResponse({ error: VERRA_CUTOFF_NOTICE, code: VERRA_CUTOFF_CODE }, 400);
     }
     if (province && !SA_PROVINCES.has(province)) {
       return jsonResponse({ error: "Please select a valid South African province.", code: "INVALID_PROVINCE" }, 400);

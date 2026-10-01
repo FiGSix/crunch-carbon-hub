@@ -30,7 +30,7 @@ const faqs = [
   },
   {
     question: "But do I qualify for the program?",
-    answer: "There are five main qualifying criteria: (1) You must be the legal owner of the solar system or plant. (2) The system must be within South Africa. (3) The system must be smaller than 15MWp (Megawatts peak). (4) The system may not be participating in any other GHG programs. (5) The system must have been commissioned on or after 15 September 2022. No. 5 is the most important - sadly we cannot help if the system was commissioned before that date.",
+    answer: "There are five main qualifying criteria: (1) You must be the legal owner of the solar system or plant. (2) The system must be within South Africa. (3) The system must be smaller than 15MWp (Megawatts peak). (4) The system may not be participating in any other GHG programs. (5) The system must have been switched on or commissioned on or after 1 July 2026. Under Verra’s updated Verified Carbon Standard rules, systems commissioned before this date that were not already part of an earlier Crunch Carbon audit can no longer be newly added.",
   },
   {
     question: "Who is Crunch Carbon the company?",
