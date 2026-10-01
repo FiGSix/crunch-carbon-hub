@@ -1,51 +1,32 @@
-# Close the 18 listed server-function security findings
+# New proposals: switch-on date must be on or after 1 July 2026
 
-Only the 18 findings you listed get fixed. Nothing else is touched or dismissed. All fixes keep the public flows working: the calculator, signing from an email link, declining, and unsubscribing.
+From now on, every newly created proposal must have a commissioning (switch-on) date on or after 1 July 2026. If someone enters an earlier date, they are stopped and shown your Verra 5.0 notice.
 
-## What changes for people using the platform
+## The notice (shown word for word)
 
-- Nobody signed out can send emails, create proposals, make documents, or look up agreements unless they hold a valid signing link for that exact proposal.
-- Partners can only send invitations for their own proposals, and only to that proposal's client (plus the existing CC rules). Admins keep full access.
-- Automatic jobs (reminders, weekly roundup, stale-proposal sweep, document sweep) keep running, because they use the existing system key.
-- Address search on the calculator keeps working, with a usage limit.
+"Important eligibility update: Due to changes to Verra's Verified Carbon Standard rules, solar projects being newly onboarded to this monitoring period must have been switched on or commissioned on or after 1 July 2026. Unfortunately, projects commissioned before this date that were not already included in an earlier Crunch Carbon audit can no longer be newly added under this monitoring period. We know this may be disappointing, but this is a Verra eligibility requirement rather than a Crunch Carbon decision. If your system was commissioned on or after 1 July 2026, you can continue with the onboarding process."
 
-## The fix for each finding (file confirmed during build, step 1)
+## Where it applies (new projects only)
 
-| Finding | Function | Fix |
-|---|---|---|
-| Anyone can create eligibility proposals | send-eligibility-proposal | Never link to an existing client record from a public request; always create a new unlinked client, add a per-email/IP rate limit and input checks |
-| Anyone can get signed links to legal documents | tmp-legal-doc-url | Delete the function (it was marked temporary) |
-| Anyone can trigger installer emails | send-installer-invitation | Require admin, owning partner, or the system key |
-| Invitations go to recipients the caller picks | send-proposal-invitation | Recipient always comes from the proposal's client record; caller must own the proposal or be admin |
-| Send messages / spend money (2 paths) | likely send-contact-email, send-calculator-results | Fixed recipient for contact form; calculator results only to the email tied to that proposal; rate limits |
-| Private data read without checks (2 paths) | likely ensure-proposal-agreement, post-signature-automation | Require valid signing link for that proposal, signed-in owner/admin, or system key |
-| Anyone can generate signed contract documents | generate-cession-agreement-pdf / generate-signed-agreement-pdf | Allow only admin, owning partner, or system key (called by signing and the sweep) |
-| Anyone can send roundup emails | send-weekly-roundup | System key or admin only; recipients taken from the database, never the request |
-| Anyone can alter email reputation records | resend-webhook | Verify the email provider's webhook signature; reject unsigned calls |
-| Anyone can trigger proposal automation | proposal-automation | System key or admin only |
-| Anyone can retrieve agreement details | ensure-proposal-agreement | Valid signing link for that proposal, owner, or admin |
-| Anyone can trigger client reminders | send-onboarding-followup / send-audit-ready-email | System key, admin, or owning partner only |
-| Anyone can use address search | mapbox-geocode | Rate limit per IP, cap query length, allow only your own site origins |
-| Admin approval email to any address | send-agent-approval-email | Look up the partner's email and name from their account by ID; ignore what the request sends |
-| Oversized signature images | accept-proposal | Reject signatures over about 500 KB or not a PNG/JPEG image |
-| Signed-in users invite arbitrary recipients | send-client-invitation | Caller must be admin or own the related client/proposal; block self-email as today |
+- Public calculator and quick calculator: date picker starts at 1 July 2026; earlier dates show the notice and cannot continue.
+- Homeowner eligibility check (Solar Rewards pop-up).
+- Partner "Create proposal" form (all phases), plus the eligibility checklist wording.
+- Client "Submit a project" form.
+- Bulk proposal upload: rows with earlier dates are rejected with the notice as the reason.
+- Partner referral page and partner connection (outside systems sending projects in).
+- Server checks repeat the same rule, so nobody can get around the screens.
+- Public wording that still says "15 September 2022" (FAQ, referral page, calculator help text) is updated to 1 July 2026.
 
-## Order of work
+## What is NOT affected
 
-1. Open each finding's details and confirm the exact function for the four "likely" rows.
-2. Add one shared caller check (signed-in user, admin, owning partner, system key, or valid signing link) and use it everywhere above.
-3. Apply each fix, update the app screens that call these functions if they send fields that are now ignored.
-4. Deploy, then test signed-out calls are refused and the public calculator, signing link, decline and unsubscribe still work.
-5. Mark the 18 findings fixed.
-
-## One thing I may need from you
-
-Checking the email provider's webhook signature needs its signing secret (from the Resend webhook settings). If it isn't already stored, I'll ask you to paste it in a secure box during the build.
+- Existing proposals and onboarding projects keep their dates and can still be edited, signed and onboarded.
+- Projects already in Audit 1 or Audit 2 keep their original periods.
+- The legacy project upload (used to load already-audited projects) keeps the 15 September 2022 minimum.
 
 ## Technical details
 
-- New `_shared/authorize.ts`: `resolveCaller(req)` returns `{kind: 'system'|'admin'|'user'|'anon', userId}` using `getClaims`, `has_role`, and comparison against `SWEEP_CRON_SECRET`; `canActOnProposal(callerOrToken, proposalId)` checks admin, `agent_id`, company teammate, or matching unexpired `invitation_token`.
-- Rate limiting: small `edge_rate_limits` table (key, window_start, count) with GRANTs to service_role only, RLS on, no policies.
-- Resend: verify `svix-id/svix-timestamp/svix-signature` with `RESEND_WEBHOOK_SECRET`.
-- Delete `tmp-legal-doc-url` via the delete-function tool.
-- Record the shared-authorization rule in AGENTS.md.
+- Add `NEW_PROJECT_MIN_COMMISSION_DATE` (2026-07-01) and the notice text to `src/utils/dateValidation.ts`, with a server mirror in `supabase/functions/_shared/` (record the rule in AGENTS.md alongside the audit-period rule).
+- Replace hard-coded `2022-09-15` checks in: Calculator.tsx, SystemInputPanel.tsx, QuickCalcForm.tsx, EligibilityModal.tsx, ProjectInfoForm.tsx (+ DateRejectionDialog showing the notice), EligibilityCriteriaList.tsx, onboardingSchema.ts (new-project path only), PartnerReferralLandingPage.tsx, WhyChooseUsFAQ.tsx.
+- Server: send-calculator-results, send-eligibility-proposal, bulk-upload-proposals, create-referral-proposal, _shared/partner-validation.ts return 400 with code `COMMISSION_BEFORE_VERRA_CUTOFF` and the notice.
+- Edit flows check only when the proposal is new (no id); OnboardingTab and bulk-upload-legacy-projects unchanged.
+- Verify in the browser: calculator with 10 March 2023 shows the notice; 1 August 2026 proceeds.
