@@ -184,7 +184,7 @@ export function ProjectInfoForm({
               />
               <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-carbon-gray-400 pointer-events-none" />
             </div>
-            <p className="text-xs text-carbon-gray-500">Must be on or after September 15, 2022</p>
+            <p className="text-xs text-carbon-gray-500">Must be on or after 1 July 2026</p>
           </div>
         </div>
       ) : (
@@ -221,7 +221,7 @@ export function ProjectInfoForm({
               />
               <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-carbon-gray-400 pointer-events-none" />
             </div>
-            <p className="text-xs text-carbon-gray-500">Must be on or after September 15, 2022</p>
+            <p className="text-xs text-carbon-gray-500">Must be on or after 1 July 2026</p>
           </div>
         </div>
       )}
