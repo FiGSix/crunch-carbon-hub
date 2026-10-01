@@ -1,4 +1,5 @@
 import { BulkProposalRow } from '@/types/proposals';
+import { isBeforeNewProjectCutoff } from '@/utils/dateValidation';
 
 export interface ValidationError {
   row: number;
@@ -57,9 +58,8 @@ export function validateProposalRows(rows: BulkProposalRow[]): ValidationError[]
     } else if (!isValidDate(row.commission_date)) {
       errors.push({ row: rowNum, field: 'commission_date', message: 'Invalid date format (use YYYY/MM/DD)' });
     } else {
-      const commissionYear = new Date(row.commission_date).getFullYear();
-      if (commissionYear < 2022) {
-        errors.push({ row: rowNum, field: 'commission_date', message: 'Commission date must be 2022 or later' });
+      if (isBeforeNewProjectCutoff(String(row.commission_date).replace(/\//g, '-'))) {
+        errors.push({ row: rowNum, field: 'commission_date', message: 'Commissioned before 1 July 2026 — not eligible for new onboarding under Verra’s updated rules' });
       }
     }
     

@@ -12,7 +12,7 @@ export const VERRA_CUTOFF_NOTICE =
 /** True when a YYYY-MM-DD (or ISO) date is before the cutoff. Invalid dates return false. */
 export function isBeforeNewProjectCutoff(date: string | null | undefined): boolean {
   if (!date || typeof date !== "string") return false;
-  const day = date.trim().slice(0, 10);
+  const day = date.trim().replace(/\//g, "-").slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
   return day < NEW_PROJECT_MIN_COMMISSION_ISO;
 }
