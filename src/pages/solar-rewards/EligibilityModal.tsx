@@ -77,6 +77,10 @@ export function EligibilityModal({ open, onOpenChange, onQualified }: Eligibilit
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isBeforeNewProjectCutoff(formData.commissioningDate)) {
+      toast({ title: "Important eligibility update", description: VERRA_CUTOFF_NOTICE.replace(/^Important eligibility update:\s*/, ""), variant: "destructive" });
+      return;
+    }
     setIsSubmitting(true);
     
     try {

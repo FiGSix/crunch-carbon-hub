@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { isBeforeNewProjectCutoff, VERRA_CUTOFF_NOTICE } from "../_shared/commissionCutoff.ts";
 import { corsHeaders } from "../_shared/types.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -83,6 +84,10 @@ Deno.serve(async (req) => {
       const rowNum = i + 3; // Account for header rows
 
       try {
+        if (isBeforeNewProjectCutoff((proposal.commission_date || '').trim())) {
+          throw new Error(`Commissioned ${proposal.commission_date} — ${VERRA_CUTOFF_NOTICE}`);
+        }
+
         // Determine which agent should own this proposal
         let assignedAgentId = user.id; // Default to uploader (agent or admin)
 
