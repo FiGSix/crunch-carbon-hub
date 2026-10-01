@@ -1,3 +1,4 @@
+import { VERRA_CUTOFF_NOTICE, isBeforeNewProjectCutoff } from "@/utils/dateValidation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,7 +46,7 @@ export function EligibilityModal({ open, onOpenChange, onQualified }: Eligibilit
       correctAnswer: true
     },
     {
-      question: "Was it commissioned or switched on for the first time, on or after the 15th September 2022?",
+      question: "Was it commissioned or switched on for the first time, on or after 1 July 2026?",
       correctAnswer: true
     },
     {
@@ -309,7 +310,7 @@ export function EligibilityModal({ open, onOpenChange, onQualified }: Eligibilit
               <Input
                 id="commissioningDate"
                 type="date"
-                min="2022-09-15"
+                min="2026-07-01"
                 value={formData.commissioningDate}
                 onChange={(e) => setFormData({...formData, commissioningDate: e.target.value})}
                 required
@@ -357,7 +358,7 @@ export function EligibilityModal({ open, onOpenChange, onQualified }: Eligibilit
                 {failedStep === 0 && "Currently, we only work with solar systems in South Africa."}
                 {failedStep === 1 && "You must NOT be registered for any other Greenhouse Gas Emissions programs to qualify."}
                 {failedStep === 2 && "Systems over 50 kWp require a different registration process. Contact us for enterprise solutions."}
-                {failedStep === 3 && "Your system must have been commissioned on or after the 15th September 2022."}
+                {failedStep === 3 && VERRA_CUTOFF_NOTICE}
                 {failedStep === 4 && "You must be the legal owner of the solar system or the green attributes to qualify."}
                 {failedStep === 5 && "Systems funded by South African Government Grants or Funding Initiatives are not eligible."}
               </p>

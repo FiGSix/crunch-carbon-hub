@@ -279,7 +279,7 @@ export const SystemInputPanel = ({
                 </TooltipTrigger>
                 <TooltipContent className="bg-white border-2 border-crunch-black max-w-xs">
                   <p className="text-sm">
-                    Systems commissioned before 15 September 2022 are not eligible for the Crunch Carbon programme under our Verra-registered project rules.
+                    Under Verra’s updated rules, new systems must have been switched on or commissioned on or after 1 July 2026.
                   </p>
                 </TooltipContent>
               </Tooltip>
@@ -306,9 +306,9 @@ export const SystemInputPanel = ({
                 mode="single"
                 selected={commissionDate}
                 onSelect={onCommissionDateChange}
-                disabled={(date) => date < new Date("2022-09-15") || date > new Date("2030-12-31")}
+                disabled={(date) => date < new Date(2026, 6, 1) || date > new Date("2030-12-31")}
                 captionLayout="dropdown"
-                startMonth={new Date(2022, 8)}
+                startMonth={new Date(2026, 6)}
                 endMonth={new Date(2030, 11)}
                 defaultMonth={commissionDate ?? new Date()}
                 initialFocus
@@ -318,7 +318,7 @@ export const SystemInputPanel = ({
             </PopoverContent>
           </Popover>
           <p className="text-xs text-crunch-black/50">
-            Systems commissioned before 15 September 2022 don't qualify.
+            New systems must be commissioned on or after 1 July 2026.
           </p>
           {errors.commissionDate && (
             <p className="text-sm text-destructive">{errors.commissionDate}</p>

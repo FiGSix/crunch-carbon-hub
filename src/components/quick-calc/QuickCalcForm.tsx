@@ -153,7 +153,7 @@ export const QuickCalcForm = ({ onCalculate, isCalculating, hasResults }: QuickC
                     setErrors(prev => ({ ...prev, commissionDate: "" }));
                   }}
                   disabled={(date) =>
-                    date < new Date("2022-09-15") || date > new Date("2030-12-31")
+                    date < new Date(2026, 6, 1) || date > new Date("2030-12-31")
                   }
                   initialFocus
                   className="pointer-events-auto"

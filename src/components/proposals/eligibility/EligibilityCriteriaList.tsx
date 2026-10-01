@@ -31,8 +31,8 @@ export function EligibilityCriteriaList({
     },
     {
       id: "commissionedAfter2022" as keyof EligibilityCriteria,
-      title: "Commissioned on or after September 15, 2022",
-      description: "The system must have been commissioned (put into operation) on or after September 15, 2022."
+      title: "Commissioned on or after 1 July 2026",
+      description: "The system must have been commissioned (put into operation) on or after 1 July 2026 (Verra VCS rules for newly onboarded projects)."
     },
     {
       id: "legalOwnership" as keyof EligibilityCriteria,

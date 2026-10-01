@@ -1,3 +1,4 @@
+import { VERRA_CUTOFF_NOTICE, isBeforeNewProjectCutoff } from "@/utils/dateValidation";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/footer";
@@ -100,10 +101,8 @@ const Calculator = () => {
 
     if (!commissionDate) {
       newErrors.commissionDate = "Please select a commissioning date";
-    } else if (commissionDate < new Date("2022-09-15")) {
-      newErrors.commissionDate =
-        "Sadly, projects commissioned prior to 15 September 2022 do not qualify.";
-      toast.error("Sadly, projects commissioned prior to 15 September 2022 do not qualify.");
+    } else if (isBeforeNewProjectCutoff(commissionDate)) {
+      newErrors.commissionDate = VERRA_CUTOFF_NOTICE;
     }
 
     setErrors(newErrors);
