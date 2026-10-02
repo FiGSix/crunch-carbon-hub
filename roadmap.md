@@ -61,3 +61,12 @@
 - [x] Re-signing supersedes incomplete agreements instead of editing them
 - [x] Hourly safety net so Group A cannot build up again
 - [ ] Remove the page, route, sidebar entry and tables once all groups are clear
+
+# Test sandbox (Tester Shaun)
+
+- [ ] Database fence: test stamp, access rules, guarded admin functions, nightly reset
+- [ ] Role switcher (Client / Partner / Super Partner / Admin) for test accounts
+- [ ] Email guard: test emails redirected to the tester's inbox
+- [ ] Block or scope admin server tasks for test accounts
+- [ ] Nightly reset job (23:00 SAST) incl. files, and seed demo data
+- [ ] Verify end-to-end
