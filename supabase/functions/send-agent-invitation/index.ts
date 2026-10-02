@@ -1,4 +1,4 @@
-import "../_shared/sandbox.ts";
+import { isTestAccount, sandboxRefusal } from "../_shared/sandbox.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "npm:resend@2.0.0";
@@ -51,6 +51,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log("User authenticated:", user.id);
+
+    if (await isTestAccount(supabase, user.id)) return sandboxRefusal(corsHeaders);
 
     // Check if user is admin by querying profiles directly
     const { data: profileData, error: profileError } = await supabase
