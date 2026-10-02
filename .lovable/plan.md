@@ -21,14 +21,9 @@ Tester Shaun gets full rights, but only inside a walled-off sandbox. Real data c
 6. **Nightly reset at 23:00 SAST:** a scheduled job deletes all test-stamped records and files, then re-seeds the demo data. Only test-stamped rows are touched, so real data can't be hit.
 7. **Exclusions:** test data is left out of homepage stats, revenue dashboards, exports, the weekly roundup and Agreement Recovery.
 
-## Alternative: a separate test copy of the site
+## Decision
 
-This is a full copy with its own empty database, used only for testing. It's the cleanest and safest option, but it's more work to keep in step with the live site and costs more to run. I'm happy to plan this instead if you prefer.
-
-## What I need from you
-
-- Is the sandbox approach right, or would you rather have a separate test copy?
-- Is 23:00 SAST the right reset time?
+You chose the sandbox inside the live site. The nightly reset runs at 23:00 SAST, and you can change that time later.
 
 ## Technical details
 
