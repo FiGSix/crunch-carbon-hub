@@ -13,8 +13,20 @@ serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // Only one named owner account may create test partner accounts.
+  const OWNER_EMAIL = "shaun@crunchcarbon.com";
+  const token = req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
+  const { data: { user: caller } } = token
+    ? await supabaseAdmin.auth.getUser(token)
+    : { data: { user: null } };
+  if (!caller || caller.email?.toLowerCase() !== OWNER_EMAIL || !caller.email_confirmed_at) {
+    return new Response(JSON.stringify({ error: "Not allowed" }), {
+      status: 403,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
-    // Using the imported supabaseAdmin client
 
     // Get the request body
     const { email, password, firstName, lastName, companyName } = await req.json();
