@@ -1,5 +1,6 @@
 console.log("📧 send-auth-email module loading...");
 
+import "../_shared/sandbox.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Webhook } from "https://esm.sh/standardwebhooks@1.0.0";
 import { Resend } from "npm:resend@4.0.0";

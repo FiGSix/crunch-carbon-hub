@@ -4971,7 +4971,9 @@ export type Database = {
       }
       sandbox_block: { Args: never; Returns: undefined }
       sandbox_current: { Args: never; Returns: boolean }
+      sandbox_default_inbox: { Args: never; Returns: string }
       sandbox_ensure_fixtures: { Args: { _uid: string }; Returns: string }
+      sandbox_mail_inbox: { Args: { _emails: string[] }; Returns: string }
       sandbox_switch_role: { Args: { p_role: string }; Returns: string }
       search_clients: {
         Args: { search_term: string }
