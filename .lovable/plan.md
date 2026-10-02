@@ -1,40 +1,24 @@
-# Urgent fix: site-wide "infinite recursion" errors since the test-sandbox change
+# Urgent fix: the site is down for everyone because of the test-account rules
 
-## What changed and why it broke
+## What happened
 
-Today's test-sandbox work for Tester Shaun added a "sandbox fence" access rule to about 40 tables. On 20 of them, the fence looks up a parent table to ask "is this test data?". For example:
+The rules added today for Tester Shaun follow your logic: a real user is let straight through, and only the test user is checked. But 20 of those rules mention another table in their wording, for example "is this document's project test data?". The database inspects a rule's wording before it runs, and it found tables pointing back at each other in a loop. It refuses those requests outright, even though the answer for real users would have been "let through". That's why Proposals, Onboarding, Data Diagnostics and Companies are failing.
 
-- A project's agreements, emails, commissions and linked clients look up **proposals**.
-- Onboarding documents, tasks, fields, comments, the activity log and data diagnostics look up **onboarding projects**.
-- Company team members and invitations look up **companies**, and client team members look up **client companies**.
-- Cession signatures look up **clients**, and people's profiles look up **clients**.
+I only tested with elevated access, which skips these rules, so I missed it.
 
-Many of those parent tables already have rules that look the other way. Proposals check their linked clients, and companies check their team members. Now each pair of tables checks the other, in a loop:
+## The repair (small)
 
-```text
-proposals        -> proposal_clients   -> proposals          (loop)
-companies        -> company_members    -> companies          (loop)
-project_onboarding -> onboarding_*     -> project_onboarding (loop)
-clients          -> profiles           -> clients            (loop)
-```
+1. Add one sealed lookup that answers "is this record test data?". Because it's sealed, the database doesn't look inside it, so no loop is possible.
+2. Change only the 20 broken rules to read: **real user -> let through; test user -> ask the sealed lookup.**
+3. Change nothing else. No screens, no other rules, no data.
 
-The database spots these loops before it reads anything and refuses the whole request. That's why Proposals, Data Diagnostics, Onboarding and Companies all fail for real users, even though the fence is meant to do nothing for them. My earlier verification only ran the sandbox switch and reset with elevated access, which skips access rules. That's why it didn't catch this.
+## Verification before I report back
 
-## Fix (one change, covers every affected table)
-
-1. Add five small "is this test data?" checks for a proposal, onboarding project, client, company and client company. They run with elevated rights, so they never trigger other access rules and can't loop. They start closed and are granted only to signed-in users, per the project rule.
-2. Rewrite all 20 fences that look up a parent table so they use those checks instead. Real users keep the same "do nothing" behaviour, and Tester Shaun keeps seeing only test data.
-3. Leave every other access rule unchanged.
-
-## Verification before reporting back
-
-- Signed in as a real admin, partner, super partner and client, load proposals, onboarding projects and their documents and tasks, data diagnostics, companies and team members, clients, cession signatures and profiles. Confirm there are no errors and the row counts match what each account saw before today's change.
-- Repeat the check as Tester Shaun and confirm only test rows appear.
-- Run the database linter for new warnings.
+- Signed in as a real admin, partner, super partner and client, open proposals, onboarding (documents, tasks, comments), data diagnostics, companies and team members, clients and profiles. Confirm there are no errors and the same records show as this morning.
+- As Tester Shaun, confirm only test records show.
 
 ## Technical details
 
-- New functions, all `security definer`, `stable`, `set search_path = public`, `REVOKE EXECUTE FROM PUBLIC`, `GRANT EXECUTE TO authenticated, service_role`: `is_test_proposal(uuid)`, `is_test_project(uuid)`, `is_test_client(uuid)`, `is_test_company(uuid)`, `is_test_client_company(uuid)`, plus `is_test_client_user(uuid)` for the profiles fence.
-- Each fence is dropped and recreated as `NOT (select sandbox_current()) OR public.is_test_<parent>(<table>.<fk>)` for both `USING` and `WITH CHECK`. Existing extra branches such as `user_id = auth.uid()` on company_members and the profiles branches are kept.
-- Tables: agent_commissions, email_events, proposal_agreements, proposal_automation_log, proposal_clients, super_partner_commissions, data_access_config, onboarding_activity_log, onboarding_comments, onboarding_documents, onboarding_fields, onboarding_tasks, client_cession_signatures, agent_invitations, company_members, super_partner_link_requests, team_invitations, client_company_members, client_team_invitations, profiles.
-- Verification uses `set local role authenticated` with `request.jwt.claims` set per account inside a read-only transaction, so access rules really apply.
+- One function `public.sandbox_is_test(_table text, _id uuid) returns boolean`: `security definer`, `stable`, `search_path = public`. It returns the `is_test` value of `proposals`, `project_onboarding`, `clients`, `companies` or `client_companies`, plus a `client_user` case for profiles. Execute is revoked from PUBLIC and granted to `authenticated` and `service_role`.
+- Each of the 20 "Sandbox fence" policies is recreated as `NOT (select sandbox_current()) OR public.sandbox_is_test('<parent>', <fk>)`, keeping existing `user_id = auth.uid()` / profiles branches.
+- Verification runs inside a read-only transaction with `set local role authenticated` and per-account `request.jwt.claims`, so the access rules really apply.
