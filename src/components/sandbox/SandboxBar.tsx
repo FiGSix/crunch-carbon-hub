@@ -59,7 +59,7 @@ export function SandboxBar() {
   };
 
   return (
-    <div className="sticky top-0 z-40 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-warning/40 bg-warning/15 px-3 py-2 text-sm text-foreground md:px-4">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-warning/40 bg-warning/15 px-3 py-2 text-sm text-foreground md:px-4">
       <span className="flex items-center gap-2 font-semibold">
         <FlaskConical className="h-4 w-4" aria-hidden />
         Test mode
