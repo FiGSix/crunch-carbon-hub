@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { componentLogger } from '@/lib/logger';
 import { roleLandingPath } from '@/lib/auth/roleLanding';
+import { SandboxBar } from '@/components/sandbox/SandboxBar';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -100,6 +101,7 @@ export function DashboardLayout({
         <DashboardSidebar />
         
         <SidebarInset className="flex-1">
+          <SandboxBar />
           <motion.header 
             className={cn(
               "h-14 md:h-16 border-b border-gray-200 flex items-center px-3 md:px-4 bg-white shadow-sm",
