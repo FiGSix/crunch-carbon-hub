@@ -844,6 +844,7 @@ export type Database = {
           created_by: string | null
           email_domain: string | null
           id: string
+          is_test: boolean
           registration_number: string | null
           updated_at: string
         }
@@ -853,6 +854,7 @@ export type Database = {
           created_by?: string | null
           email_domain?: string | null
           id?: string
+          is_test?: boolean
           registration_number?: string | null
           updated_at?: string
         }
@@ -862,6 +864,7 @@ export type Database = {
           created_by?: string | null
           email_domain?: string | null
           id?: string
+          is_test?: boolean
           registration_number?: string | null
           updated_at?: string
         }
@@ -1107,6 +1110,7 @@ export type Database = {
           first_agreement_id: string | null
           first_name: string | null
           id: string
+          is_test: boolean
           last_modified_by: string | null
           last_name: string | null
           notes: string | null
@@ -1129,6 +1133,7 @@ export type Database = {
           first_agreement_id?: string | null
           first_name?: string | null
           id?: string
+          is_test?: boolean
           last_modified_by?: string | null
           last_name?: string | null
           notes?: string | null
@@ -1151,6 +1156,7 @@ export type Database = {
           first_agreement_id?: string | null
           first_name?: string | null
           id?: string
+          is_test?: boolean
           last_modified_by?: string | null
           last_name?: string | null
           notes?: string | null
@@ -1208,6 +1214,7 @@ export type Database = {
           created_by: string | null
           email_domain: string | null
           id: string
+          is_test: boolean
           super_partner_id: string | null
           super_partner_linked_at: string | null
           super_partner_linked_by: string | null
@@ -1220,6 +1227,7 @@ export type Database = {
           created_by?: string | null
           email_domain?: string | null
           id?: string
+          is_test?: boolean
           super_partner_id?: string | null
           super_partner_linked_at?: string | null
           super_partner_linked_by?: string | null
@@ -1232,6 +1240,7 @@ export type Database = {
           created_by?: string | null
           email_domain?: string | null
           id?: string
+          is_test?: boolean
           super_partner_id?: string | null
           super_partner_linked_at?: string | null
           super_partner_linked_by?: string | null
@@ -2852,6 +2861,7 @@ export type Database = {
           data_access_verified: boolean
           data_access_verified_at: string | null
           id: string
+          is_test: boolean
           last_activity_at: string | null
           last_followup_at: string | null
           last_followup_by: string | null
@@ -2879,6 +2889,7 @@ export type Database = {
           data_access_verified?: boolean
           data_access_verified_at?: string | null
           id?: string
+          is_test?: boolean
           last_activity_at?: string | null
           last_followup_at?: string | null
           last_followup_by?: string | null
@@ -2906,6 +2917,7 @@ export type Database = {
           data_access_verified?: boolean
           data_access_verified_at?: string | null
           id?: string
+          is_test?: boolean
           last_activity_at?: string | null
           last_followup_at?: string | null
           last_followup_by?: string | null
@@ -3317,6 +3329,7 @@ export type Database = {
           invitation_sent_at: string | null
           invitation_token: string | null
           invitation_viewed_at: string | null
+          is_test: boolean
           last_email_event_type: string | null
           last_email_sent_at: string | null
           last_engagement_at: string | null
@@ -3376,6 +3389,7 @@ export type Database = {
           invitation_sent_at?: string | null
           invitation_token?: string | null
           invitation_viewed_at?: string | null
+          is_test?: boolean
           last_email_event_type?: string | null
           last_email_sent_at?: string | null
           last_engagement_at?: string | null
@@ -3435,6 +3449,7 @@ export type Database = {
           invitation_sent_at?: string | null
           invitation_token?: string | null
           invitation_viewed_at?: string | null
+          is_test?: boolean
           last_email_event_type?: string | null
           last_email_sent_at?: string | null
           last_engagement_at?: string | null
@@ -3644,6 +3659,24 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           yield_kwh_per_kwp?: number
+        }
+        Relationships: []
+      }
+      sandbox_reset_log: {
+        Row: {
+          id: string
+          ran_at: string
+          summary: Json
+        }
+        Insert: {
+          id?: string
+          ran_at?: string
+          summary?: Json
+        }
+        Update: {
+          id?: string
+          ran_at?: string
+          summary?: Json
         }
         Relationships: []
       }
@@ -3914,6 +3947,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      test_accounts: {
+        Row: {
+          created_at: string
+          inbox_email: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          inbox_email: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          inbox_email?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_role_audit: {
         Row: {
@@ -4785,6 +4836,7 @@ export type Database = {
         Args: { company_id_param: string; user_id_param: string }
         Returns: boolean
       }
+      is_test_account: { Args: { _uid: string }; Returns: boolean }
       log_client_access: {
         Args: {
           action_param: string
@@ -4863,6 +4915,7 @@ export type Database = {
         }[]
       }
       request_company_link: { Args: { p_company_id: string }; Returns: string }
+      reset_test_sandbox: { Args: never; Returns: Json }
       resolve_broadcast_audience: {
         Args: { p_audience: Json }
         Returns: {
@@ -4908,6 +4961,18 @@ export type Database = {
         Returns: string
       }
       safe_numeric: { Args: { _v: string }; Returns: number }
+      sandbox_assert_onboarding: {
+        Args: { _project_id: string }
+        Returns: undefined
+      }
+      sandbox_assert_proposal: {
+        Args: { _proposal_id: string }
+        Returns: undefined
+      }
+      sandbox_block: { Args: never; Returns: undefined }
+      sandbox_current: { Args: never; Returns: boolean }
+      sandbox_ensure_fixtures: { Args: { _uid: string }; Returns: string }
+      sandbox_switch_role: { Args: { p_role: string }; Returns: string }
       search_clients: {
         Args: { search_term: string }
         Returns: {
