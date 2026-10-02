@@ -1,4 +1,5 @@
 
+import "../_shared/sandbox.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { supabase } from "../_shared/supabase-client.ts";
 import { validateInvitationRequest } from "./validation.ts";

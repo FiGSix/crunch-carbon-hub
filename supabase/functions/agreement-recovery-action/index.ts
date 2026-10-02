@@ -8,6 +8,7 @@
 // Every action is recorded against the client's recovery row so the page
 // doubles as the audit record of the exercise.
 
+import "../_shared/sandbox.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Resend } from "npm:resend@2.0.0";
 import { renderBrandEmail } from "../_shared/brand-email.ts";

@@ -1,5 +1,6 @@
 // Portfolio invitation: one email covering many proposals for one client.
 // Currently supports the admin-only SAMPLE preview (made-up data) for design review.
+import "../_shared/sandbox.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
